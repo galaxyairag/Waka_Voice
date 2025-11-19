@@ -586,11 +586,12 @@
 
 <script>
     // ============================================
-    // VOICE SESSION CLIENT (v1.4 - Cache Fix)
+    // VOICE SESSION CLIENT (v1.9.2 - JS Syntax Fix)
     // Cache buster: {{ cache_buster or '0' }}
+    // Last updated: 2025-01-19
     // ============================================
 
-    console.log('🔧 Script Version: 1.9.1 - UI: Flat buttons at top, modern colorful design, 16:9 format fix');
+    console.log('🔧 Script Version: 1.9.2 - Fixed tojson safe filter, verified startConversation function');
     console.log('📅 Loaded at:', new Date().toISOString());
     console.log('🔑 Cache buster:', '{{ cache_buster or "0" }}');
 
@@ -639,7 +640,7 @@
             temperature: parseFloat('{{ agent.voice.temperature }}')
         },
         instructions: `{{ agent.instructions | replace('\n', '\\n') | replace('"', '\\"') }}`,
-        tools: {{ agent.tools | tojson }},
+        tools: {{ agent.tools | tojson | safe }},
         temperature: parseFloat('{{ agent.temperature }}'),
         maxTokens: parseInt('{{ agent.max_tokens }}'),
         avatarEnabled: {{ 'true' if agent.avatar_enabled else 'false' }}{% if agent.avatar_enabled %},

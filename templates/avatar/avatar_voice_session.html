@@ -1,0 +1,2267 @@
+{% extends "base.html" %}
+
+{% block title %}Session Vocale - {{ agent.agent_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================
+       VOICE SESSION STYLES - v1.3.{{ range(1000, 9999) | random }}
+       ============================================ */
+    
+    .session-container {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 32px 24px 40px;
+        background: var(--waka-off-white);
+        min-height: calc(100vh - 80px);
+        color: var(--waka-text);
+    }
+
+    .session-header {
+        background: var(--waka-white);
+        border-radius: 18px;
+        padding: 24px 28px;
+        margin-bottom: 24px;
+        box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
+        border: 1px solid var(--waka-border);
+    }
+
+    .agent-info {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .agent-avatar {
+        width: 80px;
+        height: 80px;
+        background: var(--gradient-primary);
+        border-radius: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        color: var(--waka-white);
+        box-shadow: 0 16px 32px rgba(74, 20, 140, 0.35);
+    }
+
+    .agent-details h1 {
+        margin: 0 0 6px 0;
+        color: var(--waka-primary-dark);
+        font-size: 26px;
+        letter-spacing: 0.02em;
+    }
+
+    .agent-details p {
+        margin: 0;
+        color: #6B7280;
+        font-size: 15px;
+    }
+
+    .session-status {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 16px;
+        flex-wrap: wrap;
+    }
+
+    .status-badge {
+        padding: 7px 14px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid var(--waka-border);
+        background: var(--waka-off-white);
+        color: var(--waka-text);
+    }
+
+    .status-badge.disconnected {
+        background: rgba(244, 67, 54, 0.06);
+        color: #c53030;
+        border-color: rgba(244, 67, 54, 0.35);
+    }
+
+    .status-badge.connecting {
+        background: rgba(255, 193, 7, 0.06);
+        color: #c05621;
+        border-color: rgba(255, 193, 7, 0.35);
+    }
+
+    .status-badge.connected {
+        background: rgba(76, 175, 80, 0.06);
+        color: #2f855a;
+        border-color: rgba(76, 175, 80, 0.35);
+    }
+
+    .status-badge i {
+        animation: pulse 2s infinite;
+        font-size: 10px;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    /* Session Panel */
+    .session-panel {
+        background: var(--waka-white);
+        border-radius: 22px;
+        padding: 22px 22px 24px;
+        box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+        display: grid;
+        grid-template-columns: minmax(0, 1.6fr) minmax(320px, 0.9fr);
+        gap: 22px;
+        min-height: 620px;
+        border: 1px solid var(--waka-border);
+    }
+
+    /* Conversation Area */
+    .conversation-area {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .conversation-controls {
+        display: flex;
+        gap: 18px;
+        justify-content: center;
+        align-items: center;
+        margin-top: 4px;
+    }
+
+    .voice-button {
+        min-width: 140px;
+        height: 50px;
+        border-radius: 10px;
+        border: none;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0 24px;
+    }
+
+    .voice-button i {
+        font-size: 20px;
+    }
+
+    .voice-button.start {
+        background: #22c55e;
+        color: white;
+    }
+
+    .voice-button.stop {
+        background: #ef4444;
+        color: white;
+    }
+
+    .voice-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .voice-button.start:hover {
+        background: #16a34a;
+    }
+
+    .voice-button.stop:hover {
+        background: #dc2626;
+    }
+
+    .voice-button.recording {
+        animation: recording-pulse 1.5s infinite;
+    }
+
+    @keyframes recording-pulse {
+        0%, 100% {
+            box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4);
+        }
+        50% {
+            box-shadow: 0 2px 20px rgba(34, 197, 94, 0.8);
+        }
+    }
+
+    @keyframes float {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+
+    .conversation-display {
+        flex: 1;
+        background: var(--waka-off-white);
+        border-radius: 18px;
+        padding: 18px 18px 18px;
+        overflow-y: auto;
+        max-height: 400px;
+        min-height: 300px;
+        border: 1px solid var(--waka-border);
+    }
+
+    .message {
+        margin-bottom: 14px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        max-width: 82%;
+        animation: fadeIn 0.25s ease;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+        font-size: 14px;
+        line-height: 1.45;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .message.user {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+        margin-left: auto;
+        text-align: right;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        border: none;
+    }
+
+    .message.agent {
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        color: var(--waka-text);
+        border: 1px solid #d1d5db;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .message.system {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        color: #92400e;
+        text-align: center;
+        margin: 0 auto 14px;
+        font-size: 13px;
+        border: 1px solid #fbbf24;
+        box-shadow: 0 2px 6px rgba(251, 191, 36, 0.2);
+    }
+
+    .message-meta {
+        font-size: 11px;
+        opacity: 0.65;
+        margin-top: 4px;
+    }
+
+    /* Config Panel */
+    .config-panel {
+        background: var(--waka-off-white);
+        border-radius: 18px;
+        padding: 18px 18px 20px;
+        border: 1px solid var(--waka-border);
+    }
+
+    .config-section {
+        margin-bottom: 25px;
+    }
+
+    .config-section h3 {
+        font-size: 15px;
+        color: var(--waka-primary-dark);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+    }
+
+    .config-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(55, 65, 81, 0.85);
+    }
+
+    .config-item:last-child {
+        border-bottom: none;
+    }
+
+    .config-label {
+        font-size: 13px;
+        color: #6B7280;
+    }
+
+    .config-value {
+        font-size: 13px;
+        color: var(--waka-text);
+        font-weight: 600;
+    }
+
+    .tool-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        background: var(--gradient-primary);
+        color: var(--waka-white);
+        border-radius: 999px;
+        font-size: 11px;
+        margin: 3px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 6px 18px rgba(74, 20, 140, 0.35);
+    }
+
+    /* Audio Visualizer */
+    .audio-visualizer {
+        height: 80px;
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: 12px 16px;
+        margin-bottom: 18px;
+        border: none;
+        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .audio-visualizer::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+        pointer-events: none;
+    }
+
+    .visualizer-bar {
+        width: 5px;
+        height: 20px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 999px;
+        transition: height 0.1s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .visualizer-bar.active {
+        animation: audioWave 0.5s infinite alternate;
+        background: white;
+    }
+
+    @keyframes audioWave {
+        from {
+            height: 12px;
+            opacity: 0.7;
+        }
+        to {
+            height: 48px;
+            opacity: 1;
+        }
+    }
+
+    /* Responsive */
+    @media (max-width: 968px) {
+        .session-panel {
+            grid-template-columns: 1fr;
+        }
+
+        .config-panel {
+            order: -1;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="session-container">
+    <!-- Session Header -->
+    <div class="session-header">
+        <div class="agent-info">
+            <div class="agent-avatar">
+                <i class="bi bi-robot"></i>
+            </div>
+            <div class="agent-details">
+                <h1>{{ agent.agent_name }}</h1>
+                <p>{{ agent.role or 'Assistant vocal intelligent' }}</p>
+                <div class="session-status">
+                    <span class="status-badge disconnected" id="connectionStatus">
+                        <i class="bi bi-circle-fill"></i>
+                        <span>Déconnecté</span>
+                    </span>
+                    <span class="status-badge" style="background: #e6fffa; color: #234e52;">
+                        <i class="bi bi-cpu-fill"></i>
+                        {{ agent.model_name }}
+                    </span>
+                    <span class="status-badge" style="background: #fef5e7; color: #7d6608;">
+                        <i class="bi bi-mic-fill"></i>
+                        {{ agent.voice.name.split(':')[0] if ':' in agent.voice.name else agent.voice.name }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Voice Controls (moved to top) -->
+    <div style="margin-bottom: 24px; display: flex; justify-content: center; gap: 12px;">
+        <button class="voice-button start" id="startButton" onclick="startConversation()">
+            <i class="bi bi-mic-fill"></i>
+            <span>Démarrer</span>
+        </button>
+        <button class="voice-button stop" id="stopButton" onclick="stopConversation()" style="display: none;">
+            <i class="bi bi-stop-fill"></i>
+            <span>Arrêter</span>
+        </button>
+    </div>
+
+    <!-- Session Panel -->
+    <div class="session-panel">
+        <!-- Conversation Area -->
+        <div class="conversation-area">
+            <!-- Avatar Video Container -->
+            <!-- DEBUG: avatar_enabled = {{ agent.avatar_enabled }} -->
+            <div style="position: relative; width: 100%; max-width: 640px; margin: 0 auto 20px; border-radius: 16px; overflow: hidden; background: #667eea;">
+                <!-- Bouton de contrôle audio -->
+                <div id="audioControlButton" style="position: absolute; top: 10px; right: 10px; z-index: 10; display: none;">
+                    <button onclick="enableAvatarAudio()" style="background: rgba(255,255,255,0.9); border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                        <i class="bi bi-volume-up-fill"></i> Activer l'audio
+                    </button>
+                </div>
+                
+                <div id="avatarContainer" style="width: 100%; aspect-ratio: 16/9; border-radius: 16px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); overflow: hidden; position: relative;">
+                    <div style="text-align: center; color: white; z-index: 1;">
+                        <i class="bi bi-person-video3" style="font-size: 80px; opacity: 0.9; margin-bottom: 20px; display: block; animation: float 3s ease-in-out infinite;"></i>
+                        <p style="font-size: 18px; opacity: 0.95; font-weight: 600; margin-bottom: 8px;">Avatar Visuel</p>
+                        {% if agent.avatar_config %}
+                        <p style="font-size: 14px; opacity: 0.8; background: rgba(255, 255, 255, 0.15); padding: 6px 16px; border-radius: 20px; display: inline-block;">{{ agent.avatar_config.character }} - {{ agent.avatar_config.style }}</p>
+                        {% endif %}
+                    </div>
+                    <div style="position: absolute; inset: 0; background: radial-gradient(circle at 30% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%); pointer-events: none;"></div>
+                </div>
+            </div>
+            
+            <!-- Audio Visualizer -->
+            <div class="audio-visualizer" id="audioVisualizer">
+                {% for i in range(1, 25) %}
+                <div class="visualizer-bar"></div>
+                {% endfor %}
+            </div>
+
+            <!-- Conversation Display -->
+            <div class="conversation-display" id="conversationDisplay">
+                <div class="message system">
+                    <i class="bi bi-info-circle-fill"></i>
+                    Session prête. Cliquez sur le bouton en haut pour commencer la conversation.
+                </div>
+            </div>
+        </div>
+
+        <!-- Config Panel -->
+        <div class="config-panel">
+            <div class="config-section">
+                <h3><i class="bi bi-gear-fill"></i> Configuration</h3>
+                <div class="config-item">
+                    <span class="config-label">Agent ID</span>
+                    <span class="config-value">{{ agent.agent_id }}</span>
+                </div>
+                <div class="config-item">
+                    <span class="config-label">Modèle</span>
+                    <span class="config-value">{{ agent.model_id }}</span>
+                </div>
+                <div class="config-item">
+                    <span class="config-label">Température</span>
+                    <span class="config-value">{{ agent.temperature }}</span>
+                </div>
+                <div class="config-item">
+                    <span class="config-label">Max Tokens</span>
+                    <span class="config-value">{{ agent.max_tokens }}</span>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3><i class="bi bi-mic-fill"></i> Configuration Vocale</h3>
+                <div class="config-item">
+                    <span class="config-label">Voix</span>
+                    <span class="config-value">{{ agent.voice.name }}</span>
+                </div>
+                <div class="config-item">
+                    <span class="config-label">Vitesse</span>
+                    <span class="config-value">{{ agent.voice.rate }}x</span>
+                </div>
+                <div class="config-item">
+                    <span class="config-label">Température vocale</span>
+                    <span class="config-value">{{ agent.voice.temperature }}</span>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3><i class="bi bi-tools"></i> Outils Actifs ({{ agent.tools|length }})</h3>
+                <div style="margin-top: 10px;">
+                    {% if agent.tools %}
+                        {% for tool in agent.tools %}
+                        <span class="tool-badge">
+                            <i class="bi bi-wrench-adjustable"></i> {{ tool.name }}
+                        </span>
+                        {% endfor %}
+                    {% else %}
+                        <p style="color: #a0aec0; font-size: 13px; margin: 0;">Aucun outil activé</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Instructions Editor -->
+            <div class="config-section">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3><i class="bi bi-chat-left-text-fill"></i> Instructions</h3>
+                    <button onclick="toggleInstructionsEditor()" style="background: none; border: none; color: #667eea; cursor: pointer; font-size: 14px;">
+                        <i class="bi bi-pencil-square"></i> Modifier
+                    </button>
+                </div>
+                <div id="instructionsDisplay" style="background: white; padding: 12px; border-radius: 8px; font-size: 13px; color: #4a5568; line-height: 1.6; max-height: 150px; overflow-y: auto;">
+                    {{ agent.instructions[:200] }}{% if agent.instructions|length > 200 %}...{% endif %}
+                </div>
+                <div id="instructionsEditor" style="display: none; margin-top: 10px;">
+                    <textarea id="instructionsTextarea" style="width: 100%; min-height: 200px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: monospace; resize: vertical;">{{ agent.instructions }}</textarea>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button onclick="saveInstructions()" style="flex: 1; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            <i class="bi bi-check-circle"></i> Enregistrer
+                        </button>
+                        <button onclick="cancelInstructionsEdit()" style="flex: 1; padding: 8px 16px; background: #e2e8f0; color: #4a5568; border: none; border-radius: 8px; cursor: pointer;">
+                            <i class="bi bi-x-circle"></i> Annuler
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lexicon URL Editor -->
+            <div class="config-section">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3><i class="bi bi-book-fill"></i> Lexique personnalisé</h3>
+                    <button onclick="toggleLexiconEditor()" style="background: none; border: none; color: #667eea; cursor: pointer; font-size: 14px;">
+                        <i class="bi bi-pencil-square"></i> Modifier
+                    </button>
+                </div>
+                <div id="lexiconDisplay" style="background: white; padding: 12px; border-radius: 8px; font-size: 13px; color: #4a5568; line-height: 1.6;">
+                    <span id="lexiconUrlText">{{ agent.custom_lexicon_url if agent.custom_lexicon_url else 'Aucun lexique configuré' }}</span>
+                </div>
+                <div id="lexiconEditor" style="display: none; margin-top: 10px;">
+                    <input type="text" id="lexiconUrlInput" placeholder="https://..." value="{{ agent.custom_lexicon_url if agent.custom_lexicon_url else '' }}" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px;">
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button onclick="saveLexiconUrl()" style="flex: 1; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            <i class="bi bi-check-circle"></i> Enregistrer
+                        </button>
+                        <button onclick="cancelLexiconEdit()" style="flex: 1; padding: 8px 16px; background: #e2e8f0; color: #4a5568; border: none; border-radius: 8px; cursor: pointer;">
+                            <i class="bi bi-x-circle"></i> Annuler
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Azure Speech SDK for Avatar -->
+{% if agent.avatar_enabled %}
+<script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
+{% endif %}
+
+<script>
+    // ============================================
+    // VOICE SESSION CLIENT (v1.4 - Cache Fix)
+    // Cache buster: {{ cache_buster or '0' }}
+    // ============================================
+
+    console.log('🔧 Script Version: 1.9.1 - UI: Flat buttons at top, modern colorful design, 16:9 format fix');
+    console.log('📅 Loaded at:', new Date().toISOString());
+    console.log('🔑 Cache buster:', '{{ cache_buster or "0" }}');
+
+    let websocket = null;
+    let isRecording = false;
+    let mediaRecorder = null;
+    let audioContext = null;
+    let audioChunks = [];
+    window.callId = null; // ID unique pour cette session d'appel (global pour accès par les tools)
+    let sessionTokens = null; // Tokens globaux de la conversation (mis à jour par response.done)
+
+    // MediaStream combiné pour l'avatar (audio + video)
+    let avatarCombinedStream = null;
+
+    // Fonction pour générer un UUID
+    function generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    // Initialiser callId au chargement
+    // Vérifier si un call_id existe déjà dans sessionStorage (conversation en cours)
+    const existingCallId = sessionStorage.getItem('current_call_id');
+    if (existingCallId) {
+        window.callId = existingCallId;
+        console.log('📞 Call ID récupéré (conversation en cours):', window.callId);
+    } else {
+        window.callId = generateUUID();
+        sessionStorage.setItem('current_call_id', window.callId);
+        console.log('📞 Call ID généré (nouvelle conversation):', window.callId);
+    }
+
+    // Agent Configuration
+    const agentConfig = {
+        agentId: '{{ agent.agent_id }}',
+        agentName: '{{ agent.agent_name }}',
+        modelId: '{{ agent.model_id }}',
+        websocketUrl: '{{ agent.websocket_url | safe }}',
+        modalities: {{ agent.modalities | tojson | safe }},
+        voice: {
+            name: '{{ agent.voice.name }}',
+            rate: parseFloat('{{ agent.voice.rate }}'),
+            temperature: parseFloat('{{ agent.voice.temperature }}')
+        },
+        instructions: `{{ agent.instructions | replace('\n', '\\n') | replace('"', '\\"') }}`,
+        tools: {{ agent.tools | tojson }},
+        temperature: parseFloat('{{ agent.temperature }}'),
+        maxTokens: parseInt('{{ agent.max_tokens }}'),
+        avatarEnabled: {{ 'true' if agent.avatar_enabled else 'false' }}{% if agent.avatar_enabled %},
+        avatarConfig: {
+            character: '{{ agent.avatar_config.character }}',
+            style: '{{ agent.avatar_config.style }}',
+            backgroundColor: '{{ agent.avatar_config.background_color or "#FFFFFF" }}',
+            backgroundImage: '{{ agent.avatar_config.background_image or "" }}'
+        },
+        speechKey: '{{ agent.speech_key }}',
+        speechRegion: '{{ agent.speech_region }}'{% endif %}
+    };
+
+    console.log('🤖 Agent Configuration:', agentConfig);
+
+    // ============================================
+    // CONVERSATION PERSISTENCE
+    // ============================================
+
+    async function saveMessageToCosmosDB(messageType, content, metadata = {}) {
+        try {
+            const payload = {
+                call_id: window.callId,
+                agent_id: agentConfig.agentId,
+                message_type: messageType,
+                content: content,
+                metadata: metadata,
+                model: agentConfig.modelId  // Ajouter le model pour le calcul des coûts
+            };
+            
+            console.log('💾 Sauvegarde message - model:', agentConfig.modelId);
+            
+            const response = await fetch('/agents/api/conversation/save-message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                console.warn('⚠️ Failed to save message to Cosmos DB:', response.status);
+            }
+        } catch (error) {
+            console.error('❌ Error saving message to Cosmos DB:', error);
+        }
+    }
+
+    async function endConversationInCosmosDB(toolsUsed = []) {
+        try {
+            const requestBody = {
+                call_id: window.callId,
+                tools_used: toolsUsed
+            };
+            
+            // Ajouter les tokens si disponibles
+            if (sessionTokens) {
+                requestBody.tokens = sessionTokens;
+                console.log('📊 Sending tokens for cost calculation:', sessionTokens);
+            } else {
+                console.warn('⚠️ No tokens captured - costs will be estimated');
+            }
+            
+            const response = await fetch('/agents/api/conversation/end', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                console.warn('⚠️ Failed to end conversation in Cosmos DB:', response.status);
+            } else {
+                const result = await response.json();
+                console.log('✅ Conversation ended in Cosmos DB');
+                console.log('📊 Analysis results:', result.data);
+            }
+        } catch (error) {
+            console.error('❌ Error ending conversation in Cosmos DB:', error);
+        }
+    }
+
+    // ============================================
+    // CONNECTION MANAGEMENT
+    // ============================================
+
+    function startNewConversation() {
+        console.log('🆕 Starting NEW conversation...');
+        
+        // Générer un nouveau call_id
+        window.callId = generateUUID();
+        sessionStorage.setItem('current_call_id', window.callId);
+        console.log('📞 New Call ID generated:', window.callId);
+        
+        // Effacer l'affichage
+        document.getElementById('conversationDisplay').innerHTML = '';
+        
+        // Démarrer la conversation
+        startConversation();
+    }
+
+    // ============================================
+    // AZURE AVATAR INTEGRATION
+    // ============================================
+
+    let avatarSynthesizer = null;
+    let peerConnection = null;
+    let sdpSent = false; // Flag pour éviter d'envoyer le SDP plusieurs fois
+    let serverIceServers = null; // ICE servers fournis par Azure via session.updated
+
+    // NEW: Initialize WebRTC peer connection only (no offer yet)
+    async function initializeAvatarWebRTC() {
+        if (!agentConfig.avatarEnabled) {
+            console.log('ℹ️ Avatar not enabled for this agent');
+            return;
+        }
+
+        if (peerConnection) {
+            console.log('ℹ️ WebRTC peer connection already exists');
+            return;
+        }
+
+        try {
+            console.log('🎭 Initializing WebRTC peer connection...');
+
+            const avatarContainer = document.getElementById('avatarContainer');
+            if (!avatarContainer) {
+                console.error('❌ Avatar container not found');
+                return;
+            }
+
+            // Préparer le container pour la vidéo avatar
+            avatarContainer.innerHTML = `
+                <video id="avatarVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: contain; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></video>
+            `;
+
+            // Créer la connexion WebRTC avec les ICE servers du serveur Azure
+            // Utiliser les ICE servers fournis par Azure (reçus via session.updated)
+            // ou fallback sur Google STUN si non disponible
+            const iceServers = serverIceServers && serverIceServers.length > 0
+                ? serverIceServers
+                : [{ urls: 'stun:stun.l.google.com:19302' }];
+
+            console.log('🧊 Using ICE servers:', iceServers);
+
+            peerConnection = new RTCPeerConnection({
+                iceServers: iceServers
+            });
+
+            // Add transceivers to receive audio and video from avatar
+            peerConnection.addTransceiver('audio', { direction: 'recvonly' });
+            peerConnection.addTransceiver('video', { direction: 'recvonly' });
+            console.log('✅ Added audio and video transceivers (recvonly)');
+
+            // Gérer les événements
+            peerConnection.ontrack = (event) => {
+                console.log('🎬 Received track:', event.track.kind, 'streams:', event.streams.length);
+
+                const videoElement = document.getElementById('avatarVideo');
+
+                // Azure envoie audio et vidéo dans des streams SÉPARÉS
+                // Il faut les combiner dans un seul MediaStream
+                if (!avatarCombinedStream) {
+                    avatarCombinedStream = new MediaStream();
+                    console.log('🎭 Created combined MediaStream for avatar');
+                }
+
+                // Ajouter le track au stream combiné
+                avatarCombinedStream.addTrack(event.track);
+                console.log(`➕ Added ${event.track.kind} track to combined stream`);
+
+                // Log l'état actuel du stream combiné
+                const audioTracks = avatarCombinedStream.getAudioTracks();
+                const videoTracks = avatarCombinedStream.getVideoTracks();
+                console.log(`📊 Combined stream now has: ${audioTracks.length} audio, ${videoTracks.length} video`);
+
+                // Attacher le stream combiné à l'élément vidéo
+                if (videoElement) {
+                    videoElement.srcObject = avatarCombinedStream;
+                    videoElement.muted = false;
+                    videoElement.volume = 1.0;
+
+                    // Si on a reçu le track vidéo, démarrer la lecture
+                    if (event.track.kind === 'video') {
+                        console.log('📹 Video track received - starting playback');
+                        videoElement.play().then(() => {
+                            console.log('✅ Avatar video playing with WebRTC audio (volume: 1.0)');
+                            console.log(`🔊 Final audio tracks: ${audioTracks.length}`);
+                            audioTracks.forEach((track, i) => {
+                                console.log(`   Audio track ${i}: enabled=${track.enabled}, muted=${track.muted}, readyState=${track.readyState}`);
+                            });
+                            console.log(`📹 Final video tracks: ${videoTracks.length}`);
+                            videoTracks.forEach((track, i) => {
+                                console.log(`   Video track ${i}: enabled=${track.enabled}, muted=${track.muted}, readyState=${track.readyState}`);
+                            });
+                        }).catch(e => {
+                            console.error('❌ Video autoplay blocked:', e.message);
+                            const audioControlButton = document.getElementById('audioControlButton');
+                            if (audioControlButton) {
+                                audioControlButton.style.display = 'block';
+                            }
+                        });
+                    } else if (event.track.kind === 'audio') {
+                        console.log('🔊 Audio track added to combined stream');
+                    }
+                }
+            };
+
+            peerConnection.onicecandidate = (event) => {
+                console.log('🧊 ICE candidate event:', event.candidate ? 'candidate' : 'gathering complete');
+            };
+
+            peerConnection.onicegatheringstatechange = () => {
+                console.log('🧊 ICE gathering state:', peerConnection.iceGatheringState);
+            };
+
+            peerConnection.oniceconnectionstatechange = () => {
+                console.log('🧊 ICE connection state:', peerConnection.iceConnectionState);
+            };
+
+            peerConnection.onconnectionstatechange = () => {
+                console.log('🔗 Connection state:', peerConnection.connectionState);
+            };
+
+            console.log('✅ WebRTC peer connection initialized (waiting for server SDP)');
+
+        } catch (error) {
+            console.error('❌ Error initializing WebRTC:', error);
+        }
+    }
+
+    // OLD function - kept for backwards compatibility but simplified
+    async function initializeAvatar() {
+        if (!agentConfig.avatarEnabled) {
+            console.log('ℹ️ Avatar not enabled for this agent');
+            return;
+        }
+
+        try {
+            console.log('🎭 Initializing Azure Avatar...', agentConfig.avatarConfig);
+            
+            // Réinitialiser le flag SDP pour cette nouvelle connexion
+            sdpSent = false;
+            
+            const avatarContainer = document.getElementById('avatarContainer');
+            if (!avatarContainer) {
+                console.error('❌ Avatar container not found');
+                return;
+            }
+
+            // Préparer le container pour la vidéo avatar
+            avatarContainer.innerHTML = `
+                <video id="avatarVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: contain; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></video>
+            `;
+            
+            // Créer la connexion WebRTC avec les ICE servers du serveur Azure
+            console.log('🎭 Creating WebRTC peer connection for avatar...');
+
+            // Utiliser les ICE servers fournis par Azure (reçus via session.updated)
+            // ou fallback sur Google STUN si non disponible
+            const iceServers = serverIceServers && serverIceServers.length > 0
+                ? serverIceServers
+                : [{ urls: 'stun:stun.l.google.com:19302' }];
+
+            console.log('🧊 Using ICE servers:', iceServers);
+
+            peerConnection = new RTCPeerConnection({
+                iceServers: iceServers
+            });
+
+            // Add transceivers to receive audio and video from avatar
+            // This is REQUIRED for Azure Voice Live Avatar WebRTC
+            peerConnection.addTransceiver('audio', { direction: 'recvonly' });
+            peerConnection.addTransceiver('video', { direction: 'recvonly' });
+            console.log('✅ Added audio and video transceivers (recvonly)');
+
+            // Gérer les événements
+            peerConnection.ontrack = (event) => {
+                console.log('🎬 Received track:', event.track.kind, 'streams:', event.streams.length);
+
+                const videoElement = document.getElementById('avatarVideo');
+
+                // Azure envoie audio et vidéo dans des streams SÉPARÉS
+                // Il faut les combiner dans un seul MediaStream
+                if (!avatarCombinedStream) {
+                    avatarCombinedStream = new MediaStream();
+                    console.log('🎭 Created combined MediaStream for avatar');
+                }
+
+                // Ajouter le track au stream combiné
+                avatarCombinedStream.addTrack(event.track);
+                console.log(`➕ Added ${event.track.kind} track to combined stream`);
+
+                // Log l'état actuel du stream combiné
+                const audioTracks = avatarCombinedStream.getAudioTracks();
+                const videoTracks = avatarCombinedStream.getVideoTracks();
+                console.log(`📊 Combined stream now has: ${audioTracks.length} audio, ${videoTracks.length} video`);
+
+                // Attacher le stream combiné à l'élément vidéo
+                if (videoElement) {
+                    videoElement.srcObject = avatarCombinedStream;
+                    videoElement.muted = false;
+                    videoElement.volume = 1.0;
+
+                    // Si on a reçu le track vidéo, démarrer la lecture
+                    if (event.track.kind === 'video') {
+                        console.log('📹 Video track received - starting playback');
+                        videoElement.play().then(() => {
+                            console.log('✅ Avatar video playing with WebRTC audio (volume: 1.0)');
+                            console.log(`🔊 Final audio tracks: ${audioTracks.length}`);
+                            audioTracks.forEach((track, i) => {
+                                console.log(`   Audio track ${i}: enabled=${track.enabled}, muted=${track.muted}, readyState=${track.readyState}`);
+                            });
+                            console.log(`📹 Final video tracks: ${videoTracks.length}`);
+                            videoTracks.forEach((track, i) => {
+                                console.log(`   Video track ${i}: enabled=${track.enabled}, muted=${track.muted}, readyState=${track.readyState}`);
+                            });
+                        }).catch(e => {
+                            console.error('❌ Video autoplay blocked:', e.message);
+                            console.log('⚠️ Affichage du bouton pour activer l\'audio');
+
+                            // Afficher le bouton d'activation audio
+                            const audioControlButton = document.getElementById('audioControlButton');
+                            if (audioControlButton) {
+                                audioControlButton.style.display = 'block';
+                            }
+
+                            // Essayer de jouer après un clic utilisateur
+                            document.addEventListener('click', () => {
+                                videoElement.play().then(() => {
+                                    console.log('✅ Video playing after user interaction');
+                                    if (audioControlButton) {
+                                        audioControlButton.style.display = 'none';
+                                    }
+                                });
+                            }, { once: true });
+                        });
+                    } else if (event.track.kind === 'audio') {
+                        console.log('🔊 Audio track added to combined stream');
+                    }
+                }
+            };
+
+            peerConnection.onicecandidate = (event) => {
+                console.log('🧊 ICE candidate event:', event.candidate ? 'candidate' : 'gathering complete');
+            };
+
+            peerConnection.onicegatheringstatechange = () => {
+                console.log('🧊 ICE gathering state:', peerConnection.iceGatheringState);
+                
+                // Lorsque tous les ICE candidates sont collectés, envoyer le SDP
+                if (peerConnection.iceGatheringState === 'complete' && !sdpSent) {
+                    sdpSent = true;
+                    sendAvatarConnect();
+                }
+            };
+            
+            // Timeout de sécurité : envoyer après 3 secondes même si ICE gathering pas terminé
+            setTimeout(() => {
+                if (peerConnection && peerConnection.iceGatheringState !== 'complete' && !sdpSent) {
+                    console.log('⏱️ ICE gathering timeout - sending SDP anyway with', peerConnection.iceGatheringState);
+                    sdpSent = true;
+                    sendAvatarConnect();
+                }
+            }, 3000);
+
+            peerConnection.oniceconnectionstatechange = () => {
+                console.log('🧊 ICE connection state:', peerConnection.iceConnectionState);
+            };
+
+            peerConnection.onconnectionstatechange = () => {
+                console.log('🔗 Connection state:', peerConnection.connectionState);
+            };
+
+            // Créer une offre WebRTC
+            console.log('🎭 Creating WebRTC offer...');
+            const offer = await peerConnection.createOffer({
+                offerToReceiveAudio: true,
+                offerToReceiveVideo: true
+            });
+            await peerConnection.setLocalDescription(offer);
+            console.log('✅ Local description set, waiting for ICE gathering...');
+            
+        } catch (error) {
+            console.error('❌ Error initializing avatar:', error);
+            const avatarContainer = document.getElementById('avatarContainer');
+            if (avatarContainer) {
+                avatarContainer.innerHTML = `
+                    <div style="text-align: center; color: white; padding: 20px;">
+                        <i class="bi bi-exclamation-triangle" style="font-size: 60px; opacity: 0.8; margin-bottom: 20px; display: block;"></i>
+                        <p style="font-size: 16px; opacity: 0.9;">Erreur d'initialisation de l'avatar</p>
+                        <p style="font-size: 12px; opacity: 0.7;">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    async function sendAvatarConnect() {
+        if (!peerConnection || !websocket || websocket.readyState !== WebSocket.OPEN) {
+            console.error('❌ Cannot send avatar connect: connection not ready');
+            return;
+        }
+
+        try {
+            const localDescription = peerConnection.localDescription;
+            if (!localDescription) {
+                console.error('❌ No local description available');
+                return;
+            }
+
+            // Azure expects client_sdp as base64-encoded JSON object
+            // Format: base64(JSON.stringify({"type": "offer", "sdp": "..."}))
+            // Reference: https://github.com/MSFT-Innovation-Hub-India/VoiceAgent-Avatar-Retail
+            
+            const sdpPayload = {
+                type: localDescription.type,  // "offer"
+                sdp: localDescription.sdp     // Plain text SDP
+            };
+            
+            const jsonString = JSON.stringify(sdpPayload);
+            const base64Encoded = btoa(jsonString);
+            
+            console.log('📤 Sending session.avatar.connect with client SDP...');
+            console.log('🔍 SDP type:', localDescription.type);
+            console.log('🔍 Original SDP length:', localDescription.sdp.length);
+            console.log('🔍 JSON payload length:', jsonString.length);
+            console.log('🔍 Base64 encoded length:', base64Encoded.length);
+            console.log('🔍 First 100 chars of JSON:', jsonString.substring(0, 100));
+            
+            websocket.send(JSON.stringify({
+                type: 'session.avatar.connect',
+                client_sdp: base64Encoded  // Base64-encoded JSON object
+            }));
+        } catch (error) {
+            console.error('❌ Error sending avatar connect:', error);
+        }
+    }
+
+    function stopAvatar() {
+        if (avatarSynthesizer) {
+            avatarSynthesizer.close();
+            avatarSynthesizer = null;
+        }
+        if (peerConnection) {
+            peerConnection.close();
+            peerConnection = null;
+        }
+        // Réinitialiser le stream combiné
+        if (avatarCombinedStream) {
+            avatarCombinedStream.getTracks().forEach(track => track.stop());
+            avatarCombinedStream = null;
+        }
+    }
+
+    // Fonction pour activer manuellement l'audio de l'avatar
+    window.enableAvatarAudio = function() {
+        const videoElement = document.getElementById('avatarVideo');
+        const audioControlButton = document.getElementById('audioControlButton');
+        
+        if (videoElement) {
+            videoElement.muted = false;
+            videoElement.volume = 1.0;
+            
+            videoElement.play().then(() => {
+                console.log('✅ Audio activé manuellement - volume:', videoElement.volume);
+                if (audioControlButton) {
+                    audioControlButton.style.display = 'none';
+                }
+            }).catch(e => {
+                console.error('❌ Erreur lors de l\'activation audio:', e);
+            });
+        }
+    }
+
+    // ============================================
+    // AVATAR WEBRTC HANDLING
+    // ============================================
+
+    async function handleAvatarConnecting(serverSdp) {
+        try {
+            console.log('🎭 Received session.avatar.connecting with server SDP');
+            console.log('🔍 Server SDP type:', typeof serverSdp);
+            console.log('🔍 Server SDP length:', serverSdp ? serverSdp.length : 0);
+            
+            if (!peerConnection) {
+                console.error('❌ No peer connection available');
+                return;
+            }
+
+            if (!serverSdp) {
+                console.error('❌ No server SDP received');
+                return;
+            }
+
+            // Azure sends server_sdp as base64-encoded JSON: {"type": "answer", "sdp": "..."}
+            // Reference: https://github.com/MSFT-Innovation-Hub-India/VoiceAgent-Avatar-Retail
+            
+            try {
+                // Decode base64 to JSON string
+                const jsonString = atob(serverSdp);
+                console.log('✅ Base64 decoded, JSON length:', jsonString.length);
+                console.log('🔍 First 100 chars of JSON:', jsonString.substring(0, 100));
+                
+                // Parse JSON to get type and sdp
+                const sdpPayload = JSON.parse(jsonString);
+                console.log('✅ JSON parsed, type:', sdpPayload.type, 'SDP length:', sdpPayload.sdp ? sdpPayload.sdp.length : 0);
+                
+                // Set remote description with the decoded SDP
+                await peerConnection.setRemoteDescription(new RTCSessionDescription({
+                    type: sdpPayload.type || 'answer',
+                    sdp: sdpPayload.sdp
+                }));
+
+                console.log('✅ Avatar WebRTC connection established');
+                
+                // Debug: vérifier l'état de l'élément vidéo
+                setTimeout(() => {
+                    const videoElement = document.getElementById('avatarVideo');
+                    if (videoElement) {
+                        console.log('🔍 Video element state:');
+                        console.log('  - srcObject:', videoElement.srcObject ? 'set' : 'NOT SET');
+                        console.log('  - muted:', videoElement.muted);
+                        console.log('  - volume:', videoElement.volume);
+                        console.log('  - paused:', videoElement.paused);
+                        console.log('  - readyState:', videoElement.readyState);
+                        if (videoElement.srcObject) {
+                            const tracks = videoElement.srcObject.getTracks();
+                            console.log('  - tracks:', tracks.length);
+                            tracks.forEach(track => {
+                                console.log(`    - ${track.kind}: enabled=${track.enabled}, muted=${track.muted}, readyState=${track.readyState}`);
+                            });
+                        }
+                    }
+                }, 1000);
+                
+            } catch (decodeError) {
+                console.error('❌ Failed to decode server SDP:', decodeError);
+                console.error('❌ Raw server SDP:', serverSdp.substring(0, 200));
+            }
+
+        } catch (error) {
+            console.error('❌ Error handling avatar connecting:', error);
+            console.error('❌ Error details:', error.message, error.stack);
+        }
+    }
+
+    // ============================================
+    // CONVERSATION CONTROL
+    // ============================================
+
+    async function startConversation() {
+        console.log('🎙️ Starting conversation...');
+        
+        try {
+            // Reset audio playback timing
+            nextPlaybackTime = 0;
+            
+            // Initialize audio context (must be done after user gesture)
+            if (!playbackContext) {
+                playbackContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+                console.log('🎵 AudioContext created on user click - state:', playbackContext.state);
+            }
+            
+            // Resume if suspended (browser autoplay policy)
+            if (playbackContext.state === 'suspended') {
+                await playbackContext.resume();
+                console.log('▶️ AudioContext resumed - state:', playbackContext.state);
+            }
+            
+            // Update UI
+            updateConnectionStatus('connecting', 'Connexion...');
+            document.getElementById('startButton').style.display = 'none';
+            document.getElementById('stopButton').style.display = 'block';
+
+            // Connect to WebSocket first
+            // Avatar will be initialized after session.created event
+            await connectWebSocket();
+
+            // Start audio recording
+            await startAudioRecording();
+
+            addMessage('system', 'Connexion établie. Parlez maintenant...');
+            updateConnectionStatus('connected', 'Connecté');
+
+        } catch (error) {
+            console.error('❌ Error starting conversation:', error);
+            addMessage('system', 'Erreur de connexion: ' + error.message);
+            updateConnectionStatus('disconnected', 'Erreur');
+            resetUI();
+        }
+    }
+
+    function stopConversation() {
+        console.log('🛑 Stopping conversation...');
+
+        // Stop avatar if enabled
+        stopAvatar();
+
+        // Close WebSocket
+        if (websocket) {
+            websocket.close();
+            websocket = null;
+        }
+
+        // Stop audio recording
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+        }
+
+        // Stop audio visualizer
+        stopAudioVisualizer();
+
+        // Stop and reset audio playback context to prevent audio overlap
+        stopAllAudio();
+        currentResponseId = null;
+
+        // Terminer la conversation dans Cosmos DB
+        endConversationInCosmosDB();
+
+        // 🗑️ Effacer le call_id pour permettre une nouvelle conversation
+        sessionStorage.removeItem('current_call_id');
+        console.log('🗑️ Call ID cleared - prêt pour nouvelle conversation');
+
+        addMessage('system', 'Conversation terminée.');
+        updateConnectionStatus('disconnected', 'Déconnecté');
+        resetUI();
+    }
+
+    async function connectWebSocket() {
+        return new Promise((resolve, reject) => {
+            console.log('🔌 Connecting to:', agentConfig.websocketUrl);
+
+            websocket = new WebSocket(agentConfig.websocketUrl);
+
+            websocket.onopen = () => {
+                console.log('✅ WebSocket connected');
+
+                // Send session configuration
+                const sessionConfig = {
+                    type: 'session.update',
+                    session: {
+                        modalities: ["text", "audio"],  // Avatar is configured separately in session.avatar
+                        instructions: agentConfig.instructions,
+                        voice: {
+                            name: agentConfig.voice.name
+                        },
+                        // Temperature must be 1 (default) for avatar models
+                        // Don't specify it to use default
+                        max_response_output_tokens: agentConfig.maxTokens,
+                        input_audio_transcription: {
+                            model: 'whisper-1'
+                        },
+                        turn_detection: {
+                            type: 'server_vad',
+                            threshold: 0.5,
+                            prefix_padding_ms: 300,
+                            silence_duration_ms: 500
+                        },
+                        output_audio_timestamp_types: ['word'],
+                        animation: {
+                            outputs: ['viseme_id']
+                        }
+                    }
+                };
+
+                // Add avatar configuration if enabled
+                if (agentConfig.avatarEnabled && agentConfig.avatarConfig) {
+                    console.log('🎭 Adding avatar configuration to session...');
+                    console.log('🎭 Avatar character:', agentConfig.avatarConfig.character);
+                    console.log('🎭 Avatar style:', agentConfig.avatarConfig.style);
+                    
+                    // Valeurs par défaut si vides
+                    const avatarCharacter = agentConfig.avatarConfig.character || 'lisa';
+                    const avatarStyle = agentConfig.avatarConfig.style || 'casual-sitting';
+                    
+                    // Structure complète selon la documentation Azure
+                    // NOTE: Ne PAS inclure ice_servers ici - Azure les fournit via session.updated
+                    sessionConfig.session.avatar = {
+                        character: avatarCharacter,
+                        style: avatarStyle,
+                        customized: agentConfig.avatarConfig.customized || false,
+                        // ice_servers: REMOVED - Azure provides these in session.updated
+                        video: {
+                            codec: agentConfig.avatarConfig.video?.codec || 'h264',
+                            bitrate: agentConfig.avatarConfig.video?.bitrate || 2000000,
+                            resolution: agentConfig.avatarConfig.video?.resolution || {
+                                width: 1920,
+                                height: 1080
+                            },
+                            crop: agentConfig.avatarConfig.video?.crop || {
+                                top_left: [560, 0],
+                                bottom_right: [1360, 1080]
+                            },
+                            background: {}
+                        }
+                    };
+                    
+                    // Ajouter l'image de fond si fournie, sinon la couleur
+                    if (agentConfig.avatarConfig.backgroundImage) {
+                        sessionConfig.session.avatar.video.background.image_url = agentConfig.avatarConfig.backgroundImage;
+                    } else {
+                        sessionConfig.session.avatar.video.background.color = agentConfig.avatarConfig.backgroundColor || '#00FF00FF';
+                    }
+                    
+                    console.log('🎭 Avatar config added (full format):', sessionConfig.session.avatar);
+                }
+
+                // Add custom_lexicon_url to voice if it exists and is not empty
+                if (agentConfig.voice.custom_lexicon_url && agentConfig.voice.custom_lexicon_url.trim() !== '') {
+                    sessionConfig.session.voice.custom_lexicon_url = agentConfig.voice.custom_lexicon_url;
+                }
+
+                // Add tools if any
+                if (agentConfig.tools && agentConfig.tools.length > 0) {
+                    sessionConfig.session.tools = agentConfig.tools;
+                    console.log(`🔧 Adding ${agentConfig.tools.length} tools to session`);
+                }
+
+                // Log config summary instead of full JSON (can be huge with tools)
+                console.log('📤 Sending session config:');
+                console.log('   - Modalities:', sessionConfig.session.modalities);
+                console.log('   - Voice:', sessionConfig.session.voice.name);
+                console.log('   - Max tokens:', sessionConfig.session.max_response_output_tokens);
+                console.log('   - Tools:', agentConfig.tools ? agentConfig.tools.length : 0);
+                console.log('   - Avatar enabled:', !!sessionConfig.session.avatar);
+                if (sessionConfig.session.avatar) {
+                    console.log('   - Avatar character:', sessionConfig.session.avatar.character);
+                    console.log('   - Avatar style:', sessionConfig.session.avatar.style);
+                }
+
+                // Calculate payload size
+                const payload = JSON.stringify(sessionConfig);
+                console.log(`   - Payload size: ${payload.length} bytes (${(payload.length / 1024).toFixed(2)} KB)`);
+
+                // Send configuration
+                websocket.send(payload);
+                console.log('📤 Session config sent');
+
+                resolve();
+            };
+
+            websocket.onerror = (error) => {
+                console.error('❌ WebSocket error:', error);
+                console.error('❌ Error details:', {
+                    type: error.type,
+                    message: error.message,
+                    target: error.target ? {
+                        url: error.target.url,
+                        readyState: error.target.readyState,
+                        protocol: error.target.protocol
+                    } : null
+                });
+                reject(new Error('WebSocket connection failed'));
+            };
+
+            websocket.onclose = (event) => {
+                console.log('🔌 WebSocket disconnected');
+                console.log('🔍 Close details:', {
+                    code: event.code,
+                    reason: event.reason || '(no reason provided)',
+                    wasClean: event.wasClean
+                });
+
+                // Common WebSocket close codes:
+                // 1000 = Normal closure
+                // 1001 = Going away
+                // 1006 = Abnormal closure (no close frame)
+                // 1008 = Policy violation
+                // 1011 = Server error
+                if (event.code !== 1000) {
+                    console.error(`⚠️ Abnormal close code: ${event.code}`);
+                }
+
+                updateConnectionStatus('disconnected', 'Déconnecté');
+            };
+
+            websocket.onmessage = handleWebSocketMessage;
+
+            // Timeout after 10 seconds
+            setTimeout(() => {
+                if (websocket && websocket.readyState !== WebSocket.OPEN) {
+                    reject(new Error('Connection timeout'));
+                }
+            }, 10000);
+        });
+    }
+
+    // Stocker les function calls en attente
+    let pendingFunctionCalls = new Map();
+
+    async function handleWebSocketMessage(event) {
+        try {
+            const message = JSON.parse(event.data);
+            
+            // Logger tous les messages avec leurs détails pour debug
+            if (message.type.includes('function_call') || message.type.includes('output_item') || message.type === 'error') {
+                console.log('📥 WebSocket message:', message.type, message);
+            } else {
+                console.log('📥 WebSocket message:', message.type);
+            }
+
+            switch (message.type) {
+            case 'session.created':
+                console.log('✅ Session created:', message.session);
+                console.log('🔍 Session details:');
+                console.log('   - Model:', message.session.model);
+                console.log('   - Modalities:', message.session.modalities);
+                console.log('   - Avatar in session?', 'avatar' in message.session);
+                if (message.session.avatar) {
+                    console.log('   - Avatar config:', message.session.avatar);
+                }
+
+                // Now that session is created, initialize avatar if enabled
+                // NOTE: We DON'T initialize WebRTC here!
+                // We wait for the server to send session.avatar.connecting first
+                if (agentConfig.avatarEnabled) {
+                    console.log('🎭 Avatar enabled, waiting for server SDP...');
+                    console.log('⏳ Waiting for session.avatar.connecting event...');
+                }
+                break;
+
+            case 'response.audio.delta':
+                // Si avatar activé, l'audio vient du WebRTC stream, pas des audio chunks
+                if (agentConfig.avatarEnabled && peerConnection) {
+                    // Avatar audio comes through WebRTC - skip audio.delta chunks
+                    console.log('🎭 Avatar enabled - skipping audio.delta (using WebRTC audio)');
+                    break;
+                }
+
+                // Play audio response from agent IMMÉDIATEMENT (non-avatar mode)
+                // Ignorer les chunks des anciennes réponses
+                if (message.response_id === currentResponseId) {
+                    playAudioChunk(message.delta, message.response_id);
+                } else {
+                    console.log(`🚫 Ignoring audio from old response: ${message.response_id}`);
+                }
+                break;
+
+            case 'response.audio_transcript.delta':
+                // Display agent's spoken text
+                console.log('📝 Transcript delta:', message.delta);
+                if (message.delta && message.delta !== '<|audio_text|>') {
+                    addOrUpdateMessage('agent', message.delta, message.response_id);
+                }
+                break;
+
+            case 'response.audio_transcript.done':
+                // Save complete agent response to Cosmos DB
+                console.log('📝 Transcript done:', message.transcript);
+                if (message.transcript && message.transcript !== '<|audio_text|>') {
+                    saveMessageToCosmosDB('agent', message.transcript);
+                }
+                break;
+
+            case 'response.text.delta':
+                // Display agent's text response (for realtime models)
+                console.log('📝 Text delta:', message.delta);
+                if (message.delta) {
+                    // Vérifier si c'est du JSON
+                    let textToDisplay = message.delta;
+                    try {
+                        const parsed = JSON.parse(message.delta);
+                        if (parsed.message) {
+                            textToDisplay = parsed.message;
+                        }
+                    } catch (e) {
+                        // Pas du JSON, garder le texte brut
+                    }
+                    addOrUpdateMessage('agent', textToDisplay, message.response_id);
+                }
+                break;
+
+            case 'response.text.done':
+                // Save complete text response to Cosmos DB
+                console.log('📝 Text done:', message.text);
+                if (message.text) {
+                    // Vérifier si c'est du JSON
+                    let textToSave = message.text;
+                    try {
+                        const parsed = JSON.parse(message.text);
+                        if (parsed.message) {
+                            textToSave = parsed.message;
+                        }
+                    } catch (e) {
+                        // Pas du JSON, garder le texte brut
+                    }
+                    saveMessageToCosmosDB('agent', textToSave);
+                }
+                break;
+
+            case 'conversation.item.input_audio_transcription.completed':
+                // Display user's transcribed speech
+                console.log('📝 User transcript:', message.transcript);
+                if (message.transcript && message.transcript !== '<|audio_text|>') {
+                    // addMessage('user', message.transcript); // Désactivé - vidéo seulement
+                    // Save user message to Cosmos DB
+                    saveMessageToCosmosDB('user', message.transcript);
+                }
+                break;
+
+            case 'response.output_item.added':
+                // Capturer le response_id de la nouvelle réponse
+                if (message.response_id && message.response_id !== currentResponseId) {
+                    currentResponseId = message.response_id;
+                    console.log('🆕 New response starting:', currentResponseId);
+                }
+                
+                // Capturer le nom du tool pour les function calls
+                if (message.item && message.item.type === 'function_call') {
+                    const callId = message.item.call_id;
+                    const toolName = message.item.name;
+                    
+                    // Initialiser la function call avec le nom correct
+                    if (!pendingFunctionCalls.has(callId)) {
+                        pendingFunctionCalls.set(callId, {
+                            name: toolName,
+                            arguments: ''
+                        });
+                    } else {
+                        pendingFunctionCalls.get(callId).name = toolName;
+                    }
+                    
+                    console.log('🔧 Tool call detected:', toolName);
+                    // addMessage('system', `🔧 Utilisation de l'outil: ${toolName}...`); // Désactivé - vidéo seulement
+                }
+                break;
+
+            case 'response.created':
+                // Nouvelle réponse commence - arrêter l'ancien audio
+                console.log('🆕 New response created');
+                stopAllAudio();
+                break;
+
+            case 'input_audio_buffer.speech_started':
+                // L'utilisateur commence à parler - arrêter l'audio de l'IA
+                console.log('🎤 User started speaking - stopping AI audio');
+                stopAllAudio();
+                break;
+
+            case 'response.cancelled':
+                // La réponse a été annulée (interruption) - arrêter l'audio
+                console.log('🚫 Response cancelled - stopping audio');
+                stopAllAudio();
+                break;
+
+            case 'response.function_call_arguments.delta':
+                // Accumuler les arguments de la function call
+                if (!pendingFunctionCalls.has(message.call_id)) {
+                    pendingFunctionCalls.set(message.call_id, {
+                        name: 'unknown',
+                        arguments: ''
+                    });
+                }
+                pendingFunctionCalls.get(message.call_id).arguments += message.delta;
+                break;
+
+            case 'response.function_call_arguments.done':
+                // Exécuter la function call
+                if (pendingFunctionCalls.has(message.call_id)) {
+                    const functionCall = pendingFunctionCalls.get(message.call_id);
+                    console.log('🔧 Tool call done:', functionCall.name, functionCall.arguments);
+                    executeToolCall(message.call_id, functionCall.name, functionCall.arguments);
+                    pendingFunctionCalls.delete(message.call_id);
+                }
+                break;
+
+            case 'response.done':
+                // Log complet pour debug
+                console.log('📊 Response.done complete:', JSON.stringify(message, null, 2));
+                
+                // Extraire la transcription de la réponse si disponible
+                if (message.response && message.response.output) {
+                    for (const item of message.response.output) {
+                        if (item.type === 'message' && item.content) {
+                            for (const content of item.content) {
+                                if (content.type === 'audio' && content.transcript) {
+                                    console.log('📝 Transcript from response.done:', content.transcript);
+                                    if (content.transcript !== '<|audio_text|>') {
+                                        // Sauvegarder le transcript complet
+                                        saveMessageToCosmosDB('agent', content.transcript);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Capturer les tokens globaux de la conversation (mis à jour à chaque réponse)
+                if (message.response && message.response.usage) {
+                    sessionTokens = {
+                        inputs_text_tokens: message.response.usage.input_token_details?.text_tokens || 0,
+                        inputs_cached_tokens: message.response.usage.input_token_details?.cached_tokens || 0,
+                        inputs_audio_tokens: message.response.usage.input_token_details?.audio_tokens || 0,
+                        outputs_text_tokens: message.response.usage.output_token_details?.text_tokens || 0,
+                        outputs_audio_tokens: message.response.usage.output_token_details?.audio_tokens || 0
+                    };
+                    console.log('📊 Tokens updated from response.done:', sessionTokens);
+                }
+                break;
+
+            case 'error':
+                console.error('❌ Server error:', message.error);
+                console.error('❌ Full error message:', JSON.stringify(message, null, 2));
+
+                // Extract detailed error information
+                const errorDetails = {
+                    type: message.error?.type || 'unknown',
+                    code: message.error?.code || message.error?.status_code,
+                    message: message.error?.message || message.error?.error,
+                    param: message.error?.param,
+                    event_id: message.error?.event_id
+                };
+
+                console.error('📋 Error details:', errorDetails);
+
+                const errorMsg = message.error?.message || message.error?.error || JSON.stringify(message.error);
+                addMessage('system', 'Erreur serveur: ' + errorMsg);
+
+                // If error is related to avatar configuration, provide helpful hints
+                if (errorMsg.includes('avatar') || errorMsg.includes('character') || errorMsg.includes('style')) {
+                    console.error('💡 Hint: Avatar configuration error. Check:');
+                    console.error('   - Character name is valid (e.g., "lisa", "harry")');
+                    console.error('   - Style is valid for the character');
+                    console.error('   - Model supports avatars (gpt-5 required)');
+                }
+                break;
+
+            // Gestion des événements Avatar
+            case 'session.avatar.connecting':
+                console.log('🎭 Received session.avatar.connecting');
+                console.log('🎉 Server is ready for avatar WebRTC connection!');
+
+                // NOW we initialize WebRTC because server sent us its SDP
+                if (message.server_sdp) {
+                    console.log('📥 Received server SDP, initializing WebRTC...');
+
+                    // Initialize WebRTC peer connection first
+                    if (!peerConnection) {
+                        await initializeAvatarWebRTC();
+                    }
+
+                    // Then handle the server SDP
+                    await handleAvatarConnecting(message.server_sdp);
+                } else {
+                    console.error('❌ session.avatar.connecting received but no server_sdp provided');
+                }
+                break;
+
+            case 'session.updated':
+                console.log('✅ Session updated');
+                // Si la session contient des ice_servers, on pourrait les utiliser
+                if (message.session && message.session.avatar && message.session.avatar.ice_servers) {
+                    console.log('🧊 Server provided ICE servers:', message.session.avatar.ice_servers);
+                    serverIceServers = message.session.avatar.ice_servers;
+
+                    // NOW initialize avatar WebRTC with the server ICE servers
+                    if (agentConfig.avatarEnabled && !peerConnection) {
+                        console.log('🎭 Session updated received, initializing avatar with server ICE servers...');
+                        await initializeAvatar();
+                    }
+                }
+                break;
+
+            case 'response.animation_viseme.delta':
+                // Événements viseme pour synchronisation labiale
+                const visemeId = message.viseme_id;
+                const audioOffset = message.audio_offset_ms;
+                console.log(`👄 Viseme ${visemeId} at ${audioOffset}ms`);
+                // Ici vous pouvez ajouter une logique pour afficher le viseme
+                // ou synchroniser avec d'autres animations
+                break;
+
+            case 'response.animation_viseme.done':
+                console.log('👄 All visemes received for response:', message.response_id);
+                break;
+                
+            default:
+                console.log('ℹ️ Unhandled message type:', message.type);
+                break;
+        }
+        } catch (error) {
+            console.error('❌ Error handling WebSocket message:', error);
+            console.error('❌ Raw event data:', event.data);
+        }
+    }
+
+    // ============================================
+    // AUDIO RECORDING
+    // ============================================
+
+    async function startAudioRecording() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    channelCount: 1,
+                    sampleRate: 24000,
+                    echoCancellation: true,
+                    noiseSuppression: true
+                } 
+            });
+
+            // Use AudioContext to capture raw PCM audio
+            audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+            const source = audioContext.createMediaStreamSource(stream);
+            const processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+            source.connect(processor);
+            processor.connect(audioContext.destination);
+
+            processor.onaudioprocess = (e) => {
+                if (websocket && websocket.readyState === WebSocket.OPEN) {
+                    const inputData = e.inputBuffer.getChannelData(0);
+                    
+                    // Convert Float32 to Int16 PCM
+                    const pcmData = new Int16Array(inputData.length);
+                    for (let i = 0; i < inputData.length; i++) {
+                        const s = Math.max(-1, Math.min(1, inputData[i]));
+                        pcmData[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                    }
+                    
+                    // Ensure even length for PCM16
+                    const evenLength = pcmData.length % 2 === 0 ? pcmData.length : pcmData.length - 1;
+                    const evenPcmData = pcmData.slice(0, evenLength);
+                    
+                    // Convert to base64
+                    const base64Audio = arrayBufferToBase64(evenPcmData.buffer);
+                    
+                    websocket.send(JSON.stringify({
+                        type: 'input_audio_buffer.append',
+                        audio: base64Audio
+                    }));
+                }
+            };
+
+            startAudioVisualizer(stream);
+            console.log('🎤 Audio recording started');
+        } catch (error) {
+            console.error('❌ Error accessing microphone:', error);
+            throw new Error('Impossible d\'accéder au microphone');
+        }
+    }
+
+    // Helper function to convert ArrayBuffer to Base64
+    function arrayBufferToBase64(buffer) {
+        let binary = '';
+        const bytes = new Uint8Array(buffer);
+        const len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return window.btoa(binary);
+    }
+
+    // ============================================
+    // AUDIO VISUALIZER
+    // ============================================
+
+    function startAudioVisualizer(stream) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const analyser = audioContext.createAnalyser();
+        const microphone = audioContext.createMediaStreamSource(stream);
+        
+        microphone.connect(analyser);
+        analyser.fftSize = 64;
+        
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        const bars = document.querySelectorAll('.visualizer-bar');
+
+        function animate() {
+            if (!audioContext) return;
+
+            requestAnimationFrame(animate);
+            analyser.getByteFrequencyData(dataArray);
+
+            bars.forEach((bar, index) => {
+                const value = dataArray[index] || 0;
+                const height = (value / 255) * 40 + 10;
+                bar.style.height = height + 'px';
+                bar.classList.add('active');
+            });
+        }
+
+        animate();
+    }
+
+    function stopAudioVisualizer() {
+        if (audioContext) {
+            audioContext.close();
+            audioContext = null;
+        }
+
+        const bars = document.querySelectorAll('.visualizer-bar');
+        bars.forEach(bar => {
+            bar.style.height = '20px';
+            bar.classList.remove('active');
+        });
+    }
+
+    // ============================================
+    // AUDIO PLAYBACK WITH QUEUE
+    // ============================================
+
+    let playbackContext = null;
+    let nextPlaybackTime = 0;
+    const MAX_AUDIO_LAG = 0.5; // Limite le lag audio à 500ms
+    let activeSources = []; // Suivre toutes les sources audio actives
+    let currentResponseId = null; // ID de la réponse en cours
+    
+    // 🔥 File d'attente pour lecture séquentielle
+    let audioQueue = [];
+    let isProcessingQueue = false;
+
+    function stopAllAudio() {
+        // Arrêter toutes les sources audio en cours de lecture
+        activeSources.forEach(source => {
+            try {
+                source.stop();
+            } catch (e) {
+                // Ignore si déjà arrêté
+            }
+        });
+        activeSources = [];
+        
+        // 🔥 Vider la file d'attente
+        audioQueue = [];
+        isProcessingQueue = false;
+        
+        // FERMER et recréer le contexte audio pour vraiment tout réinitialiser
+        if (playbackContext) {
+            try {
+                playbackContext.close();
+            } catch (e) {
+                // Ignore si déjà fermé
+            }
+            playbackContext = null;
+        }
+        
+        nextPlaybackTime = 0;
+        
+        console.log('🔇 All audio stopped and context reset');
+    }
+
+    async function processAudioQueue() {
+        if (isProcessingQueue || audioQueue.length === 0) {
+            return;
+        }
+        
+        isProcessingQueue = true;
+        
+        while (audioQueue.length > 0) {
+            const { base64Audio, responseId } = audioQueue.shift();
+            
+            // Vérifier que c'est toujours la réponse actuelle
+            if (responseId !== currentResponseId) {
+                console.log(`🚫 Skipping queued audio from old response: ${responseId}`);
+                continue;
+            }
+            
+            try {
+                await playAudioChunkNow(base64Audio, responseId);
+            } catch (error) {
+                console.error('❌ Error playing audio chunk:', error);
+            }
+        }
+        
+        isProcessingQueue = false;
+    }
+
+    function playAudioChunk(base64Audio, responseId) {
+        // 🔥 Ajouter à la file d'attente au lieu de jouer immédiatement
+        audioQueue.push({ base64Audio, responseId });
+        
+        // Démarrer le traitement de la file
+        processAudioQueue();
+    }
+
+    async function playAudioChunkNow(base64Audio, responseId) {
+        return new Promise(async (resolve) => {
+            // Vérifier que c'est toujours la réponse actuelle
+            if (responseId !== currentResponseId) {
+                console.log(`🚫 Skipping audio chunk from old response: ${responseId}`);
+                resolve();
+                return;
+            }
+            
+            // Decode base64 to PCM16 audio
+            const audioData = atob(base64Audio);
+            const arrayBuffer = new ArrayBuffer(audioData.length);
+            const view = new Uint8Array(arrayBuffer);
+            
+            for (let i = 0; i < audioData.length; i++) {
+                view[i] = audioData.charCodeAt(i);
+            }
+
+            // Convert PCM16 to Float32 for Web Audio API
+            const pcm16 = new Int16Array(arrayBuffer);
+            const float32 = new Float32Array(pcm16.length);
+            for (let i = 0; i < pcm16.length; i++) {
+                float32[i] = pcm16[i] / 32768.0;
+            }
+
+            // Initialize audio context if needed
+            if (!playbackContext) {
+                playbackContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+                nextPlaybackTime = playbackContext.currentTime;
+                console.log('🎵 AudioContext created - state:', playbackContext.state);
+            }
+            
+            // Resume AudioContext if suspended (browser autoplay policy)
+            if (playbackContext.state === 'suspended') {
+                await playbackContext.resume();
+                console.log('▶️ AudioContext resumed - state:', playbackContext.state);
+            }
+
+            // Create audio buffer
+            const audioBuffer = playbackContext.createBuffer(1, float32.length, 24000);
+            audioBuffer.getChannelData(0).set(float32);
+
+            // Schedule playback sequentially
+            const source = playbackContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(playbackContext.destination);
+            
+            // Play at the next available time slot, but avoid excessive lag
+            const now = playbackContext.currentTime;
+            const startTime = Math.max(now, Math.min(nextPlaybackTime, now + MAX_AUDIO_LAG));
+            source.start(startTime);
+            
+            // Ajouter à la liste des sources actives
+            activeSources.push(source);
+            
+            // Retirer de la liste quand terminé
+            source.onended = () => {
+                const index = activeSources.indexOf(source);
+                if (index > -1) {
+                    activeSources.splice(index, 1);
+                }
+                resolve();
+            };
+            
+            // Update next playback time (current start + duration of this chunk)
+            nextPlaybackTime = startTime + audioBuffer.duration;
+            
+            console.log(`🔊 Audio chunk playing (lag: ${Math.round((startTime - now) * 1000)}ms, queue: ${audioQueue.length})`);
+        });
+    }
+
+    // ============================================
+    // TOOL EXECUTION
+    // ============================================
+
+    async function executeToolCall(callId, toolName, argumentsJson) {
+        console.log(`🔧 Executing tool: ${toolName}`);
+        console.log(`📋 Arguments JSON:`, argumentsJson);
+        
+        try {
+            // Vérifier que le nom du tool est valide
+            if (!toolName || toolName === 'unknown') {
+                throw new Error('Tool name is missing or unknown');
+            }
+            
+            const args = JSON.parse(argumentsJson);
+            console.log(`📦 Parsed arguments:`, args);
+            
+            // Injecter automatiquement le call_id pour tous les outils
+            args.call_id = window.callId;
+            console.log(`📞 Added call_id to arguments:`, window.callId);
+            
+            // Appeler le backend pour exécuter le tool
+            const response = await fetch('/api/tools/execute', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tool_name: toolName,
+                    arguments: args,
+                    agent_id: '{{ agent.agent_id }}'
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Backend returned ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            console.log('✅ Tool result:', result);
+            
+            // Sauvegarder l'appel d'outil dans Cosmos DB
+            saveMessageToCosmosDB('tool', `Tool ${toolName} executed`, { 
+                tool_name: toolName, 
+                arguments: args,
+                result: result 
+            });
+            
+            // 🛑 Détecter si c'est le tool end_conversation
+            if (toolName === 'end_conversation' && result.action === 'end_conversation') {
+                console.log('🛑 end_conversation tool detected - triggering automatic conversation end');
+                console.log('📝 User farewell:', result.user_farewell);
+                console.log('📝 Summary:', result.summary);
+                
+                // Attendre que l'agent réponde au revoir (délai de 2 secondes)
+                setTimeout(() => {
+                    console.log('🛑 Auto-stopping conversation after end_conversation tool');
+                    stopConversation();
+                }, 2000);
+            }
+            
+            // Envoyer le résultat au modèle via WebSocket
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                websocket.send(JSON.stringify({
+                    type: 'conversation.item.create',
+                    item: {
+                        type: 'function_call_output',
+                        call_id: callId,
+                        output: JSON.stringify(result)
+                    }
+                }));
+                
+                // Demander une nouvelle réponse
+                websocket.send(JSON.stringify({
+                    type: 'response.create'
+                }));
+            }
+            
+            addMessage('system', `✅ ${toolName} exécuté avec succès`);
+            
+        } catch (error) {
+            console.error('❌ Tool execution error:', error);
+            addMessage('system', `❌ Erreur lors de l'exécution de ${toolName}`);
+            
+            // Envoyer l'erreur au modèle
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                websocket.send(JSON.stringify({
+                    type: 'conversation.item.create',
+                    item: {
+                        type: 'function_call_output',
+                        call_id: callId,
+                        output: JSON.stringify({ error: error.message })
+                    }
+                }));
+            }
+        }
+    }
+
+    // ============================================
+    // UI HELPERS
+    // ============================================
+
+    function updateConnectionStatus(status, text) {
+        const badge = document.getElementById('connectionStatus');
+        badge.className = 'status-badge ' + status;
+        badge.querySelector('span').textContent = text;
+    }
+
+    function addMessage(type, content, id = null) {
+        const display = document.getElementById('conversationDisplay');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message ' + type;
+        if (id) messageDiv.dataset.messageId = id;
+
+        const time = new Date().toLocaleTimeString('fr-FR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+
+        messageDiv.innerHTML = `
+            <div>${content}</div>
+            <div class="message-meta">${time}</div>
+        `;
+
+        display.appendChild(messageDiv);
+        display.scrollTop = display.scrollHeight;
+    }
+
+    function addOrUpdateMessage(type, content, id) {
+        const display = document.getElementById('conversationDisplay');
+        let messageDiv = display.querySelector(`[data-message-id="${id}"]`);
+
+        if (messageDiv) {
+            // Update existing message
+            messageDiv.querySelector('div:first-child').textContent += content;
+        } else {
+            // Create new message
+            addMessage(type, content, id);
+        }
+
+        display.scrollTop = display.scrollHeight;
+    }
+
+    function resetUI() {
+        document.getElementById('startButton').style.display = 'block';
+        document.getElementById('stopButton').style.display = 'none';
+    }
+
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+
+    console.log('✅ Voice Session Client Ready');
+    console.log('🤖 Agent:', agentConfig.agentName);
+    console.log('🎯 Model:', agentConfig.modelId);
+    console.log('🔧 Tools:', agentConfig.tools.length);
+
+    // ============================================
+    // INSTRUCTIONS & LEXICON EDITORS
+    // ============================================
+
+    function toggleInstructionsEditor() {
+        const display = document.getElementById('instructionsDisplay');
+        const editor = document.getElementById('instructionsEditor');
+        
+        if (editor.style.display === 'none') {
+            display.style.display = 'none';
+            editor.style.display = 'block';
+        } else {
+            display.style.display = 'block';
+            editor.style.display = 'none';
+        }
+    }
+
+    function cancelInstructionsEdit() {
+        document.getElementById('instructionsDisplay').style.display = 'block';
+        document.getElementById('instructionsEditor').style.display = 'none';
+    }
+
+    async function saveInstructions() {
+        const newInstructions = document.getElementById('instructionsTextarea').value;
+        
+        try {
+            const response = await fetch(`/agents/api/${agentConfig.agentId}/update_session_config`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    instructions: newInstructions
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                // Update display
+                document.getElementById('instructionsDisplay').innerHTML = newInstructions.substring(0, 200) + (newInstructions.length > 200 ? '...' : '');
+                
+                // Update agent config
+                agentConfig.instructions = newInstructions;
+                
+                // Close editor
+                cancelInstructionsEdit();
+                
+                // Show success message
+                addMessage('system', '✅ Instructions mises à jour avec succès');
+                
+                console.log('✅ Instructions saved successfully');
+            } else {
+                throw new Error(result.error || 'Erreur lors de la sauvegarde');
+            }
+        } catch (error) {
+            console.error('❌ Error saving instructions:', error);
+            addMessage('system', `❌ Erreur: ${error.message}`);
+        }
+    }
+
+    function toggleLexiconEditor() {
+        const display = document.getElementById('lexiconDisplay');
+        const editor = document.getElementById('lexiconEditor');
+        
+        if (editor.style.display === 'none') {
+            display.style.display = 'none';
+            editor.style.display = 'block';
+        } else {
+            display.style.display = 'block';
+            editor.style.display = 'none';
+        }
+    }
+
+    function cancelLexiconEdit() {
+        document.getElementById('lexiconDisplay').style.display = 'block';
+        document.getElementById('lexiconEditor').style.display = 'none';
+    }
+
+    async function saveLexiconUrl() {
+        const newLexiconUrl = document.getElementById('lexiconUrlInput').value;
+        
+        try {
+            const response = await fetch(`/agents/api/${agentConfig.agentId}/update_session_config`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    custom_lexicon_url: newLexiconUrl
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                // Update display
+                document.getElementById('lexiconUrlText').textContent = newLexiconUrl || 'Aucun lexique configuré';
+                
+                // Close editor
+                cancelLexiconEdit();
+                
+                // Show success message
+                addMessage('system', '✅ URL du lexique mise à jour avec succès');
+                
+                console.log('✅ Lexicon URL saved successfully');
+            } else {
+                throw new Error(result.error || 'Erreur lors de la sauvegarde');
+            }
+        } catch (error) {
+            console.error('❌ Error saving lexicon URL:', error);
+            addMessage('system', `❌ Erreur: ${error.message}`);
+        }
+    }
+
+</script>
+{% endblock %}
+

@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block title %}Historique des Conversations - Waka AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/conversations_history.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- En-tête -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="bi bi-clock-history"></i>
+                    Historique des Conversations
+                </h1>
+                <p class="page-subtitle">Consultez et analysez vos conversations passées</p>
+            </div>
+            <div class="header-stats">
+                <div class="stat-card">
+                    <div class="stat-value">{{ total }}</div>
+                    <div class="stat-label">Total</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des conversations -->
+    <div class="conversations-grid">
+        {% for conv in conversations %}
+        <div class="conversation-card" data-conversation-id="{{ conv.id }}">
+            <!-- En-tête de la card -->
+            <div class="card-header">
+                <div class="conv-info">
+                    <div class="conv-date">
+                        <i class="bi bi-calendar3"></i>
+                        {{ conv.started_at_formatted }}
+                    </div>
+                    <div class="conv-model">
+                        <i class="bi bi-cpu"></i>
+                        {{ conv.model }}
+                    </div>
+                </div>
+                <div class="conv-id">
+                    <small>ID: {{ conv.id[:8] }}...</small>
+                </div>
+            </div>
+
+            <!-- Corps de la card - 3 premiers messages -->
+            <div class="card-body">
+                <div class="messages-preview">
+                    {% if conv.first_messages|length > 0 %}
+                        {% for msg in conv.first_messages %}
+                        <div class="message-preview {{ msg.sender }}">
+                            <i class="bi {{ 'bi-person' if msg.sender == 'user' else 'bi-robot' }}"></i>
+                            <span class="message-text">{{ msg.content[:80] }}{{ '...' if msg.content|length > 80 else '' }}</span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">Aucun message</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card-actions">
+                <button class="action-btn delete-btn" 
+                        onclick="deleteConversation('{{ conv.id }}')"
+                        title="Supprimer">
+                    <i class="bi bi-trash"></i>
+                </button>
+                
+                <button class="action-btn analytics-btn" 
+                        onclick="showAnalytics('{{ conv.id }}')"
+                        title="Prix & Tokens">
+                    <i class="bi bi-currency-dollar"></i>
+                </button>
+                
+                <button class="action-btn quality-btn" 
+                        onclick="showQuality('{{ conv.id }}')"
+                        title="KPI Qualité">
+                    <i class="bi bi-bar-chart"></i>
+                </button>
+                
+                <button class="action-btn history-btn" 
+                        onclick="showHistory('{{ conv.id }}')"
+                        title="Historique détaillé">
+                    <i class="bi bi-chat-left-text"></i>
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if conversations|length == 0 %}
+        <div class="no-conversations">
+            <i class="bi bi-inbox"></i>
+            <p>Aucune conversation trouvée</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="pagination-container">
+        <nav aria-label="Pagination">
+            <ul class="pagination">
+                {% if page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page - 1 }}&page_size={{ page_size }}">
+                        <i class="bi bi-chevron-left"></i> Précédent
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for p in range(1, total_pages + 1) %}
+                    {% if p == page %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ p }}</span>
+                    </li>
+                    {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ p }}&page_size={{ page_size }}">{{ p }}</a>
+                    </li>
+                    {% elif p == page - 3 or p == page + 3 %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page < total_pages %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page + 1 }}&page_size={{ page_size }}">
+                        Suivant <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal Analytics (Prix & Tokens) -->
+<div class="modal fade" id="analyticsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-currency-dollar text-success"></i>
+                    Prix & Consommation de Tokens
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Stats principales -->
+                    <div class="col-md-12 mb-4">
+                        <div class="stats-row">
+                            <div class="stat-box">
+                                <div class="stat-label">Coût Total</div>
+                                <div class="stat-value text-success" id="totalCost">$0.000000</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Total Tokens</div>
+                                <div class="stat-value text-primary" id="totalTokens">0</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Coût/Minute</div>
+                                <div class="stat-value text-info" id="costPerMinute">$0.000000</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Graphiques -->
+                    <div class="col-md-6 mb-3">
+                        <div class="chart-container">
+                            <h6 class="chart-title">Répartition des Tokens</h6>
+                            <canvas id="tokensChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="chart-container">
+                            <h6 class="chart-title">Répartition des Coûts</h6>
+                            <canvas id="costChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal KPI Qualité -->
+<div class="modal fade" id="qualityModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-bar-chart text-primary"></i>
+                    KPI Qualité - Analyse de Sentiment
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Sentiment Utilisateur -->
+                    <div class="col-md-6 mb-4">
+                        <h6 class="sentiment-title">
+                            <i class="bi bi-person"></i> Utilisateur
+                        </h6>
+                        <div class="sentiment-bars" id="userSentiment">
+                            <div class="sentiment-bar positive">
+                                <div class="bar-label">Positif</div>
+                                <div class="bar-track">
+                                    <div class="bar-fill" data-type="positive" style="width: 0%"></div>
+                                </div>
+                                <div class="bar-value">0%</div>
+                            </div>
+                            <div class="sentiment-bar neutral">
+                                <div class="bar-label">Neutre</div>
+                                <div class="bar-track">
+                                    <div class="bar-fill" data-type="neutral" style="width: 0%"></div>
+                                </div>
+                                <div class="bar-value">0%</div>
+                            </div>
+                            <div class="sentiment-bar negative">
+                                <div class="bar-label">Négatif</div>
+                                <div class="bar-track">
+                                    <div class="bar-fill" data-type="negative" style="width: 0%"></div>
+                                </div>
+                                <div class="bar-value">0%</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sentiment Assistant -->
+                    <div class="col-md-6 mb-4">
+                        <h6 class="sentiment-title">
+                            <i class="bi bi-robot"></i> Assistant
+                        </h6>
+                        <div class="sentiment-bars" id="assistantSentiment">
+                            <div class="sentiment-bar positive">
+                                <div class="bar-label">Positif</div>
+                                <div class="bar-track">
+                                    <div class="bar-fill" data-type="positive" style="width: 0%"></div>
+                                </div>
+                                <div class="bar-value">0%</div>
+                            </div>
+                            <div class="sentiment-bar neutral">
+                                <div class="bar-label">Neutre</div>
+                                <div class="bar-track">
+                                    <div class="bar-fill" data-type="neutral" style="width: 0%"></div>
+                                </div>
+                                <div class="bar-value">0%</div>
+                            </div>
+                            <div class="sentiment-bar negative">
+                                <div class="bar-label">Négatif</div>
+                                <div class="bar-track">
+                                    <div class="bar-fill" data-type="negative" style="width: 0%"></div>
+                                </div>
+                                <div class="bar-value">0%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Historique Détaillé -->
+<div class="modal fade" id="historyModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content modern-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-chat-left-text text-info"></i>
+                    Historique Détaillé
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Stats de la conversation -->
+                <div class="conversation-stats mb-4">
+                    <div class="stat-item">
+                        <i class="bi bi-chat-dots"></i>
+                        <span id="totalInteractions">0</span> interactions
+                    </div>
+                    <div class="stat-item">
+                        <i class="bi bi-clock"></i>
+                        <span id="conversationDuration">0</span> minutes
+                    </div>
+                    <div class="stat-item">
+                        <i class="bi bi-person"></i>
+                        <span id="userMessagesCount">0</span> messages utilisateur
+                    </div>
+                    <div class="stat-item">
+                        <i class="bi bi-robot"></i>
+                        <span id="assistantMessagesCount">0</span> messages assistant
+                    </div>
+                </div>
+                
+                <!-- Timeline des messages -->
+                <div class="messages-timeline" id="messagesTimeline">
+                    <!-- Messages chargés dynamiquement -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/conversations_history.js') }}"></script>
+{% endblock %}

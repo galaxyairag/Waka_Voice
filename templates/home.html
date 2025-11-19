@@ -1,0 +1,888 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Waka Burkiné Voix{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-page {
+        min-height: calc(100vh - 80px);
+        background: radial-gradient(circle at 0% 0%, rgba(255, 102, 0, 0.08), transparent 55%),
+                    radial-gradient(circle at 100% 100%, rgba(0, 168, 89, 0.08), transparent 55%),
+                    linear-gradient(135deg, #f5f7fb 0%, #ffffff 60%, #f5fbf8 100%);
+        padding: 2.5rem 0 3rem;
+    }
+
+    .dashboard-shell {
+        background: var(--waka-off-white, #f5f6fa);
+        border-radius: 28px;
+        border: 1px solid var(--waka-border, rgba(15, 23, 42, 0.08));
+        box-shadow:
+            0 18px 45px rgba(15, 23, 42, 0.08),
+            0 0 0 1px rgba(255, 255, 255, 0.8);
+        padding: 1.75rem 1.75rem 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .dashboard-shell::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+            linear-gradient(120deg,
+                rgba(255, 102, 0, 0.06) 0%,
+                rgba(252, 209, 22, 0.06) 30%,
+                transparent 55%,
+                rgba(0, 168, 89, 0.06) 80%,
+                transparent 100%);
+        mix-blend-mode: soft-light;
+    }
+
+    .dashboard-header {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .dashboard-title-block {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .dashboard-logo-chip {
+        width: 44px;
+        height: 44px;
+        border-radius: 16px;
+        background: var(--gradient-primary, linear-gradient(135deg, #ff6600, #e63946));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        box-shadow: 0 10px 30px rgba(230, 57, 70, 0.35);
+        font-weight: 800;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+    }
+
+    .dashboard-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--waka-primary-dark, #111827);
+        margin: 0;
+    }
+
+    .dashboard-subtitle {
+        font-size: 0.9rem;
+        color: var(--waka-muted, #6b7280);
+        margin: 0.15rem 0 0;
+    }
+
+    .dashboard-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-size: 0.83rem;
+        color: var(--waka-muted, #6b7280);
+    }
+
+    .meta-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.35rem 0.8rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        backdrop-filter: blur(12px);
+    }
+
+    .meta-dot-live {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: #16a34a;
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.25);
+        animation: pulse-live 1.6s ease-out infinite;
+    }
+
+    @keyframes pulse-live {
+        0% { transform: scale(1); opacity: 1; }
+        70% { transform: scale(1.8); opacity: 0; }
+        100% { transform: scale(1); opacity: 0; }
+    }
+
+    .meta-label {
+        font-weight: 500;
+        color: var(--waka-primary-dark, #111827);
+    }
+
+    .meta-value {
+        font-variant-numeric: tabular-nums;
+    }
+
+    .refresh-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.8rem;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.04);
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.1s ease;
+    }
+
+    .refresh-badge:hover {
+        background: rgba(15, 23, 42, 0.07);
+        transform: translateY(-1px);
+    }
+
+    .refresh-badge i {
+        font-size: 0.9rem;
+    }
+
+    .refresh-badge span {
+        font-size: 0.8rem;
+    }
+
+    /* KPI GRID */
+    .kpi-grid-main {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: 1.4fr 1.1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .kpi-grid-secondary {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .kpi-card {
+        background: rgba(255, 255, 255, 0.96);
+        border-radius: 20px;
+        padding: 1.1rem 1.1rem 1rem;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.04);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .kpi-card.accent-main {
+        background: rgba(255, 255, 255, 0.98);
+        color: var(--waka-primary-dark, #111827);
+        border-color: rgba(15, 23, 42, 0.08);
+    }
+
+    .kpi-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--waka-muted, #6b7280);
+        margin-bottom: 0.55rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .kpi-label span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .kpi-label i {
+        font-size: 0.9rem;
+        color: rgba(148, 163, 184, 0.9);
+    }
+
+    .kpi-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        font-variant-numeric: tabular-nums;
+        color: var(--waka-primary-dark, #111827);
+        margin-bottom: 0.15rem;
+    }
+
+    .kpi-unit {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--waka-muted, #6b7280);
+    }
+
+    .kpi-subvalue {
+        font-size: 0.8rem;
+        color: var(--waka-muted, #9ca3af);
+    }
+
+    .kpi-trend {
+        font-size: 0.78rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.2rem 0.55rem;
+        border-radius: 999px;
+        background: rgba(22, 163, 74, 0.08);
+        color: #16a34a;
+    }
+
+    .kpi-trend.negative {
+        background: rgba(239, 68, 68, 0.08);
+        color: #ef4444;
+    }
+
+    .kpi-trend i {
+        font-size: 0.85rem;
+    }
+
+    /* Sparklines */
+    .sparkline {
+        position: relative;
+        height: 42px;
+        width: 100%;
+        margin-top: 0.35rem;
+    }
+
+    .sparkline-canvas {
+        position: absolute;
+        inset: 0.1rem 0 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .sparkline-baseline {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0.2rem;
+        height: 1px;
+        background: linear-gradient(90deg, rgba(148, 163, 184, 0.3), transparent);
+    }
+
+    .sparkline-shadow {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 0 100%, rgba(255, 255, 255, 0.3), transparent 60%);
+        opacity: 0.4;
+        pointer-events: none;
+    }
+
+    .sparkline-label {
+        position: absolute;
+        right: 0.35rem;
+        top: 0.25rem;
+        font-size: 0.7rem;
+        color: rgba(148, 163, 184, 0.9);
+    }
+
+    /* Secondary KPIs */
+    .kpi-secondary-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--waka-muted, #9ca3af);
+        margin-bottom: 0.35rem;
+    }
+
+    .kpi-secondary-value {
+        font-size: 1.15rem;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        color: var(--waka-primary-dark, #111827);
+    }
+
+    .kpi-secondary-unit {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: var(--waka-muted, #9ca3af);
+        margin-left: 0.25rem;
+    }
+
+    .kpi-secondary-caption {
+        font-size: 0.74rem;
+        color: var(--waka-muted, #9ca3af);
+        margin-top: 0.25rem;
+    }
+
+    /* Footer stripe */
+    .dashboard-footer {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 1.1rem;
+        padding-top: 0.85rem;
+        border-top: 1px solid rgba(148, 163, 184, 0.35);
+        font-size: 0.78rem;
+        color: var(--waka-muted, #9ca3af);
+    }
+
+    .footer-left {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .footer-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.65rem;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.04);
+        border: 1px solid rgba(148, 163, 184, 0.4);
+    }
+
+    .footer-right a {
+        color: var(--waka-primary, #ff6600);
+        text-decoration: none;
+    }
+
+    .footer-right a:hover {
+        text-decoration: underline;
+    }
+
+    @media (max-width: 991px) {
+        .kpi-grid-main {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-shell {
+            padding: 1.25rem 1.2rem 1rem;
+        }
+
+        .dashboard-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .kpi-grid-secondary {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page">
+    <div class="container">
+        <div class="dashboard-shell">
+            <div class="dashboard-header">
+                <div class="dashboard-title-block">
+                    <div class="dashboard-logo-chip">WB</div>
+                    <div>
+                        <h1 class="dashboard-title">Tableau de bord temps réel</h1>
+                        <p class="dashboard-subtitle">Vue premium des performances Voice Live aujourd'hui</p>
+                    </div>
+                </div>
+                <div class="dashboard-meta">
+                    <div class="meta-pill">
+                        <span class="meta-dot-live"></span>
+                        <span class="meta-label">Live</span>
+                        <span class="meta-value" id="meta-clock">--:--:--</span>
+                    </div>
+                    <div class="meta-pill" style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3);">
+                        <span class="meta-label" style="color: #16a34a;">En cours</span>
+                        <span class="meta-value" id="kpi-active-conversations-header" style="color: #15803d; font-weight: 700;">0</span>
+                    </div>
+                    <div class="meta-pill">
+                        <span class="meta-label">Dernière mise à jour</span>
+                        <span class="meta-value" id="last-updated">--</span>
+                    </div>
+                    <button class="refresh-badge" id="manual-refresh" type="button">
+                        <i class="bi bi-arrow-repeat"></i>
+                        <span>Rafraîchir maintenant</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="kpi-grid-main">
+                <!-- Bloc CA, coût & marge (ligne business en premier) -->
+                <div class="kpi-card accent-main">
+                    <div class="kpi-label">
+                        <span><i class="bi bi-cash-coin"></i>Chiffre d'affaires & marge</span>
+                    </div>
+                    <div class="row g-4 align-items-stretch">
+                        <div class="col-6">
+                            <div style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(34, 197, 94, 0.02)); border-radius: 0.75rem; padding: 1.25rem; height: 100%; border: 1px solid rgba(34, 197, 94, 0.2);">
+                                <div class="kpi-unit mb-2" style="color: #16a34a; font-weight: 600;">
+                                    <i class="bi bi-arrow-up-circle"></i> Chiffre d'affaires
+                                </div>
+                                <div class="kpi-value" id="kpi-total-revenue-main" style="font-size: 2.5rem; color: #15803d;">0.00</div>
+                                <div class="kpi-subvalue mt-2" style="color: #22c55e;">Basé sur durée totale × tarif</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.02)); border-radius: 0.75rem; padding: 1.25rem; height: 100%; border: 1px solid rgba(239, 68, 68, 0.2);">
+                                <div class="kpi-unit mb-2" style="color: #dc2626; font-weight: 600;">
+                                    <i class="bi bi-arrow-down-circle"></i> Coût ressources
+                                </div>
+                                <div class="kpi-value" id="kpi-total-cost-main" style="font-size: 2.5rem; color: #b91c1c;">0.00</div>
+                                <div class="kpi-subvalue mt-2" style="color: #ef4444;">Modèles & audio du jour</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-4 align-items-stretch mt-2">
+                        <div class="col-6">
+                            <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.02)); border-radius: 0.75rem; padding: 1.25rem; height: 100%; border: 1px solid rgba(59, 130, 246, 0.2);">
+                                <div class="kpi-unit mb-2" style="color: #2563eb; font-weight: 600;">
+                                    <i class="bi bi-bank"></i> Marge brute
+                                </div>
+                                <div class="kpi-value" id="kpi-gm-main" style="font-size: 2.2rem; color: #1d4ed8;">0.00</div>
+                                <div class="kpi-subvalue mt-2" style="color: #3b82f6;">Bénéfice net (CA - Coût)</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(168, 85, 247, 0.02)); border-radius: 0.75rem; padding: 1.25rem; height: 100%; border: 1px solid rgba(168, 85, 247, 0.2);">
+                                <div class="kpi-unit mb-2" style="color: #9333ea; font-weight: 600;">
+                                    <i class="bi bi-percent"></i> Marge %
+                                </div>
+                                <div class="kpi-value" id="kpi-gm-main-pct" style="font-size: 2.2rem; color: #7e22ce;">0%</div>
+                                <div class="kpi-subvalue mt-2" style="color: #a855f7;">Rentabilité relative</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sparkline mt-3">
+                        <div class="sparkline-shadow"></div>
+                        <canvas id="sparkline-costs" class="sparkline-canvas"></canvas>
+                        <div class="sparkline-baseline"></div>
+                        <div class="sparkline-label">Coûts 15 min</div>
+                    </div>
+                </div>
+
+                <!-- Bloc activité & volume conversations -->
+                <div class="kpi-card">
+                    <div class="kpi-label">
+                        <span><i class="bi bi-activity"></i>Activité de la journée</span>
+                        <span class="kpi-trend" id="kpi-trend-conv">
+                            <i class="bi bi-arrow-up-right"></i>
+                            <span id="kpi-trend-conv-label">stable</span>
+                        </span>
+                    </div>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-6">
+                            <div class="kpi-unit mb-1">Conversations</div>
+                            <div class="kpi-value" id="kpi-total-conversations">0</div>
+                            <div class="kpi-subvalue">
+                                <span id="kpi-active-conversations">0</span> en cours
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="kpi-unit mb-1">Minutes</div>
+                            <div class="kpi-value" id="kpi-total-minutes">0.0</div>
+                            <div class="kpi-subvalue">
+                                Coût/min <span id="kpi-cost-per-minute">0.00</span> USD
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sparkline mt-3">
+                        <div class="sparkline-shadow"></div>
+                        <canvas id="sparkline-conversations" class="sparkline-canvas"></canvas>
+                        <div class="sparkline-baseline"></div>
+                        <div class="sparkline-label">Flux 15 min</div>
+                    </div>
+
+                    <!-- Token breakdown -->
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(168, 85, 247, 0.1);">
+                        <div style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--waka-muted); margin-bottom: 0.5rem;">Tokens par type</div>
+                        <div style="display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.75rem;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: var(--waka-muted);">Input text:</span>
+                                <span style="font-weight: 600; font-variant-numeric: tabular-nums; color: var(--waka-purple);" id="kpi-tokens-input-text">0</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: var(--waka-muted);">Input cached:</span>
+                                <span style="font-weight: 600; font-variant-numeric: tabular-nums; color: var(--waka-purple);" id="kpi-tokens-input-cached">0</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: var(--waka-muted);">Input audio:</span>
+                                <span style="font-weight: 600; font-variant-numeric: tabular-nums; color: var(--waka-purple);" id="kpi-tokens-input-audio">0</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: var(--waka-muted);">Output text:</span>
+                                <span style="font-weight: 600; font-variant-numeric: tabular-nums; color: var(--waka-purple);" id="kpi-tokens-output-text">0</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: var(--waka-muted);">Output audio:</span>
+                                <span style="font-weight: 600; font-variant-numeric: tabular-nums; color: var(--waka-purple);" id="kpi-tokens-output-audio">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bloc sentiment clients -->
+                <div class="kpi-card">
+                    <div class="kpi-label">
+                        <span><i class="bi bi-person"></i>Sentiment Clients</span>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
+                        <div style="flex: 1; min-width: 5rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.02)); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid rgba(34, 197, 94, 0.2);">
+                            <div style="font-size: 0.7rem; text-transform: uppercase; color: #16a34a; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Positif</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #15803d;" id="kpi-user-positive">0%</div>
+                        </div>
+                        <div style="flex: 1; min-width: 5rem; background: linear-gradient(135deg, rgba(148, 163, 184, 0.1), rgba(148, 163, 184, 0.02)); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid rgba(148, 163, 184, 0.2);">
+                            <div style="font-size: 0.7rem; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Neutre</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #475569;" id="kpi-user-neutral">0%</div>
+                        </div>
+                        <div style="flex: 1; min-width: 5rem; background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.02)); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid rgba(239, 68, 68, 0.2);">
+                            <div style="font-size: 0.7rem; text-transform: uppercase; color: #dc2626; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Négatif</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #b91c1c;" id="kpi-user-negative">0%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bloc sentiment agents IA -->
+                <div class="kpi-card">
+                    <div class="kpi-label">
+                        <span><i class="bi bi-robot"></i>Sentiment Agents IA</span>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
+                        <div style="flex: 1; min-width: 5rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.02)); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid rgba(34, 197, 94, 0.2);">
+                            <div style="font-size: 0.7rem; text-transform: uppercase; color: #16a34a; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Positif</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #15803d;" id="kpi-agent-positive">0%</div>
+                        </div>
+                        <div style="flex: 1; min-width: 5rem; background: linear-gradient(135deg, rgba(148, 163, 184, 0.1), rgba(148, 163, 184, 0.02)); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid rgba(148, 163, 184, 0.2);">
+                            <div style="font-size: 0.7rem; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Neutre</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #475569;" id="kpi-agent-neutral">0%</div>
+                        </div>
+                        <div style="flex: 1; min-width: 5rem; background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.02)); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid rgba(239, 68, 68, 0.2);">
+                            <div style="font-size: 0.7rem; text-transform: uppercase; color: #dc2626; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Négatif</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #b91c1c;" id="kpi-agent-negative">0%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="kpi-grid-secondary">
+                <div class="kpi-card">
+                    <div class="kpi-secondary-label">Durée moyenne</div>
+                    <div>
+                        <span class="kpi-secondary-value" id="kpi-avg-duration">0.0</span>
+                        <span class="kpi-secondary-unit">min / conv</span>
+                    </div>
+                    <p class="kpi-secondary-caption">Temps d'échange client sur la journée</p>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-secondary-label">Interactions moyennes</div>
+                    <div>
+                        <span class="kpi-secondary-value" id="kpi-avg-interactions">0.0</span>
+                        <span class="kpi-secondary-unit">tour / conv</span>
+                    </div>
+                    <p class="kpi-secondary-caption">Nombre moyen de prises de parole utilisateur</p>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-secondary-label">Conversations clôturées (15 min)</div>
+                    <div>
+                        <span class="kpi-secondary-value" id="kpi-last-bucket-conv">0</span>
+                        <span class="kpi-secondary-unit">conv</span>
+                    </div>
+                    <p class="kpi-secondary-caption">Nombre de conversations clôturées sur la dernière tranche</p>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-secondary-label">TOTAL Coût & Chiffre</div>
+                    <div class="mb-1">
+                        <span class="kpi-secondary-value" id="kpi-total-cost-usd">0.00</span>
+                        <span class="kpi-secondary-unit">USD</span>
+                    </div>
+                    <div>
+                        <span class="kpi-secondary-value" id="kpi-total-revenue">0.00</span>
+                        <span class="kpi-secondary-unit">Chiffre</span>
+                    </div>
+                    <p class="kpi-secondary-caption mb-1">Durée totale x tarif minute</p>
+                    <div class="kpi-secondary-caption">
+                        Tarif facturation :
+                        <input id="billing-rate" type="number" step="0.01" min="0" value="0.1" style="width: 4.5rem; font-size: 0.75rem; padding: 0.1rem 0.25rem; margin-left: 0.25rem;" />
+                        <span>USD / min</span>
+                    </div>
+                    <div class="kpi-secondary-caption mt-1">
+                        GM : <span id="kpi-gm-abs">0.00</span> · GM% : <span id="kpi-gm-pct">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-footer mt-3">
+                <div class="footer-left">
+                    <div class="footer-pill">
+                        <i class="bi bi-geo-alt"></i>
+                        <span>Ouagadougou · Burkina Faso</span>
+                    </div>
+                    <span>Journée calculée en UTC (00:00 → 23:59)</span>
+                </div>
+                <div class="footer-right">
+                    <a href="/agents/config/step1">Créer un nouvel agent Voice Live</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Horloge live dans le header
+    function updateMetaClock() {
+        const now = new Date();
+        const h = String(now.getHours()).padStart(2, '0');
+        const m = String(now.getMinutes()).padStart(2, '0');
+        const s = String(now.getSeconds()).padStart(2, '0');
+        const el = document.getElementById('meta-clock');
+        if (el) {
+            el.textContent = `${h}:${m}:${s}`;
+        }
+    }
+    setInterval(updateMetaClock, 1000);
+    updateMetaClock();
+
+    function formatNumber(n) {
+        return new Intl.NumberFormat('fr-FR').format(n);
+    }
+
+    function formatCurrency(n) {
+        return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'USD' }).format(n);
+    }
+
+    function formatPercent01(n) {
+        return `${Math.round(n * 100)}%`;
+    }
+
+    function drawSparkline(canvasId, data, options = {}) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas || !data || !data.length) return;
+
+        const ctx = canvas.getContext('2d');
+        const width = canvas.clientWidth || 200;
+        const height = canvas.clientHeight || 40;
+        canvas.width = width * window.devicePixelRatio;
+        canvas.height = height * window.devicePixelRatio;
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+        ctx.clearRect(0, 0, width, height);
+
+        const max = Math.max(...data);
+        const min = Math.min(...data);
+        const paddingX = 4;
+        const paddingY = 4;
+        const usableWidth = width - paddingX * 2;
+        const usableHeight = height - paddingY * 2;
+
+        const color = options.color || '#22c55e';
+        const gradient = ctx.createLinearGradient(0, 0, width, 0);
+        gradient.addColorStop(0, color);
+        gradient.addColorStop(1, options.color2 || color);
+
+        ctx.beginPath();
+        data.forEach((v, i) => {
+            const x = paddingX + (usableWidth * (i / Math.max(1, data.length - 1)));
+            const norm = max === min ? 0.5 : (v - min) / (max - min);
+            const y = paddingY + (1 - norm) * usableHeight;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        });
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 1.6;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        if (options.fill) {
+            ctx.lineTo(paddingX + usableWidth, height - paddingY);
+            ctx.lineTo(paddingX, height - paddingY);
+            ctx.closePath();
+            const fillGradient = ctx.createLinearGradient(0, paddingY, 0, height - paddingY);
+            fillGradient.addColorStop(0, options.fillFrom || 'rgba(34, 197, 94, 0.18)');
+            fillGradient.addColorStop(1, 'rgba(15, 23, 42, 0)');
+            ctx.fillStyle = fillGradient;
+            ctx.fill();
+        }
+    }
+
+    async function loadDashboardMetrics() {
+        try {
+            const resp = await fetch('/api/dashboard/summary');
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const payload = await resp.json();
+            if (!payload.success) throw new Error(payload.error || 'Erreur API');
+
+            const d = payload.data;
+
+            // KPIs principaux
+            const elTotalConv = document.getElementById('kpi-total-conversations');
+            if (elTotalConv) elTotalConv.textContent = formatNumber(d.total_conversations || 0);
+            
+            const elActiveConv = document.getElementById('kpi-active-conversations');
+            if (elActiveConv) elActiveConv.textContent = formatNumber(d.active_conversations || 0);
+            
+            // Update header badge for active conversations
+            const elActiveConvHeader = document.getElementById('kpi-active-conversations-header');
+            if (elActiveConvHeader) elActiveConvHeader.textContent = formatNumber(d.active_conversations || 0);
+            
+            const elTotalMin = document.getElementById('kpi-total-minutes');
+            if (elTotalMin) elTotalMin.textContent = (d.total_minutes || 0).toFixed(1);
+            
+            const elCostPerMin = document.getElementById('kpi-cost-per-minute');
+            if (elCostPerMin) elCostPerMin.textContent = (d.cost_per_minute || 0).toFixed(4);
+            
+            const elLegacyTotalCost = document.getElementById('kpi-total-cost');
+            if (elLegacyTotalCost) {
+                elLegacyTotalCost.textContent = (d.total_cost_usd || 0).toFixed(3);
+            }
+            
+            const elTotalTokens = document.getElementById('kpi-total-tokens');
+            if (elTotalTokens) elTotalTokens.textContent = formatNumber(d.total_tokens || 0);
+
+            // Token breakdown
+            const tokensBreakdown = d.tokens_breakdown || {};
+            const elTokensInputText = document.getElementById('kpi-tokens-input-text');
+            if (elTokensInputText) elTokensInputText.textContent = formatNumber(tokensBreakdown.inputs_text_tokens || 0);
+            const elTokensInputCached = document.getElementById('kpi-tokens-input-cached');
+            if (elTokensInputCached) elTokensInputCached.textContent = formatNumber(tokensBreakdown.inputs_cached_tokens || 0);
+            const elTokensInputAudio = document.getElementById('kpi-tokens-input-audio');
+            if (elTokensInputAudio) elTokensInputAudio.textContent = formatNumber(tokensBreakdown.inputs_audio_tokens || 0);
+            const elTokensOutputText = document.getElementById('kpi-tokens-output-text');
+            if (elTokensOutputText) elTokensOutputText.textContent = formatNumber(tokensBreakdown.outputs_text_tokens || 0);
+            const elTokensOutputAudio = document.getElementById('kpi-tokens-output-audio');
+            if (elTokensOutputAudio) elTokensOutputAudio.textContent = formatNumber(tokensBreakdown.outputs_audio_tokens || 0);
+
+            // Sentiment breakdown
+            const elUserPos = document.getElementById('kpi-user-positive');
+            if (elUserPos) elUserPos.textContent = formatPercent01(d.avg_user_positive || 0);
+            const elUserNeut = document.getElementById('kpi-user-neutral');
+            if (elUserNeut) elUserNeut.textContent = formatPercent01(d.avg_user_neutral || 0);
+            const elUserNeg = document.getElementById('kpi-user-negative');
+            if (elUserNeg) elUserNeg.textContent = formatPercent01(d.avg_user_negative || 0);
+            
+            const elAgentPos = document.getElementById('kpi-agent-positive');
+            if (elAgentPos) elAgentPos.textContent = formatPercent01(d.avg_agent_positive || 0);
+            const elAgentNeut = document.getElementById('kpi-agent-neutral');
+            if (elAgentNeut) elAgentNeut.textContent = formatPercent01(d.avg_agent_neutral || 0);
+            const elAgentNeg = document.getElementById('kpi-agent-negative');
+            if (elAgentNeg) elAgentNeg.textContent = formatPercent01(d.avg_agent_negative || 0);
+
+            const elAvgDuration = document.getElementById('kpi-avg-duration');
+            if (elAvgDuration) elAvgDuration.textContent = (d.avg_duration_minutes || 0).toFixed(1);
+            
+            const elAvgInteractions = document.getElementById('kpi-avg-interactions');
+            if (elAvgInteractions) elAvgInteractions.textContent = (d.avg_interactions_per_conversation || 0).toFixed(1);
+
+            const lastMinutesBucket = (d.sparkline_minutes || []).slice(-1)[0] || 0;
+            const lastConvBucket = (d.sparkline_conversations || []).slice(-1)[0] || 0;
+            const elLastBucketConv = document.getElementById('kpi-last-bucket-conv');
+            if (elLastBucketConv) elLastBucketConv.textContent = lastConvBucket;
+
+            // TOTAL coût & TOTAL chiffre
+            const totalCost = d.total_cost_usd || 0;
+            const totalMinutes = d.total_minutes || 0;
+            const billingRate = parseFloat(document.getElementById('billing-rate')?.value || '0.1') || 0.1;
+            const totalRevenue = totalMinutes * billingRate;
+
+            const gm = totalRevenue - totalCost;
+            const gmPct = totalCost > 0 ? (gm / totalCost) * 100 : 0;
+
+            const elTotalCostUsd = document.getElementById('kpi-total-cost-usd');
+            const elTotalRevenue = document.getElementById('kpi-total-revenue');
+            if (elTotalCostUsd) elTotalCostUsd.textContent = totalCost.toFixed(2);
+            if (elTotalRevenue) elTotalRevenue.textContent = totalRevenue.toFixed(2);
+
+            // Ligne business principale
+            const elTotalRevenueMain = document.getElementById('kpi-total-revenue-main');
+            const elTotalCostMain = document.getElementById('kpi-total-cost-main');
+            const elGmMain = document.getElementById('kpi-gm-main');
+            const elGmMainPct = document.getElementById('kpi-gm-main-pct');
+            if (elTotalRevenueMain) elTotalRevenueMain.textContent = totalRevenue.toFixed(2);
+            if (elTotalCostMain) elTotalCostMain.textContent = totalCost.toFixed(2);
+            if (elGmMain) elGmMain.textContent = gm.toFixed(2);
+            if (elGmMainPct) elGmMainPct.textContent = `${gmPct.toFixed(1)}%`;
+
+            const elGmAbs = document.getElementById('kpi-gm-abs');
+            const elGmPct = document.getElementById('kpi-gm-pct');
+            if (elGmAbs) elGmAbs.textContent = gm.toFixed(2);
+            if (elGmPct) elGmPct.textContent = `${gmPct.toFixed(1)}%`;
+
+            // Sparklines
+            const sparkConv = d.sparkline_conversations || [];
+            const sparkCosts = d.sparkline_costs || [];
+            const sparkMinutes = d.sparkline_minutes || [];
+
+            drawSparkline('sparkline-conversations', sparkConv, {
+                color: '#22c55e',
+                color2: '#a3e635',
+                fill: true,
+                fillFrom: 'rgba(34, 197, 94, 0.25)'
+            });
+            drawSparkline('sparkline-costs', sparkCosts, {
+                color: '#f97316',
+                color2: '#ec4899',
+                fill: true,
+                fillFrom: 'rgba(249, 115, 22, 0.25)'
+            });
+
+            // Trend très simple : si plus de 0 conv, on affiche "actif"
+            const trendLabel = document.getElementById('kpi-trend-conv-label');
+            const trendChip = document.getElementById('kpi-trend-conv');
+            if (sparkConv.reduce((a, b) => a + b, 0) > 0) {
+                trendLabel.textContent = 'actif';
+                trendChip.classList.remove('negative');
+            } else {
+                trendLabel.textContent = 'calme';
+                trendChip.classList.add('negative');
+            }
+
+            // Last updated
+            const genAt = d.generated_at || new Date().toISOString();
+            const dt = new Date(genAt);
+            const timeStr = dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const dateStr = dt.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' });
+            document.getElementById('last-updated').textContent = `${dateStr} · ${timeStr}`;
+        } catch (err) {
+            console.error('Erreur dashboard:', err);
+        }
+    }
+
+    // Chargement initial
+    loadDashboardMetrics();
+
+    // Rafraîchissement toutes les 15 minutes
+    setInterval(loadDashboardMetrics, 15 * 60 * 1000);
+
+    // Rafraîchissement manuel
+    const btnRefresh = document.getElementById('manual-refresh');
+    if (btnRefresh) {
+        btnRefresh.addEventListener('click', () => {
+            loadDashboardMetrics();
+        });
+    }
+
+    // Recalculer le TOTAL chiffre quand le tarif par minute change
+    const billingInput = document.getElementById('billing-rate');
+    if (billingInput) {
+        billingInput.addEventListener('change', () => {
+            loadDashboardMetrics();
+        });
+    }
+</script>
+{% endblock %}

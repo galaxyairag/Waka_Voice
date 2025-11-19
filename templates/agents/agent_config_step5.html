@@ -1,0 +1,542 @@
+{% extends "base.html" %}
+
+{% block title %}Étape 5 : Instructions & Persona{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ========================================
+   SECTION : Page header et progression
+   ======================================== */
+
+.page-header {
+    background: var(--waka-white);
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 16px rgba(74, 20, 140, 0.1);
+    border: 2px solid var(--waka-border);
+    margin-bottom: 40px;
+}
+
+.page-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--waka-primary);
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 16px;
+}
+
+.progress-step {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #6B7280;
+    transition: all 0.3s ease;
+}
+
+.progress-step.active {
+    font-weight: 700;
+    color: var(--waka-primary);
+}
+
+/* ========================================
+   SECTION : Test container
+   ======================================== */
+
+.test-container {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.smartphone-frame {
+    background: var(--waka-primary);
+    border-radius: 40px;
+    padding: 15px;
+    box-shadow: 0 20px 60px rgba(74, 20, 140, 0.4);
+    position: relative;
+}
+
+    .smartphone-notch {
+    width: 150px;
+    height: 25px;
+    background: var(--waka-primary);
+    border-radius: 0 0 20px 20px;
+    margin: -15px auto 10px;
+    position: relative;
+}
+
+    .smartphone-screen {
+        background: white;
+        border-radius: 25px;
+        height: 650px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .phone-header {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.phone-header h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.2rem;
+    margin: 0;
+    font-weight: 700;
+}
+
+    .phone-header .agent-status {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-top: 5px;
+    }
+
+    .connection-status {
+        display: inline-block;
+        font-size: 0.85rem;
+        padding: 3px 10px;
+        border-radius: 12px;
+        margin-top: 5px;
+    }
+
+    .connection-status.connected {
+        background: rgba(76, 175, 80, 0.2);
+        color: #4CAF50;
+    }
+
+    .connection-status.connecting {
+        background: rgba(255, 193, 7, 0.2);
+        color: #FFC107;
+    }
+
+    .connection-status.disconnected,
+    .connection-status.error {
+        background: rgba(244, 67, 54, 0.2);
+        color: #F44336;
+    }
+
+    .status-indicator {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 5px;
+    }
+
+    .status-indicator.connected {
+        background: #4CAF50;
+        box-shadow: 0 0 8px #4CAF50;
+    }
+
+    .status-indicator.connecting {
+        background: #FFC107;
+        animation: pulse 1.5s infinite;
+    }
+
+    .status-indicator.disconnected,
+    .status-indicator.error {
+        background: #F44336;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
+
+    .chat-container {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: var(--waka-off-white);
+}
+
+    .typing-dots {
+        display: flex;
+        gap: 4px;
+        padding: 8px 0;
+    }
+
+    .typing-dots span {
+        width: 8px;
+        height: 8px;
+        background: #999;
+        border-radius: 50%;
+        animation: typing 1.4s infinite;
+    }
+
+    .typing-dots span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .typing-dots span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+
+    @keyframes typing {
+        0%, 60%, 100% {
+            transform: translateY(0);
+            opacity: 0.7;
+        }
+        30% {
+            transform: translateY(-10px);
+            opacity: 1;
+        }
+    }
+
+    .message {
+        margin-bottom: 15px;
+        display: flex;
+        align-items: flex-start;
+    }
+
+    .message.user {
+        flex-direction: row-reverse;
+    }
+
+    .message-bubble {
+        max-width: 75%;
+        padding: 12px 16px;
+        border-radius: 18px;
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+
+    .message.assistant .message-bubble {
+    background: var(--waka-white);
+    color: var(--waka-text);
+    border: 2px solid var(--waka-border);
+    border-bottom-left-radius: 4px;
+}
+
+.message.user .message-bubble {
+    background: var(--gradient-primary);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.message.system .message-bubble {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 111, 0, 0.1));
+    color: var(--waka-text);
+    border: 2px solid var(--waka-accent-yellow);
+    max-width: 90%;
+    font-size: 0.85rem;
+}
+
+    .voice-input-area {
+        padding: 15px;
+        background: white;
+        border-top: 1px solid #e0e0e0;
+    }
+
+    .voice-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .voice-button {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    background: var(--gradient-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 1.5rem;
+    box-shadow: 0 4px 12px rgba(74, 20, 140, 0.3);
+}
+
+.voice-button:hover {
+    background: var(--gradient-accent);
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(255, 111, 0, 0.4);
+}
+
+.voice-button.recording {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    animation: pulse 1.5s infinite;
+    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+}
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+
+    .text-input-group {
+        flex: 1;
+        display: flex;
+        gap: 8px;
+    }
+
+    .text-input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid var(--waka-border);
+    border-radius: 25px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.text-input:focus {
+    border-color: var(--waka-primary);
+    box-shadow: 0 0 0 3px rgba(74, 20, 140, 0.1);
+}
+
+    .send-button {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: none;
+    background: var(--gradient-primary);
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 3px 8px rgba(74, 20, 140, 0.3);
+}
+
+.send-button:hover {
+    background: var(--gradient-accent);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(255, 111, 0, 0.4);
+}
+
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        margin-top: 30px;
+        justify-content: center;
+    }
+
+    .btn-save, .btn-back {
+        padding: 14px 32px;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-save {
+    background: var(--gradient-primary);
+    color: white;
+}
+
+.btn-save:hover {
+    background: var(--gradient-accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 111, 0, 0.4);
+}
+
+.btn-back {
+    background: var(--waka-white);
+    color: var(--waka-primary);
+    border: 2px solid var(--waka-primary);
+}
+
+.btn-back:hover {
+    background: var(--waka-primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(74, 20, 140, 0.3);
+}
+
+    .injection-indicator {
+    position: absolute;
+    top: 70px;
+    right: 25px;
+    background: var(--gradient-accent);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: none;
+    animation: slideIn 0.3s ease;
+    box-shadow: 0 3px 8px rgba(255, 111, 0, 0.3);
+}
+
+    .injection-indicator.show {
+        display: block;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(100px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- En-tête avec progression -->
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="page-title mb-0">
+                <i class="bi bi-robot"></i> 
+                <span>Créer un agent</span>
+            </h2>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> Annuler
+            </a>
+        </div>
+        
+        <!-- Barre de progression -->
+        <div class="progress mb-3" style="height: 10px;">
+            <div class="progress-bar" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        
+        <div class="progress-steps">
+            <span class="progress-step">
+                <i class="bi bi-check-circle-fill"></i> Étape 1 : Configuration
+            </span>
+            <span class="progress-step">
+                <i class="bi bi-check-circle-fill"></i> Étape 2 : Voix
+            </span>
+            <span class="progress-step">
+                <i class="bi bi-check-circle-fill"></i> Étape 3 : Outils
+            </span>
+            <span class="progress-step">
+                <i class="bi bi-check-circle-fill"></i> Étape 4 : Prompt
+            </span>
+            <span class="progress-step active">
+                <i class="bi bi-play-circle-fill"></i> Étape 5 : Test & Sauvegarde
+            </span>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <!-- Smartphone Frame -->
+        <div class="smartphone-frame">
+            <div class="smartphone-notch"></div>
+            <div class="smartphone-screen">
+                <!-- Phone Header -->
+                <div class="phone-header">
+                    <h2><i class="bi bi-robot"></i> {{ config.assistant_name }}</h2>
+                    <div class="agent-status">
+                        <span class="status-indicator" id="statusIndicator"></span>
+                        <span class="connection-status" id="connectionStatus">Démarrage...</span>
+                    </div>
+                </div>
+
+                <!-- Injection Indicator -->
+                <div class="injection-indicator" id="injectionIndicator">
+                    <i class="bi bi-lightning-charge-fill"></i> Tool injecté
+                </div>
+
+                <!-- Chat Container -->
+                <div class="chat-container" id="chatContainer">
+                    <div class="message assistant">
+                        <div class="message-bubble">
+                            👋 Bonjour ! Je suis {{ config.assistant_name }}. Comment puis-je vous aider aujourd'hui ?
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Voice Input Area -->
+                <div class="voice-input-area">
+                    <div class="voice-controls">
+                        <button class="voice-button" id="voiceBtn" title="Maintenir pour parler">
+                            <i class="bi bi-mic-fill"></i>
+                        </button>
+                        <div class="text-input-group">
+                            <input type="text" 
+                                   class="text-input" 
+                                   id="textInput" 
+                                   placeholder="Ou tapez votre message...">
+                            <button class="send-button" id="sendBtn">
+                                <i class="bi bi-send-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button class="btn-back" onclick="window.location.href='{{ url_for('agents_manager.agent_config_step4', agent_id=agent_id) }}'">
+                <i class="bi bi-arrow-left"></i>
+                Retour à l'étape 4
+            </button>
+            <button class="btn-save" id="saveBtn">
+                <i class="bi bi-check-circle-fill"></i>
+                Enregistrer l'agent
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts Voice Live WebSocket -->
+<script src="{{ url_for('static', filename='js/voice_live_session.js') }}?v={{ random(1, 9999999) }}"></script>
+<script src="{{ url_for('static', filename='js/agent_config_step5.js') }}?v={{ random(1, 9999999) }}"></script>
+<script>
+// Configuration de l'agent depuis le backend (fallback pour ancienne logique)
+const agentConfig = {{ config|tojson }};
+
+// Éléments DOM supplémentaires pour compatibilité
+const saveBtn = document.getElementById('saveBtn');
+const injectionIndicator = document.getElementById('injectionIndicator');
+
+// Bouton Sauvegarder (ancien comportement conservé)
+if (saveBtn) {
+    saveBtn.addEventListener('click', async () => {
+        if (confirm('Voulez-vous enregistrer cette configuration ?')) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Enregistrement...';
+            
+            try {
+                const response = await fetch('/agents/api/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        agent_name: agentConfig.assistant_name,
+                        agent_description: agentConfig.role
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✅ Agent enregistré avec succès !');
+                    window.location.href = '/agents/dashboard';
+                } else {
+                    throw new Error(result.error);
+                }
+            } catch (error) {
+                alert('❌ Erreur lors de l\'enregistrement: ' + error.message);
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Enregistrer';
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,1968 @@
+{% extends "base.html" %}
+
+{% block title %}Étape 2 : Configuration Voice Live{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ========================================
+   SECTION : Page header et progression
+   ======================================== */
+
+.page-header {
+    background: var(--waka-white);
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 16px rgba(74, 20, 140, 0.1);
+    border: 2px solid var(--waka-border);
+    margin-bottom: 40px;
+}
+
+.page-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--waka-primary);
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 16px;
+}
+
+.progress-step {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #6B7280;
+    transition: all 0.3s ease;
+}
+
+.progress-step.active {
+    font-weight: 700;
+    color: var(--waka-primary);
+}
+
+/* ========================================
+   SECTION : Model info card
+   ======================================== */
+
+.model-info-card {
+    background: var(--waka-white);
+    border-radius: 16px;
+    padding: 24px;
+    border: 2px solid var(--waka-border);
+    box-shadow: 0 4px 16px rgba(74, 20, 140, 0.1);
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.model-info-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.model-info-icon.f1 {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.model-info-icon.f2 {
+    background: linear-gradient(135deg, #FF6F00, #FFC107);
+}
+
+.model-info-icon.f3 {
+    background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+.model-info-details h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--waka-primary);
+    margin: 0 0 8px 0;
+}
+
+.model-info-details p {
+    color: #6B7280;
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.model-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: auto;
+}
+
+/* ========================================
+   SECTION : Configuration sections
+   ======================================== */
+
+.config-section {
+    background: var(--waka-white);
+    border-radius: 16px;
+    padding: 32px;
+    border: 2px solid var(--waka-border);
+    box-shadow: 0 4px 16px rgba(74, 20, 140, 0.1);
+    margin-bottom: 24px;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--waka-border);
+}
+
+.section-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+}
+
+.section-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--waka-primary);
+    margin: 0;
+}
+
+.section-description {
+    color: #6B7280;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* ========================================
+   SECTION : Form elements
+   ======================================== */
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--waka-primary);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+}
+
+.form-label .optional-badge {
+    background: #E3F2FD;
+    color: #1976D2;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.form-label .required-badge {
+    background: #FFEBEE;
+    color: #C62828;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Tooltip */
+.info-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2196F3, #1976D2);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: help;
+    transition: all 0.3s ease;
+    position: relative;
+    margin-left: 6px;
+}
+
+.info-icon:hover {
+    transform: scale(1.15);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+}
+
+.tooltip-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip-content {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    background: linear-gradient(135deg, #1976D2, #1565C0);
+    color: white;
+    padding: 16px 20px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    font-weight: 400;
+    width: 320px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.tooltip-content::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-top-color: #1565C0;
+}
+
+.tooltip-wrapper:hover .tooltip-content {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(-12px);
+}
+
+.tooltip-example {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-top: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    border-left: 3px solid #FFC107;
+}
+
+.tooltip-emoji {
+    font-size: 1.2rem;
+    margin-right: 6px;
+}
+
+.form-help {
+    font-size: 0.85rem;
+    color: #6B7280;
+    margin-top: 6px;
+    font-style: italic;
+}
+
+.form-control, .form-select {
+    border-radius: 10px;
+    border: 2px solid var(--waka-border);
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--waka-primary);
+    box-shadow: 0 0 0 3px rgba(74, 20, 140, 0.1);
+    outline: none;
+}
+
+.form-check {
+    padding-left: 2rem;
+    margin-bottom: 12px;
+}
+
+.form-check-input {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.15rem;
+    border: 2px solid var(--waka-border);
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: var(--waka-primary);
+    border-color: var(--waka-primary);
+}
+
+.form-check-label {
+    font-size: 0.95rem;
+    color: var(--waka-text);
+    cursor: pointer;
+    margin-left: 8px;
+}
+
+/* ========================================
+   SECTION : Voices Grid
+   ======================================== */
+
+.voices-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 8px;
+}
+
+.voice-card {
+    background: white;
+    border: 2px solid var(--waka-border);
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.voice-card:hover {
+    border-color: var(--waka-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 20, 140, 0.2);
+}
+
+.voice-card.selected {
+    background: var(--gradient-primary);
+    border-color: var(--waka-primary);
+    color: white;
+}
+
+.voice-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.voice-card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+}
+
+.voice-card.selected .voice-card-icon {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.voice-card-title {
+    flex: 1;
+}
+
+.voice-card-name {
+    font-weight: 700;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.voice-card-local {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    margin: 0;
+}
+
+.voice-card-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.badge-success {
+    background: #D4EDDA;
+    color: #155724;
+}
+
+.voice-card.selected .voice-card-badge {
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+.voice-card-details {
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+
+.voice-card-detail {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.voice-card-detail i {
+    width: 16px;
+    text-align: center;
+    opacity: 0.7;
+}
+
+/* ========================================
+   SECTION : États de chargement
+   ======================================== */
+
+.loading-spinner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    font-size: 0.9rem;
+    color: #6B7280;
+}
+
+.loading-spinner i {
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+    font-size: 1.5rem;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.no-voices-message {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6B7280;
+}
+
+.no-voices-message i {
+    font-size: 3rem;
+    color: var(--waka-primary-pale);
+    margin-bottom: 16px;
+}
+
+.no-voices-message p {
+    margin: 8px 0;
+}
+
+.error-message {
+    text-align: center;
+    padding: 40px 20px;
+    color: #dc3545;
+    background: #f8d7da;
+    border-radius: 12px;
+    border: 2px solid #f5c2c7;
+}
+
+.error-message i {
+    font-size: 2rem;
+    margin-bottom: 12px;
+}
+
+/* ========================================
+   SECTION : Restrictions et warnings
+   ======================================== */
+
+.restriction-warning {
+    background: #FFF3CD;
+    border-left: 4px solid #FFC107;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-top: 12px;
+    font-size: 0.9rem;
+    color: #856404;
+    display: flex;
+    align-items: start;
+    gap: 10px;
+}
+
+.restriction-warning i {
+    font-size: 1.2rem;
+    margin-top: 2px;
+}
+
+.info-box {
+    background: #E3F2FD;
+    border-left: 4px solid #2196F3;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+    color: #0D47A1;
+}
+
+/* ========================================
+   SECTION : Action buttons
+   ======================================== */
+
+.action-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    margin-top: 40px;
+    padding-top: 32px;
+    border-top: 2px solid var(--waka-border);
+}
+
+.btn-back {
+    background: white;
+    border: 2px solid var(--waka-border);
+    color: var(--waka-primary);
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-back:hover {
+    background: var(--waka-off-white);
+    border-color: var(--waka-primary);
+    transform: translateX(-4px);
+}
+
+.btn-next {
+    background: var(--gradient-primary);
+    border: none;
+    color: white;
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 12px rgba(74, 20, 140, 0.3);
+}
+
+.btn-next:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(74, 20, 140, 0.4);
+}
+
+/* ========================================
+   SECTION : Visualiseur Avatar Moderne
+   ======================================== */
+
+.preview-container {
+    background: white;
+    border: 2px solid var(--waka-border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(74, 20, 140, 0.1);
+    margin-top: 30px;
+}
+
+.preview-header {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.preview-header i {
+    font-size: 1.3rem;
+}
+
+.preview-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    flex: 1;
+}
+
+.preview-viewport {
+    position: relative;
+    background: linear-gradient(135deg, #f5f5f5 0%, #e9ecef 100%);
+    padding: 40px;
+    min-height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.preview-image-wrapper {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    background: white;
+}
+
+.preview-image-wrapper img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.preview-details {
+    padding: 16px 20px;
+    background: #f8f9fa;
+    border-top: 1px solid var(--waka-border);
+}
+
+.preview-detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.preview-detail-item:last-child {
+    border-bottom: none;
+}
+
+.preview-label {
+    font-weight: 600;
+    color: #6B7280;
+    font-size: 0.85rem;
+}
+
+.preview-value {
+    font-weight: 500;
+    color: var(--waka-primary);
+    font-size: 0.85rem;
+    text-align: right;
+}
+
+/* ========================================
+   SECTION : Responsive
+   ======================================== */
+
+@media (max-width: 768px) {
+    .model-info-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .model-badge {
+        margin-left: 0;
+        margin-top: 12px;
+    }
+    
+    .action-buttons {
+        flex-direction: column-reverse;
+    }
+    
+    .btn-back, .btn-next {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ========================================
+   SECTION : Avatar Configuration
+   ======================================== */
+
+.avatar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.avatar-card {
+    background: white;
+    border: 2px solid var(--waka-border);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.avatar-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.3;
+    transition: opacity 0.3s ease;
+    z-index: 0;
+}
+
+.avatar-card:hover::before {
+    opacity: 0.5;
+}
+
+.avatar-card:hover {
+    border-color: var(--waka-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 20, 140, 0.2);
+}
+
+.avatar-card.selected {
+    background: var(--gradient-primary);
+    border-color: var(--waka-primary);
+    color: white;
+}
+
+.avatar-card-icon {
+    display: none; /* Caché - on utilise uniquement background-image */
+    font-size: 2.5rem;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 1;
+}
+
+.avatar-card-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.avatar-card-styles {
+    font-size: 0.75rem;
+    opacity: 0.7;
+    margin-top: 4px;
+    position: relative;
+    z-index: 1;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* Pagination Controls */
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+    padding: 16px;
+    background: var(--waka-off-white);
+    border-radius: 12px;
+}
+
+.pagination-btn {
+    padding: 8px 16px;
+    border: 2px solid var(--waka-border);
+    background: white;
+    color: var(--waka-primary);
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    font-size: 0.9rem;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: var(--gradient-primary);
+    color: white;
+    border-color: var(--waka-primary);
+    transform: translateY(-2px);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.pagination-info {
+    font-weight: 600;
+    color: var(--waka-primary);
+    font-size: 0.95rem;
+}
+
+.avatar-style-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.avatar-style-card {
+    background: white;
+    border: 2px solid var(--waka-border);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.avatar-style-card:hover {
+    border-color: var(--waka-primary);
+    background: var(--waka-off-white);
+}
+
+.avatar-style-card.selected {
+    background: var(--gradient-primary);
+    border-color: var(--waka-primary);
+    color: white;
+}
+
+.color-preview {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    border: 2px solid var(--waka-border);
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 10px;
+}
+
+.resolution-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+}
+
+.resolution-card {
+    background: white;
+    border: 2px solid var(--waka-border);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.resolution-card:hover {
+    border-color: var(--waka-primary);
+}
+
+.resolution-card.selected {
+    background: var(--gradient-primary);
+    border-color: var(--waka-primary);
+    color: white;
+}
+
+.resolution-card-size {
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.resolution-card-label {
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- En-tête avec progression -->
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="page-title mb-0">
+                <i class="bi bi-sliders"></i> 
+                <span>Configuration Voice Live</span>
+            </h2>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> Annuler
+            </a>
+        </div>
+        
+        <!-- Barre de progression -->
+        <div class="progress mb-3" style="height: 10px;">
+            <div class="progress-bar" role="progressbar" style="width: 66%;" aria-valuenow="66" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        
+        <div class="progress-steps">
+            <span class="progress-step">
+                <i class="bi bi-check-circle-fill"></i> Étape 1 : Configuration
+            </span>
+            <span class="progress-step active">
+                <i class="bi bi-check-circle-fill"></i> Étape 2 : Paramètres Voice
+            </span>
+            <span class="progress-step">
+                Étape 3 : Finalisation
+            </span>
+        </div>
+    </div>
+
+    <!-- Informations sur le modèle sélectionné -->
+    <div class="model-info-card" id="modelInfoCard">
+        <div class="model-info-icon f1">
+            <i class="bi bi-robot"></i>
+        </div>
+        <div class="model-info-details">
+            <h3 id="selectedModelName">{{ model_name or 'Modèle sélectionné' }}</h3>
+            <p id="selectedModelDescription">{{ model_description or 'Description du modèle' }}</p>
+        </div>
+        <span class="model-badge bg-primary text-white" id="selectedModelFamily">{{ model_family or 'F1_Realtime' }}</span>
+    </div>
+
+    <!-- Formulaire de configuration -->
+    <form id="voiceLiveForm" method="POST" action="{{ url_for('personal_voice.personal_voice_config_step3', agent_id=agent_id) }}">
+        <!-- Champs cachés pour les informations du modèle -->
+        <input type="hidden" name="config_type" id="configType" value="{{ config_type }}">
+        <input type="hidden" name="model_id" id="modelId" value="{{ model_id }}">
+        <input type="hidden" name="model_name" id="modelName" value="{{ model_name }}">
+        <input type="hidden" name="model_description" id="modelDescription" value="{{ model_description }}">
+        <input type="hidden" name="model_family" id="modelFamily" value="{{ model_family }}">
+        <input type="hidden" name="voice_type" value="personal">
+
+        <!-- Section : Model Configuration -->
+        <div class="config-section">
+            <div class="section-header">
+                <div class="section-icon">
+                    <i class="bi bi-cpu"></i>
+                </div>
+                <div>
+                    <h3 class="section-title">Configuration du Modèle</h3>
+                    <p class="section-description">Paramètres de génération de texte</p>
+                </div>
+            </div>
+
+            <!-- Max Tokens -->
+            <div class="form-group">
+                <label for="maxTokens" class="form-label">
+                    Tokens maximum
+                    <span class="optional-badge">Optionnel</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">📏</span> <strong>Longueur maximale de la réponse</strong><br>
+                            Limite le nombre de tokens générés par le modèle.<br><br>
+                            <div class="tooltip-example">
+                                1000 tokens ≈ 750 mots
+                            </div>
+                        </div>
+                    </div>
+                </label>
+                <input type="number" class="form-control" id="maxTokens" name="max_tokens" 
+                       min="1" max="16000" step="1" placeholder="ex: 1000">
+                <div class="form-help">
+                    Nombre maximum de tokens dans la réponse (1-4096 pour GPT-4, 1-16000 pour GPT-5/o1)
+                </div>
+            </div>
+        </div>
+
+        <!-- Section : Input Audio Properties -->
+        <div class="config-section">
+            <div class="section-header">
+                <div class="section-icon">
+                    <i class="bi bi-soundwave"></i>
+                </div>
+                <div>
+                    <h3 class="section-title">Entrée Audio (Speech to Text)</h3>
+                    <p class="section-description">Configuration de la capture et reconnaissance audio</p>
+                </div>
+            </div>
+
+            <!-- Input Audio Sampling Rate -->
+            <div class="form-group">
+                <label for="inputAudioSamplingRate" class="form-label">
+                    Taux d'échantillonnage
+                    <span class="optional-badge">Optionnel</span>
+                </label>
+                <select class="form-select" id="inputAudioSamplingRate" name="input_audio_sampling_rate">
+                    <option value="24000" selected>24000 Hz (Haute qualité - Défaut)</option>
+                    <option value="16000">16000 Hz (Qualité téléphone)</option>
+                </select>
+            </div>
+
+            <!-- Echo Cancellation -->
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="enableEchoCancellation" name="enable_echo_cancellation">
+                    <label class="form-check-label" for="enableEchoCancellation">
+                        Activer l'annulation d'écho
+                    </label>
+                </div>
+            </div>
+
+            <!-- Noise Reduction -->
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="enableNoiseReduction" name="enable_noise_reduction">
+                    <label class="form-check-label" for="enableNoiseReduction">
+                        Activer la réduction de bruit
+                    </label>
+                </div>
+            </div>
+
+            <!-- Phrase List -->
+            <div class="form-group">
+                <label for="phraseList" class="form-label">
+                    Liste de phrases personnalisées
+                    <span class="optional-badge">Optionnel</span>
+                </label>
+                <textarea class="form-control" id="phraseList" name="phrase_list" rows="3" 
+                          placeholder="Termes spécifiques, un par ligne (max 500)"></textarea>
+                <div class="form-help">
+                    Améliore la reconnaissance des termes métier
+                </div>
+            </div>
+        </div>
+
+        <!-- Section : Configuration VAD -->
+        <div class="config-section">
+            <div class="section-header">
+                <div class="section-icon">
+                    <i class="bi bi-mic-fill"></i>
+                </div>
+                <div>
+                    <h3 class="section-title">Configuration VAD</h3>
+                    <p class="section-description">Détection d'activité vocale</p>
+                </div>
+            </div>
+
+            <!-- Type de VAD -->
+            <div class="form-group">
+                <label for="vadType" class="form-label">
+                    Type de VAD
+                    <span class="required-badge">Requis</span>
+                </label>
+                <select class="form-select" id="vadType" name="vad_type" required>
+                    <option value="server_vad">Server VAD (Par défaut)</option>
+                    <option value="semantic_vad">Semantic VAD</option>
+                    <option value="azure_semantic_vad">Azure Semantic VAD</option>
+                    <option value="azure_semantic_vad_multilingual">Azure Semantic VAD Multilingual</option>
+                </select>
+            </div>
+
+            <!-- Threshold -->
+            <div class="form-group">
+                <label for="vadThreshold" class="form-label">
+                    Seuil de confiance
+                    <span class="optional-badge">Optionnel</span>
+                </label>
+                <input type="number" class="form-control" id="vadThreshold" name="vad_threshold" 
+                       min="0" max="1" step="0.1" placeholder="0.7">
+            </div>
+
+            <!-- Silence Duration -->
+            <div class="form-group">
+                <label for="silenceDuration" class="form-label">
+                    Durée de silence (ms)
+                    <span class="optional-badge">Optionnel</span>
+                </label>
+                <input type="number" class="form-control" id="silenceDuration" name="silence_duration_ms" 
+                       min="0" step="50" placeholder="500">
+            </div>
+
+            <!-- Create Response -->
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="createResponse" name="create_response" checked>
+                    <label class="form-check-label" for="createResponse">
+                        Générer une réponse automatiquement
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section : Voix Personnalisée -->
+        <div class="config-section">
+            <div class="section-header">
+                <div class="section-icon">
+                    <i class="bi bi-megaphone-fill"></i>
+                </div>
+                <div>
+                    <h3 class="section-title">Voix Personnalisée</h3>
+                    <p class="section-description">Sélectionnez votre Personal Voice</p>
+                </div>
+            </div>
+
+            <!-- Sélecteur de voix personnalisées -->
+            <div class="form-group">
+                <label class="form-label">
+                    Voix disponibles
+                    <span class="required-badge">Requis</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">🎙️</span> <strong>Personal Voices</strong><br>
+                            Vos voix créées dans Azure Speech Studio.<br><br>
+                            <strong>Note :</strong> Seules les voix actives (Succeeded) sont affichées.
+                        </div>
+                    </div>
+                </label>
+                
+                <!-- États de chargement -->
+                <div id="voicesLoadingState" class="loading-spinner">
+                    <i class="bi bi-arrow-repeat"></i>
+                    Chargement des voix personnalisées...
+                </div>
+                
+                <div id="voicesErrorState" class="error-message" style="display: none;">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <p id="voicesErrorMessage">Erreur lors du chargement des voix</p>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="loadPersonalVoices()">
+                        <i class="bi bi-arrow-clockwise"></i> Réessayer
+                    </button>
+                </div>
+                
+                <div id="voicesEmptyState" class="no-voices-message" style="display: none;">
+                    <i class="bi bi-mic-mute"></i>
+                    <p><strong>Aucune voix personnalisée trouvée</strong></p>
+                    <p>Créez d'abord une voix dans Azure Speech Studio</p>
+                </div>
+                
+                <!-- Grille des voix -->
+                <div class="voices-grid" id="personalVoicesGrid" style="display: none;">
+                    <!-- Les cartes de voix seront ajoutées dynamiquement -->
+                </div>
+                
+                <!-- Champs cachés pour stocker la sélection -->
+                <input type="hidden" id="voiceName" name="voice_name" required>
+                <input type="hidden" id="customVoiceEndpoint" name="custom_voice_endpoint">
+                <input type="hidden" id="speakerProfileId" name="speaker_profile_id">
+                <input type="hidden" id="voiceLocale" name="voice_locale">
+            </div>
+
+            <!-- Speaking Rate -->
+            <div class="form-group">
+                <label for="speakingRate" class="form-label">
+                    Vitesse de parole
+                    <span class="optional-badge">Optionnel</span>
+                </label>
+                <input type="number" class="form-control" id="speakingRate" name="speaking_rate" 
+                       min="0.5" max="1.5" step="0.1" value="1.0">
+                <div class="form-help">
+                    0.5 (lent) à 1.5 (rapide), défaut 1.0
+                </div>
+            </div>
+
+            <!-- Output Audio Timestamps -->
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="enableOutputTimestamps" name="enable_output_timestamps">
+                    <label class="form-check-label" for="enableOutputTimestamps">
+                        Activer les timestamps audio
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section : Avatar Configuration -->
+        <div class="config-section" id="avatarSection">
+            <div class="section-header">
+                <div class="section-icon">
+                    <i class="bi bi-person-video3"></i>
+                </div>
+                <div>
+                    <h3 class="section-title">Avatar (Optionnel)</h3>
+                    <p class="section-description">Configuration de l'avatar vidéo pour accompagner la voix</p>
+                </div>
+                <div class="tooltip-wrapper" style="margin-left: auto;">
+                    <span class="info-icon">
+                        <i class="bi bi-info-lg"></i>
+                    </span>
+                    <div class="tooltip-content">
+                        <span class="tooltip-emoji">🧑‍💼</span> <strong>Avatar Azure AI</strong><br>
+                        Ajoute un avatar vidéo photoréaliste qui parle en synchronisation avec la voix.<br><br>
+                        <strong>Fonctionnalités :</strong><br>
+                        • Streaming WebRTC en temps réel<br>
+                        • Fond personnalisable<br>
+                        • Résolution jusqu'à 1920x1080<br><br>
+                        <div class="tooltip-example">
+                            Nécessite une région Azure compatible
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activer Avatar -->
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="enableAvatar" name="enable_avatar">
+                    <label class="form-check-label" for="enableAvatar">
+                        <strong>Activer l'avatar vidéo</strong>
+                    </label>
+                </div>
+                <div class="form-help">
+                    Active le streaming vidéo d'un avatar parlant en temps réel
+                </div>
+            </div>
+
+            <div id="avatarConfigSection" style="display: none;">
+                <!-- Avatar Character -->
+                <div class="form-group">
+                    <label class="form-label">
+                        Personnage de l'avatar
+                        <span class="required-badge">Requis</span>
+                        <div class="tooltip-wrapper">
+                            <span class="info-icon">
+                                <i class="bi bi-info-lg"></i>
+                            </span>
+                            <div class="tooltip-content">
+                                <span class="tooltip-emoji">👤</span> <strong>Choix du personnage</strong><br>
+                                Sélectionnez l'apparence de votre avatar.<br><br>
+                                <strong>Avatars disponibles :</strong><br>
+                                • Lisa, Harry, Jeff<br>
+                                • Lori, Max, Meg<br><br>
+                                <strong>⚠️ Limitation :</strong><br>
+                                Les avatars pré-construits ne permettent pas de modifier la couleur des vêtements, de la peau, ou la coiffure. Pour une personnalisation complète, utilisez un Custom Avatar.<br><br>
+                                <div class="tooltip-example">
+                                    Chaque personnage a plusieurs styles
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                    <div class="avatar-grid" id="avatarCharacterGrid">
+                        <!-- Les avatars seront chargés dynamiquement via JavaScript -->
+                    </div>
+                    
+                    <!-- Contrôles de pagination -->
+                    <div class="pagination-controls" id="avatarPaginationControls" style="display: none;">
+                        <button type="button" class="pagination-btn" id="prevPageBtn">
+                            <i class="bi bi-chevron-left"></i> Précédent
+                        </button>
+                        <span class="pagination-info" id="paginationInfo">Page 1</span>
+                        <button type="button" class="pagination-btn" id="nextPageBtn">
+                            Suivant <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
+                    
+                    <input type="hidden" id="avatarCharacter" name="avatar_character" value="lisa">
+                </div>
+
+                <!-- Avatar Style -->
+                <div class="form-group" id="avatarStyleGroup">
+                    <label class="form-label">
+                        Style de l'avatar
+                        <span class="required-badge">Requis</span>
+                        <div class="tooltip-wrapper">
+                            <span class="info-icon">
+                                <i class="bi bi-info-lg"></i>
+                            </span>
+                            <div class="tooltip-content">
+                                <span class="tooltip-emoji">🎨</span> <strong>Style vestimentaire et posture</strong><br>
+                                Définit l'apparence et la posture de l'avatar.<br><br>
+                                <strong>Types de styles :</strong><br>
+                                • business : Tenue professionnelle<br>
+                                • casual : Tenue décontractée<br>
+                                • formal : Tenue formelle<br>
+                                • sitting/standing : Position<br><br>
+                                <div class="tooltip-example">
+                                    Les styles varient selon le personnage
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                    <div class="avatar-style-grid" id="avatarStyleGrid">
+                        <!-- Styles dynamiques selon le personnage -->
+                    </div>
+                    <input type="hidden" id="avatarStyle" name="avatar_style" value="casual-sitting">
+                </div>
+
+                <!-- Custom Avatar -->
+                <div class="form-group">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="avatarCustomized" name="avatar_customized">
+                        <label class="form-check-label" for="avatarCustomized">
+                            Utiliser un avatar personnalisé (Custom Avatar)
+                        </label>
+                    </div>
+                    <div class="form-help">
+                        Cochez si vous utilisez un avatar créé sur mesure dans Speech Studio
+                    </div>
+                </div>
+
+                <!-- Background Color -->
+                <div class="form-group">
+                    <label for="avatarBackgroundColor" class="form-label">
+                        Couleur de fond
+                        <span class="optional-badge">Optionnel</span>
+                        <div class="tooltip-wrapper">
+                            <span class="info-icon">
+                                <i class="bi bi-info-lg"></i>
+                            </span>
+                            <div class="tooltip-content">
+                                <span class="tooltip-emoji">🎨</span> <strong>Couleur d'arrière-plan</strong><br>
+                                Format #RRGGBBAA (avec canal alpha).<br><br>
+                                <strong>Exemples :</strong><br>
+                                • #FFFFFFFF : Blanc opaque<br>
+                                • #00FF00FF : Vert (pour chroma key)<br>
+                                • #000000FF : Noir opaque<br><br>
+                                <div class="tooltip-example">
+                                    Le canal alpha est ignoré en temps réel
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                    <div class="d-flex align-items-center">
+                        <input type="text" class="form-control" id="avatarBackgroundColor" name="avatar_background_color" 
+                               placeholder="#FFFFFFFF" value="#FFFFFFFF" style="max-width: 200px;">
+                        <input type="color" id="avatarColorPicker" value="#ffffff" 
+                               style="margin-left: 10px; width: 50px; height: 40px; border: none; cursor: pointer;">
+                    </div>
+                    <div class="form-help">
+                        Couleur au format hexadécimal avec alpha (#RRGGBBAA)
+                    </div>
+                </div>
+
+                <!-- Background Image -->
+                <div class="form-group">
+                    <label for="avatarBackgroundImage" class="form-label">
+                        Image de fond
+                        <span class="optional-badge">Optionnel</span>
+                        <div class="tooltip-wrapper">
+                            <span class="info-icon">
+                                <i class="bi bi-info-lg"></i>
+                            </span>
+                            <div class="tooltip-content">
+                                <span class="tooltip-emoji">🖼️</span> <strong>Image d'arrière-plan</strong><br>
+                                URL publique vers une image de fond.<br><br>
+                                <strong>Recommandations :</strong><br>
+                                • Résolution : 1920x1080<br>
+                                • Format : JPEG ou PNG<br>
+                                • URL accessible publiquement<br><br>
+                                <div class="tooltip-example">
+                                    https://example.com/background.jpg
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                    
+                    <!-- Galerie d'images -->
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="toggleBackgroundGallery">
+                            <i class="bi bi-images"></i> Sélectionner depuis la galerie
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-success" id="uploadBackgroundBtn">
+                            <i class="bi bi-cloud-upload"></i> Uploader une image
+                        </button>
+                    </div>
+                    
+                    <!-- Galerie masquée par défaut -->
+                    <div id="backgroundGallery" style="display: none; margin-bottom: 15px;">
+                        <div id="backgroundGalleryLoading" class="text-center py-3">
+                            <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">Chargement...</span>
+                            </div>
+                            <p class="text-muted mt-2">Chargement des images...</p>
+                        </div>
+                        <div id="backgroundGalleryGrid" class="row g-2" style="display: none;"></div>
+                        <div id="backgroundGalleryEmpty" class="alert alert-info" style="display: none;">
+                            <i class="bi bi-info-circle"></i> Aucune image disponible. Uploadez votre première image !
+                        </div>
+                    </div>
+                    
+                    <!-- Input file caché -->
+                    <input type="file" id="backgroundFileInput" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp" style="display: none;">
+                    
+                    <!-- URL de l'image sélectionnée -->
+                    <input type="url" class="form-control" id="avatarBackgroundImage" name="avatar_background_image" 
+                           placeholder="https://example.com/background.jpg" readonly>
+                    <div class="form-help">
+                        Sélectionnez une image depuis la galerie ou uploadez la vôtre
+                    </div>
+                    
+                    <!-- Prévisualisation -->
+                    <div id="backgroundPreview" style="display: none; margin-top: 10px;">
+                        <img id="backgroundPreviewImg" src="" alt="Aperçu" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 2px solid var(--waka-border);">
+                    </div>
+                </div>
+
+                <!-- Visualiseur moderne centralisé -->
+                <div class="preview-container" id="modernPreview">
+                    <div class="preview-header">
+                        <i class="bi bi-eye"></i>
+                        <h3>Prévisualisation en temps réel</h3>
+                    </div>
+                    <div class="preview-viewport" id="previewViewport">
+                        <div class="preview-image-wrapper" id="previewImageWrapper" style="display: none;">
+                            <img id="previewImage" src="" alt="Aperçu avatar">
+                        </div>
+                        <div id="previewPlaceholder" style="text-align: center; color: #6B7280;">
+                            <i class="bi bi-image" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <p style="margin-top: 10px; font-size: 0.9rem;">Sélectionnez un avatar ou une image de fond pour prévisualiser</p>
+                        </div>
+                    </div>
+                    <div class="preview-details">
+                        <div class="preview-detail-item">
+                            <span class="preview-label">Avatar :</span>
+                            <span class="preview-value" id="previewAvatarName">-</span>
+                        </div>
+                        <div class="preview-detail-item">
+                            <span class="preview-label">Résolution :</span>
+                            <span class="preview-value" id="previewResolutionText">1920×1080</span>
+                        </div>
+                        <div class="preview-detail-item">
+                            <span class="preview-label">Fond :</span>
+                            <span class="preview-value" id="previewBackgroundValue">#FFFFFFFF</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Video Resolution -->
+                <div class="form-group">
+                    <label class="form-label">
+                        Résolution vidéo
+                        <span class="optional-badge">Optionnel</span>
+                        <div class="tooltip-wrapper">
+                            <span class="info-icon">
+                                <i class="bi bi-info-lg"></i>
+                            </span>
+                            <div class="tooltip-content">
+                                <span class="tooltip-emoji">📺</span> <strong>Qualité de la vidéo</strong><br>
+                                Définit la résolution du flux vidéo avatar.<br><br>
+                                <strong>Options :</strong><br>
+                                • 1920x1080 : Full HD (défaut)<br>
+                                • 1280x720 : HD<br>
+                                • 960x540 : qHD<br><br>
+                                <div class="tooltip-example">
+                                    Plus la résolution est haute, plus la bande passante est élevée
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                    <div class="resolution-options" id="resolutionOptions">
+                        <div class="resolution-card selected" data-width="1920" data-height="1080">
+                            <p class="resolution-card-size">1920 x 1080</p>
+                            <p class="resolution-card-label">Full HD</p>
+                        </div>
+                        <div class="resolution-card" data-width="1280" data-height="720">
+                            <p class="resolution-card-size">1280 x 720</p>
+                            <p class="resolution-card-label">HD</p>
+                        </div>
+                        <div class="resolution-card" data-width="960" data-height="540">
+                            <p class="resolution-card-size">960 x 540</p>
+                            <p class="resolution-card-label">qHD</p>
+                        </div>
+                    </div>
+                    <input type="hidden" id="avatarVideoWidth" name="avatar_video_width" value="1920">
+                    <input type="hidden" id="avatarVideoHeight" name="avatar_video_height" value="1080">
+                </div>
+
+                <!-- Video Bitrate -->
+                <div class="form-group">
+                    <label for="avatarVideoBitrate" class="form-label">
+                        Bitrate vidéo (bps)
+                        <span class="optional-badge">Optionnel</span>
+                        <div class="tooltip-wrapper">
+                            <span class="info-icon">
+                                <i class="bi bi-info-lg"></i>
+                            </span>
+                            <div class="tooltip-content">
+                                <span class="tooltip-emoji">📊</span> <strong>Débit vidéo</strong><br>
+                                Qualité et compression du flux vidéo.<br><br>
+                                <strong>Valeurs recommandées :</strong><br>
+                                • 2000000 : Standard (2 Mbps)<br>
+                                • 3000000 : Haute qualité (3 Mbps)<br>
+                                • 5000000 : Très haute qualité (5 Mbps)<br><br>
+                                <div class="tooltip-example">
+                                    Plus le bitrate est élevé, meilleure est la qualité
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                    <input type="number" class="form-control" id="avatarVideoBitrate" name="avatar_video_bitrate" 
+                           min="500000" max="10000000" step="100000" value="2000000">
+                    <div class="form-help">
+                        Débit vidéo en bits par seconde (défaut : 2000000 = 2 Mbps)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="action-buttons">
+            <a href="{{ url_for('personal_voice.personal_voice_config_step1') }}" class="btn-back">
+                <i class="bi bi-arrow-left"></i>
+                <span>Retour</span>
+            </a>
+            <button type="submit" class="btn-next">
+                <span>Continuer</span>
+                <i class="bi bi-arrow-right"></i>
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+/**
+ * Personal Voice Selector
+ * Charge et affiche les voix personnalisées depuis l'API Azure Speech
+ */
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadPersonalVoices();
+});
+
+async function loadPersonalVoices() {
+    const loadingState = document.getElementById('voicesLoadingState');
+    const errorState = document.getElementById('voicesErrorState');
+    const emptyState = document.getElementById('voicesEmptyState');
+    const voicesGrid = document.getElementById('personalVoicesGrid');
+    const errorMessage = document.getElementById('voicesErrorMessage');
+    
+    // Afficher loading
+    loadingState.style.display = 'flex';
+    errorState.style.display = 'none';
+    emptyState.style.display = 'none';
+    voicesGrid.style.display = 'none';
+    
+    try {
+        const response = await fetch('/personal-voice/api/personal-voices');
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        loadingState.style.display = 'none';
+        
+        if (data.success && data.voices && data.voices.length > 0) {
+            renderPersonalVoices(data.voices);
+            voicesGrid.style.display = 'grid';
+            console.log(`✅ ${data.voices.length} voix personnalisées chargées`);
+        } else {
+            emptyState.style.display = 'block';
+            console.log('ℹ️ Aucune voix personnalisée trouvée');
+        }
+        
+    } catch (error) {
+        console.error('❌ Erreur chargement voix:', error);
+        loadingState.style.display = 'none';
+        errorMessage.textContent = error.message || 'Erreur lors du chargement des voix';
+        errorState.style.display = 'block';
+    }
+}
+
+function renderPersonalVoices(voices) {
+    const grid = document.getElementById('personalVoicesGrid');
+    grid.innerHTML = '';
+    
+    voices.forEach(voice => {
+        const card = document.createElement('div');
+        card.className = 'voice-card';
+        card.dataset.voiceId = voice.voice_id;
+        card.dataset.voiceName = voice.voice_name;
+        card.dataset.endpointId = voice.endpoint_id;
+        card.dataset.speakerProfileId = voice.speaker_profile_id;
+        card.dataset.locale = voice.locale;
+        
+        // Icône selon le genre
+        const genderIcon = voice.gender === 'Female' ? '👩' : 
+                          voice.gender === 'Male' ? '👨' : '🎙️';
+        
+        card.innerHTML = `
+            <div class="voice-card-header">
+                <div class="voice-card-icon">${genderIcon}</div>
+                <div class="voice-card-title">
+                    <p class="voice-card-name">${voice.voice_name}</p>
+                    <p class="voice-card-local">${voice.locale}</p>
+                </div>
+                <span class="voice-card-badge badge-success">Personal</span>
+            </div>
+            <div class="voice-card-details">
+                ${voice.description ? `
+                <div class="voice-card-detail">
+                    <i class="bi bi-info-circle"></i>
+                    <span>${voice.description}</span>
+                </div>
+                ` : ''}
+                <div class="voice-card-detail">
+                    <i class="bi bi-calendar"></i>
+                    <span>${formatDate(voice.created_at)}</span>
+                </div>
+                <div class="voice-card-detail">
+                    <i class="bi bi-person-badge"></i>
+                    <span title="${voice.speaker_profile_id}">Profile: ${truncateId(voice.speaker_profile_id)}</span>
+                </div>
+            </div>
+        `;
+        
+        card.addEventListener('click', () => selectPersonalVoice(card, voice));
+        grid.appendChild(card);
+    });
+    
+    // Sélectionner automatiquement la première voix si une seule
+    if (voices.length === 1) {
+        const firstCard = grid.querySelector('.voice-card');
+        if (firstCard) {
+            selectPersonalVoice(firstCard, voices[0]);
+        }
+    }
+}
+
+function selectPersonalVoice(card, voice) {
+    // Désélectionner toutes les cartes
+    document.querySelectorAll('.voice-card').forEach(c => c.classList.remove('selected'));
+    
+    // Sélectionner la carte cliquée
+    card.classList.add('selected');
+    
+    // Mettre à jour les champs cachés
+    document.getElementById('voiceName').value = voice.voice_name;
+    document.getElementById('customVoiceEndpoint').value = voice.endpoint_id;
+    document.getElementById('speakerProfileId').value = voice.speaker_profile_id;
+    document.getElementById('voiceLocale').value = voice.locale;
+    
+    console.log('🎙️ Voix sélectionnée:', voice.voice_name, voice.endpoint_id);
+}
+
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    });
+}
+
+function truncateId(id) {
+    if (!id) return 'N/A';
+    if (id.length <= 12) return id;
+    return id.substring(0, 8) + '...';
+}
+
+// Validation du formulaire
+document.getElementById('voiceLiveForm').addEventListener('submit', function(e) {
+    const voiceName = document.getElementById('voiceName').value;
+    if (!voiceName) {
+        e.preventDefault();
+        alert('Veuillez sélectionner une voix personnalisée');
+        return false;
+    }
+});
+</script>
+
+<script>
+// ========================================
+// Avatar Configuration Script
+// ========================================
+
+const avatarStyles = {
+    lisa: [
+        { id: 'casual-sitting', name: 'Casual Sitting', icon: '🪑' },
+        { id: 'graceful-sitting', name: 'Graceful Sitting', icon: '💺' },
+        { id: 'graceful-standing', name: 'Graceful Standing', icon: '🧍‍♀️' },
+        { id: 'technical-sitting', name: 'Technical Sitting', icon: '💻' },
+        { id: 'technical-standing', name: 'Technical Standing', icon: '📊' }
+    ],
+    harry: [
+        { id: 'business', name: 'Business', icon: '👔' },
+        { id: 'casual', name: 'Casual', icon: '👕' },
+        { id: 'youthful', name: 'Youthful', icon: '😊' }
+    ],
+    jeff: [
+        { id: 'business', name: 'Business', icon: '👔' },
+        { id: 'formal', name: 'Formal', icon: '🎩' }
+    ],
+    lori: [
+        { id: 'casual', name: 'Casual', icon: '👕' },
+        { id: 'graceful', name: 'Graceful', icon: '✨' },
+        { id: 'formal', name: 'Formal', icon: '👗' }
+    ],
+    max: [
+        { id: 'business', name: 'Business', icon: '👔' },
+        { id: 'casual', name: 'Casual', icon: '👕' },
+        { id: 'formal', name: 'Formal', icon: '🎩' }
+    ],
+    meg: [
+        { id: 'formal', name: 'Formal', icon: '👗' },
+        { id: 'casual', name: 'Casual', icon: '👕' },
+        { id: 'business', name: 'Business', icon: '👔' }
+    ]
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Load real avatar images from API
+    loadAvatarImages();
+    
+    // Pagination event listeners
+    const prevBtn = document.getElementById('prevPageBtn');
+    const nextBtn = document.getElementById('nextPageBtn');
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderAvatarPage();
+            }
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function() {
+            const totalPages = Math.ceil(allAvatars.length / avatarsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderAvatarPage();
+            }
+        });
+    }
+    
+    // Toggle avatar config section
+    const enableAvatar = document.getElementById('enableAvatar');
+    const avatarConfigSection = document.getElementById('avatarConfigSection');
+    
+    if (enableAvatar && avatarConfigSection) {
+        enableAvatar.addEventListener('change', function() {
+            avatarConfigSection.style.display = this.checked ? 'block' : 'none';
+        });
+    }
+    
+    // Avatar character selection
+    const avatarCharacterGrid = document.getElementById('avatarCharacterGrid');
+    const avatarCharacterInput = document.getElementById('avatarCharacter');
+    
+    if (avatarCharacterGrid) {
+        avatarCharacterGrid.addEventListener('click', function(e) {
+            const card = e.target.closest('.avatar-card');
+            if (card) {
+                // Remove selection from all cards
+                avatarCharacterGrid.querySelectorAll('.avatar-card').forEach(c => c.classList.remove('selected'));
+                // Add selection to clicked card
+                card.classList.add('selected');
+                // Update hidden input
+                const character = card.dataset.character;
+                avatarCharacterInput.value = character;
+                // Update styles for selected character
+                updateAvatarStyles(character);
+            }
+        });
+        
+        // Initialize with default selection
+        const defaultCard = avatarCharacterGrid.querySelector('[data-character="lisa"]');
+        if (defaultCard) {
+            defaultCard.classList.add('selected');
+            updateAvatarStyles('lisa');
+        }
+    }
+    
+    // Resolution selection
+    const resolutionOptions = document.getElementById('resolutionOptions');
+    const widthInput = document.getElementById('avatarVideoWidth');
+    const heightInput = document.getElementById('avatarVideoHeight');
+    
+    if (resolutionOptions) {
+        resolutionOptions.addEventListener('click', function(e) {
+            const card = e.target.closest('.resolution-card');
+            if (card) {
+                resolutionOptions.querySelectorAll('.resolution-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                widthInput.value = card.dataset.width;
+                heightInput.value = card.dataset.height;
+            }
+        });
+    }
+    
+    // Color picker sync
+    const colorInput = document.getElementById('avatarBackgroundColor');
+    const colorPicker = document.getElementById('avatarColorPicker');
+    
+    if (colorInput && colorPicker) {
+        colorPicker.addEventListener('input', function() {
+            colorInput.value = this.value.toUpperCase() + 'FF';
+        });
+        
+        colorInput.addEventListener('input', function() {
+            if (this.value.length >= 7) {
+                colorPicker.value = this.value.substring(0, 7);
+            }
+        });
+    }
+    
+    // Load avatars with pagination
+    loadAvatarImages();
+});
+
+// Pagination variables
+let allAvatars = [];
+let currentPage = 1;
+const avatarsPerPage = 6;
+
+async function loadAvatarImages() {
+    try {
+        const response = await fetch('/avatar/api/avatars');
+        if (!response.ok) {
+            console.warn('⚠️ Impossible de charger les images des avatars, utilisation des avatars par défaut');
+            loadDefaultAvatars();
+            return;
+        }
+        
+        const data = await response.json();
+        if (data.success && data.avatars && data.avatars.length > 0) {
+            allAvatars = data.avatars;
+            renderAvatarPage();
+            console.log(`✅ ${allAvatars.length} avatars chargés`);
+        } else {
+            loadDefaultAvatars();
+        }
+    } catch (error) {
+        console.error('❌ Erreur chargement avatars:', error);
+        loadDefaultAvatars();
+    }
+}
+
+function loadDefaultAvatars() {
+    allAvatars = [
+        { character: 'lisa', avatar_name: 'Lisa', preview_url: '', styles_count: 5 },
+        { character: 'harry', avatar_name: 'Harry', preview_url: '', styles_count: 3 },
+        { character: 'jeff', avatar_name: 'Jeff', preview_url: '', styles_count: 2 },
+        { character: 'lori', avatar_name: 'Lori', preview_url: '', styles_count: 3 },
+        { character: 'max', avatar_name: 'Max', preview_url: '', styles_count: 3 },
+        { character: 'meg', avatar_name: 'Meg', preview_url: '', styles_count: 3 }
+    ];
+    renderAvatarPage();
+}
+
+function renderAvatarPage() {
+    const grid = document.getElementById('avatarCharacterGrid');
+    const paginationControls = document.getElementById('avatarPaginationControls');
+    const prevBtn = document.getElementById('prevPageBtn');
+    const nextBtn = document.getElementById('nextPageBtn');
+    const paginationInfo = document.getElementById('paginationInfo');
+    
+    if (!grid) return;
+    
+    // Calculate pagination
+    const totalPages = Math.ceil(allAvatars.length / avatarsPerPage);
+    const startIndex = (currentPage - 1) * avatarsPerPage;
+    const endIndex = Math.min(startIndex + avatarsPerPage, allAvatars.length);
+    const pageAvatars = allAvatars.slice(startIndex, endIndex);
+    
+    // Clear grid
+    grid.innerHTML = '';
+    
+    // Render avatars for current page
+    pageAvatars.forEach((avatar, index) => {
+        const character = (avatar.character || avatar.avatar_name || '').toLowerCase();
+        const displayName = avatar.avatar_name || character.charAt(0).toUpperCase() + character.slice(1);
+        const stylesCount = getStylesCount(character);
+        const emoji = getDefaultEmoji(character);
+        
+        const card = document.createElement('div');
+        card.className = 'avatar-card';
+        card.dataset.character = character;
+        
+        // Add selection to first avatar on first page
+        if (currentPage === 1 && index === 0) {
+            card.classList.add('selected');
+        }
+        
+        card.innerHTML = `
+            <div class="avatar-card-icon">${emoji}</div>
+            <div class="avatar-card-name">${displayName}</div>
+            <div class="avatar-card-styles">${stylesCount} style${stylesCount > 1 ? 's' : ''}</div>
+        `;
+        
+        // Apply background image if available
+        if (avatar.preview_url) {
+            card.style.setProperty('--avatar-bg-image', `url('${avatar.preview_url}')`);
+            card.style.backgroundImage = `var(--avatar-bg-image)`;
+            card.style.backgroundSize = 'cover';
+            card.style.backgroundPosition = 'center';
+            // Hide emoji icon if we have a real image
+            const icon = card.querySelector('.avatar-card-icon');
+            if (icon) icon.style.display = 'none';
+        }
+        
+        grid.appendChild(card);
+    });
+    
+    // Update pagination controls
+    if (paginationControls) {
+        paginationControls.style.display = totalPages > 1 ? 'flex' : 'none';
+    }
+    if (prevBtn) {
+        prevBtn.disabled = currentPage === 1;
+    }
+    if (nextBtn) {
+        nextBtn.disabled = currentPage === totalPages;
+    }
+    if (paginationInfo) {
+        paginationInfo.textContent = `Page ${currentPage} sur ${totalPages}`;
+    }
+}
+
+function getDefaultEmoji(character) {
+    const emojiMap = {
+        'lisa': '👩',
+        'harry': '👨',
+        'jeff': '👨‍💼',
+        'lori': '👩‍💼',
+        'max': '🧑',
+        'meg': '👩‍🦰'
+    };
+    return emojiMap[character] || '👤';
+}
+
+function getStylesCount(character) {
+    return avatarStyles[character] ? avatarStyles[character].length : 0;
+}
+
+function updateAvatarStyles(character) {
+    const styleGrid = document.getElementById('avatarStyleGrid');
+    const styleInput = document.getElementById('avatarStyle');
+    
+    if (!styleGrid || !avatarStyles[character]) return;
+    
+    const styles = avatarStyles[character];
+    styleGrid.innerHTML = '';
+    
+    styles.forEach((style, index) => {
+        const card = document.createElement('div');
+        card.className = 'avatar-style-card' + (index === 0 ? ' selected' : '');
+        card.dataset.style = style.id;
+        card.innerHTML = `<span style="font-size: 1.5rem;">${style.icon}</span><br>${style.name}`;
+        
+        card.addEventListener('click', function() {
+            styleGrid.querySelectorAll('.avatar-style-card').forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+            styleInput.value = this.dataset.style;
+        });
+        
+        styleGrid.appendChild(card);
+    });
+    
+    // Set default value
+    if (styles.length > 0) {
+        styleInput.value = styles[0].id;
+    }
+}
+</script>
+
+<script src="{{ url_for('static', filename='js/background_upload.js') }}?v={{ range(1, 9999999) | random }}"></script>
+{% endblock %}

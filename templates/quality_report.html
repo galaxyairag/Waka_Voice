@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapport d'Analyse Qualité - Waka AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        .report-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .report-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .report-header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        .report-body {
+            padding: 40px;
+            line-height: 1.8;
+        }
+        .loading-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+        .loading-state .spinner-border {
+            width: 4rem;
+            height: 4rem;
+        }
+        .loading-state h2 {
+            color: #667eea;
+            margin-top: 30px;
+            font-weight: 600;
+        }
+        .progress-custom {
+            height: 8px;
+            max-width: 500px;
+            margin: 30px auto;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .report-content h1 {
+            color: #667eea;
+            font-size: 1.8rem;
+            margin-top: 30px;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .report-content h2 {
+            color: #764ba2;
+            font-size: 1.5rem;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        .report-content h3 {
+            color: #5a67d8;
+            font-size: 1.2rem;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .report-content strong {
+            color: #667eea;
+            font-weight: 600;
+        }
+        .report-content ul {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+        .report-content li {
+            margin: 8px 0;
+        }
+        .report-actions {
+            padding: 20px 40px;
+            background: #f8f9fa;
+            border-top: 2px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn-custom {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <div class="report-header">
+            <h1><i class="bi bi-file-earmark-text"></i> Rapport d'Analyse Qualité</h1>
+            <p class="mb-0 mt-2">Analyse des sentiments sur <span id="period-display">30</span> jours</p>
+        </div>
+        
+        <div class="report-body">
+            <div id="loading-state" class="loading-state">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Génération du rapport...</span>
+                </div>
+                <h2>🤖 Analyse par IA en cours...</h2>
+                <p class="text-muted mt-3">Le modèle GPT analyse <span id="period-loading">30</span> jours de données</p>
+                <div class="progress progress-custom">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 100%"></div>
+                </div>
+                <div class="mt-4 text-muted">
+                    <p><i class="bi bi-lightbulb"></i> Le modèle de raisonnement analyse les corrélations, tendances et anomalies...</p>
+                    <p><i class="bi bi-clock"></i> Cela peut prendre 10-30 secondes</p>
+                </div>
+            </div>
+            
+            <div id="report-content" class="report-content" style="display: none;">
+                <!-- Le rapport sera inséré ici -->
+            </div>
+            
+            <div id="error-state" style="display: none;">
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> 
+                    <strong>Erreur lors de la génération du rapport</strong>
+                    <p class="mb-0 mt-2" id="error-message"></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="report-actions" id="report-actions" style="display: none;">
+            <div>
+                <a href="/quality" class="btn btn-secondary btn-custom">
+                    <i class="bi bi-arrow-left"></i> Retour au Dashboard
+                </a>
+            </div>
+            <div>
+                <button class="btn btn-success btn-custom me-2" id="download-word-btn">
+                    <i class="bi bi-file-word"></i> Télécharger Word
+                </button>
+                <button class="btn btn-danger btn-custom" id="download-pdf-btn">
+                    <i class="bi bi-file-pdf"></i> Télécharger PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Récupérer la période depuis l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const period = parseInt(urlParams.get('period')) || 30;
+        
+        document.getElementById('period-display').textContent = period;
+        document.getElementById('period-loading').textContent = period;
+        
+        let currentReport = '';
+        
+        // Générer le rapport automatiquement au chargement
+        window.addEventListener('DOMContentLoaded', function() {
+            generateReport();
+        });
+        
+        function generateReport() {
+            fetch(`/api/quality/generate-report?period=${period}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.report) {
+                        currentReport = data.report;
+                        const htmlContent = convertMarkdownToHTML(data.report);
+                        
+                        // Cacher le loading, afficher le rapport
+                        document.getElementById('loading-state').style.display = 'none';
+                        document.getElementById('report-content').style.display = 'block';
+                        document.getElementById('report-content').innerHTML = htmlContent;
+                        document.getElementById('report-actions').style.display = 'flex';
+                    } else {
+                        showError(data.error || 'Erreur inconnue');
+                    }
+                })
+                .catch(err => {
+                    showError(err.message);
+                });
+        }
+        
+        function showError(message) {
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('error-state').style.display = 'block';
+            document.getElementById('error-message').textContent = message;
+        }
+        
+        function convertMarkdownToHTML(markdown) {
+            if (!markdown) return '';
+            
+            let html = markdown;
+            
+            // Titres
+            html = html.replace(/^### (.+)$/gim, '<h3>$1</h3>');
+            html = html.replace(/^## (.+)$/gim, '<h2>$1</h2>');
+            html = html.replace(/^# (.+)$/gim, '<h1>$1</h1>');
+            
+            // Gras et italique
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            
+            // Listes
+            html = html.replace(/^[\-\*] (.+)$/gim, '<li>$1</li>');
+            html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+            
+            // Paragraphes
+            html = html.split('\n\n').map(para => {
+                para = para.trim();
+                if (!para) return '';
+                if (para.startsWith('<h') || para.startsWith('<ul') || para.startsWith('<ol')) {
+                    return para;
+                }
+                return '<p>' + para + '</p>';
+            }).join('\n');
+            
+            return html;
+        }
+        
+        // Téléchargements
+        document.getElementById('download-word-btn').addEventListener('click', function() {
+            if (currentReport) {
+                fetch('/api/quality/export-report', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ report: currentReport, format: 'docx', period: period })
+                })
+                .then(res => res.blob())
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `rapport_qualite_${period}j.docx`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                });
+            }
+        });
+        
+        document.getElementById('download-pdf-btn').addEventListener('click', function() {
+            if (currentReport) {
+                fetch('/api/quality/export-report', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ report: currentReport, format: 'pdf', period: period })
+                })
+                .then(res => res.blob())
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `rapport_qualite_${period}j.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

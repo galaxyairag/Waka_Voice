@@ -1,0 +1,984 @@
+{% extends "base.html" %}
+
+{% block title %}Mes Agents Avatar - Waka Burkiné Voix{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================
+       AVATAR GALLERY STYLING
+       ============================================ */
+    .agents-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem 0;
+        border-radius: 20px;
+        margin-bottom: 3rem;
+        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+    }
+
+    .agents-header h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+    }
+
+    .agents-header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    .agents-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+
+    .stat-card {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        padding: 1.5rem 2.5rem;
+        border-radius: 15px;
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #ffd700;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        opacity: 0.9;
+    }
+
+    /* ============================================
+       AVATAR CARDS GRID
+       ============================================ */
+    .agents-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .agent-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .agent-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .agent-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+        border-color: #667eea;
+    }
+
+    .avatar-preview {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 3rem;
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .avatar-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .avatar-badge {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        color: white;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .agent-name {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+        text-align: center;
+    }
+
+    .agent-description {
+        color: #6c757d;
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+        text-align: center;
+    }
+
+    .agent-meta {
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: column;
+        gap: 0.8rem;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+    }
+
+    .meta-item {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.8rem;
+        font-size: 0.85rem;
+    }
+
+    .meta-item i {
+        color: #667eea;
+        font-size: 1rem;
+        width: 20px;
+        text-align: center;
+    }
+
+    .meta-label {
+        font-weight: 600;
+        color: #6c757d;
+        min-width: 80px;
+    }
+
+    .meta-value {
+        color: #333;
+    }
+
+    /* ============================================
+       API SNIPPET SECTION
+       ============================================ */
+    .api-snippet {
+        margin: 1.5rem 0;
+        background: #1e1e1e;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid #333;
+    }
+
+    .api-snippet-header {
+        background: #2d2d2d;
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #444;
+    }
+
+    .api-snippet-title {
+        color: #fff;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .api-snippet-title i {
+        color: #667eea;
+    }
+
+    .api-snippet-copy {
+        background: transparent;
+        border: 1px solid #667eea;
+        color: #667eea;
+        padding: 0.3rem 0.8rem;
+        border-radius: 5px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .api-snippet-copy:hover {
+        background: #667eea;
+        color: white;
+    }
+
+    .api-snippet-body {
+        padding: 1rem;
+    }
+
+    .api-code {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 0.75rem;
+        line-height: 1.5;
+        color: #d4d4d4;
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+
+    .api-label {
+        color: #569cd6;
+        font-weight: 600;
+    }
+
+    .api-url {
+        color: #ce9178;
+    }
+
+    .api-key {
+        color: #9cdcfe;
+    }
+
+    .api-string {
+        color: #ce9178;
+    }
+
+    .api-comment {
+        color: #6a9955;
+        font-style: italic;
+    }
+
+    .agent-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+        margin-top: 1.5rem;
+    }
+
+    .btn-agent-action {
+        flex: 1 1 auto;
+        min-width: 45px;
+        padding: 0.8rem 1.2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border: 2px solid;
+        white-space: nowrap;
+    }
+
+    .btn-test {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: #667eea;
+    }
+
+    .btn-test:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .btn-call {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        color: white;
+        border-color: #48bb78;
+        font-weight: 700;
+    }
+
+    .btn-call:hover {
+        background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        color: white;
+    }
+
+    .btn-info {
+        background: white;
+        color: #17a2b8;
+        border-color: #17a2b8;
+        padding: 0.8rem;
+    }
+
+    .btn-info:hover {
+        background: #17a2b8;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .btn-edit {
+        background: white;
+        color: #667eea;
+        border-color: #e9ecef;
+    }
+
+    .btn-edit:hover {
+        background: #f8f9fa;
+        border-color: #667eea;
+        transform: translateY(-2px);
+        color: #667eea;
+    }
+
+    .btn-delete {
+        background: white;
+        color: #dc3545;
+        border-color: #dc3545;
+        padding: 0.8rem;
+    }
+
+    .btn-delete:hover {
+        background: #dc3545;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* ============================================
+       EMPTY STATE
+       ============================================ */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .empty-state-icon {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 4rem;
+        margin: 0 auto 2rem;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+
+    .empty-state h2 {
+        font-size: 2rem;
+        color: #667eea;
+        margin-bottom: 1rem;
+        font-weight: 700;
+    }
+
+    .empty-state p {
+        color: #6c757d;
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+
+    .btn-create-first {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.2rem 3rem;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        border: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.8rem;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-create-first:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 12px 35px rgba(102, 126, 234, 0.5);
+        color: white;
+    }
+
+    /* ============================================
+       FILTERS & SEARCH
+       ============================================ */
+    .filters-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .search-box {
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 0.8rem 1rem 0.8rem 2.5rem;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23667eea' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: 0.8rem center;
+        background-size: 1.2rem;
+    }
+
+    .search-box input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .filter-select {
+        padding: 0.8rem 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        color: #333;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    /* ============================================
+       STATUS BADGES
+       ============================================ */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-configured {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .status-draft {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    /* ============================================
+       RESPONSIVE
+       ============================================ */
+    @media (max-width: 768px) {
+        .agents-header h1 {
+            font-size: 2rem;
+        }
+
+        .agents-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .agents-stats {
+            gap: 1rem;
+        }
+
+        .stat-card {
+            padding: 1rem 1.5rem;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+        }
+
+        .filters-section {
+            flex-direction: column;
+        }
+
+        .search-box,
+        .filter-select {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header Section -->
+    <div class="agents-header text-center">
+        <h1>
+            <i class="bi bi-person-video3 me-3"></i>
+            Mes Agents Avatar
+        </h1>
+        <p>Gérez vos agents intelligents avec avatars visuels</p>
+        
+        <div class="agents-stats">
+            <div class="stat-card">
+                <div class="stat-number">{{ total or 0 }}</div>
+                <div class="stat-label">Avatars Totaux</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ active_count or 0 }}</div>
+                <div class="stat-label">Actifs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ draft_count or 0 }}</div>
+                <div class="stat-label">En configuration</div>
+            </div>
+        </div>
+        
+        <!-- Boutons de création -->
+        <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="/avatar/step1" class="btn btn-create-first">
+                <i class="bi bi-plus-circle-fill"></i>
+                Créer un agent avatar
+            </a>
+            <a href="/agents" class="btn" style="background: white; color: #667eea; padding: 12px 24px; border-radius: 50px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; border: 2px solid #667eea;">
+                <i class="bi bi-arrow-left"></i>
+                Retour aux agents voix
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters & Search -->
+    <div class="filters-section">
+        <div class="search-box">
+            <input type="text" 
+                   id="searchAvatars" 
+                   placeholder="Rechercher un avatar..."
+                   onkeyup="filterAvatarsLive()">
+        </div>
+        <select class="filter-select" id="filterStatus" onchange="applyFilters()">
+            <option value="">Tous les statuts</option>
+            <option value="active">Actifs</option>
+            <option value="step1_completed">Configuration en cours</option>
+            <option value="inactive">Inactifs</option>
+        </select>
+        <button class="btn btn-secondary" onclick="resetFilters()" style="padding: 0.8rem 1.5rem; border-radius: 10px; background: #6c757d; color: white; border: none;">
+            <i class="bi bi-x-circle"></i> Réinitialiser
+        </button>
+    </div>
+
+    <!-- Avatars Grid -->
+    <div id="avatarsContainer">
+        {% if avatars and avatars|length > 0 %}
+        <div class="agents-grid" id="avatarsGrid">
+            {% for avatar in avatars %}
+            <div class="agent-card" data-status="{{ avatar.status or 'draft' }}">
+                <div class="avatar-preview">
+                    {% if avatar.avatar_id %}
+                    <i class="bi bi-person-video3"></i>
+                    {% else %}
+                    <i class="bi bi-person-circle"></i>
+                    {% endif %}
+                    <div class="avatar-badge">
+                        <i class="bi bi-check-lg"></i>
+                    </div>
+                </div>
+                <h3 class="agent-name">{{ avatar.agent_name or 'Avatar sans nom' }}</h3>
+                <p class="agent-description">
+                    {{ avatar.description or 'Description non disponible' }}
+                </p>
+                <div class="agent-meta">
+                    <div class="meta-item">
+                        <i class="bi bi-person-badge"></i>
+                        <span class="meta-label">Avatar :</span>
+                        <span class="meta-value">{{ avatar.avatar_name or 'Non défini' }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="bi bi-mic-fill"></i>
+                        <span class="meta-label">Voix :</span>
+                        <span class="meta-value">{{ avatar.voice_name or avatar.voice_id or 'Non configurée' }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="bi bi-cpu"></i>
+                        <span class="meta-label">Modèle :</span>
+                        <span class="meta-value">{{ avatar.model_name or avatar.model_id or avatar.gpt_model or 'Non défini' }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="bi bi-translate"></i>
+                        <span class="meta-label">Langue :</span>
+                        <span class="meta-value">{{ avatar.language or 'fr-FR' }}</span>
+                    </div>
+                    {% if avatar.phone_number %}
+                    <div class="meta-item">
+                        <i class="bi bi-telephone"></i>
+                        <span class="meta-label">Téléphone :</span>
+                        <span class="meta-value">{{ avatar.phone_number }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="meta-item">
+                        <i class="bi bi-calendar"></i>
+                        <span class="meta-label">Créé le :</span>
+                        <span class="meta-value">{{ avatar.created_at[:10] if avatar.created_at else 'N/A' }}</span>
+                    </div>
+                </div>
+
+                <!-- API Endpoint Snippet -->
+                {% if avatar.agent_id %}
+                <div class="api-snippet">
+                    <div class="api-snippet-header">
+                        <span class="api-snippet-title">
+                            <i class="bi bi-code-slash"></i>
+                            API Endpoint
+                        </span>
+                        <button class="api-snippet-copy" onclick="copyApiSnippet('{{ avatar.agent_id }}', event)">
+                            <i class="bi bi-clipboard"></i> Copier
+                        </button>
+                    </div>
+                    <div class="api-snippet-body">
+                        <pre class="api-code" id="api-snippet-{{ avatar.agent_id }}"><span class="api-comment">// Endpoint URL</span>
+<span class="api-label">POST</span> <span class="api-url">https://www.waka.azurewebsites.net/api/agent/{{ avatar.agent_id }}/audio</span>
+
+<span class="api-comment">// Corps de la requête (multipart/form-data)</span>
+<span class="api-label">Content-Type:</span> multipart/form-data
+
+<span class="api-key">audio</span>: <span class="api-string">&lt;fichier audio .wav ou .mp3&gt;</span>
+<span class="api-key">session_id</span>: <span class="api-string">"optional-session-id"</span> (optionnel)
+
+<span class="api-comment">// Réponse (audio + texte)</span>
+{
+  <span class="api-key">"status"</span>: <span class="api-string">"success"</span>,
+  <span class="api-key">"agent_id"</span>: <span class="api-string">"{{ avatar.agent_id }}"</span>,
+  <span class="api-key">"transcript"</span>: <span class="api-string">"Bonjour, comment allez-vous?"</span>,
+  <span class="api-key">"response_text"</span>: <span class="api-string">"Bonjour! Je vais très bien..."</span>,
+  <span class="api-key">"audio_url"</span>: <span class="api-string">"https://...azure.blob.../response.wav"</span>,
+  <span class="api-key">"session_id"</span>: <span class="api-string">"session-123"</span>
+}</pre>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="agent-actions">
+                    {% if avatar.agent_id %}
+                    {% if avatar.status == 'active' or avatar.current_step == 4 %}
+                    <a href="/avatar/call/{{ avatar.agent_id }}" class="btn btn-agent-action btn-call" title="Lancer une conversation avec avatar">
+                        <i class="bi bi-camera-video-fill"></i>
+                        Lancer
+                    </a>
+                    {% else %}
+                    <a href="/avatar/step{{ avatar.current_step or 2 }}/{{ avatar.agent_id }}" class="btn btn-agent-action btn-test">
+                        <i class="bi bi-arrow-right-circle"></i>
+                        Continuer
+                    </a>
+                    {% endif %}
+                    <button class="btn btn-agent-action btn-info" onclick="viewAvatarDetails('{{ avatar.agent_id }}')">
+                        <i class="bi bi-info-circle"></i>
+                    </button>
+                    <a href="/avatar/step2/{{ avatar.agent_id }}" class="btn btn-agent-action btn-edit">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <button class="btn btn-agent-action btn-delete" onclick="deleteAvatar('{{ avatar.agent_id }}', '{{ avatar.agent_name or 'Avatar' }}')">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                    {% else %}
+                    <span class="text-muted" style="font-size: 0.85rem;">Avatar incomplet - ID manquant</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-person-video3"></i>
+            </div>
+            <h2>Aucun agent avatar pour le moment</h2>
+            <p>Commencez par créer votre premier agent avec avatar visuel</p>
+            <a href="/avatar/step1" class="btn btn-create-first">
+                <i class="bi bi-plus-circle-fill"></i>
+                <span>Créer mon premier avatar</span>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // ============================================
+    // FILTER & SEARCH FUNCTIONS
+    // ============================================
+    function applyFilters() {
+        const status = document.getElementById('filterStatus').value;
+        filterAvatarsByStatus(status);
+    }
+
+    function resetFilters() {
+        document.getElementById('filterStatus').value = '';
+        document.getElementById('searchAvatars').value = '';
+        const avatarCards = document.querySelectorAll('.agent-card');
+        avatarCards.forEach(card => {
+            card.style.display = 'block';
+        });
+    }
+
+    function filterAvatarsLive() {
+        const searchTerm = document.getElementById('searchAvatars').value.toLowerCase();
+        const avatarCards = document.querySelectorAll('.agent-card');
+        
+        avatarCards.forEach(card => {
+            const name = card.querySelector('.agent-name').textContent.toLowerCase();
+            const description = card.querySelector('.agent-description').textContent.toLowerCase();
+            
+            if (name.includes(searchTerm) || description.includes(searchTerm)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    function filterAvatarsByStatus(status) {
+        const avatarCards = document.querySelectorAll('.agent-card');
+        
+        avatarCards.forEach(card => {
+            const cardStatus = card.dataset.status;
+            
+            if (!status || cardStatus === status) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    // ============================================
+    // API SNIPPET FUNCTIONS
+    // ============================================
+    function copyApiSnippet(agentId, event) {
+        const snippetElement = document.getElementById(`api-snippet-${agentId}`);
+
+        if (!snippetElement) {
+            console.error('Snippet element not found for agent:', agentId);
+            alert('❌ Erreur: snippet introuvable');
+            return;
+        }
+
+        const textToCopy = snippetElement.textContent;
+
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            // Show success feedback
+            const button = event.currentTarget;
+            if (!button) return;
+
+            const originalHTML = button.innerHTML;
+            button.innerHTML = '<i class="bi bi-check-lg"></i> Copié!';
+            button.style.background = '#48bb78';
+            button.style.color = 'white';
+            button.style.borderColor = '#48bb78';
+
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.style.background = 'transparent';
+                button.style.color = '#667eea';
+                button.style.borderColor = '#667eea';
+            }, 2000);
+        }).catch(err => {
+            console.error('Erreur lors de la copie:', err);
+            alert('❌ Impossible de copier le snippet');
+        });
+    }
+
+    // ============================================
+    // AVATAR MANAGEMENT FUNCTIONS
+    // ============================================
+    async function deleteAvatar(avatarId, avatarName) {
+        if (!confirm(`Êtes-vous sûr de vouloir supprimer l'avatar "${avatarName}" ?\n\nCette action est irréversible.`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/avatar/api/${avatarId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('✅ Avatar supprimé avec succès');
+                window.location.reload();
+            } else {
+                alert('❌ Erreur lors de la suppression: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Error deleting avatar:', error);
+            alert('❌ Erreur lors de la suppression de l\'avatar');
+        }
+    }
+
+    async function viewAvatarDetails(avatarId) {
+        try {
+            const response = await fetch(`/avatar/api/${avatarId}/details`);
+            const result = await response.json();
+
+            if (result.success) {
+                showAvatarDetailsModal(result.avatar);
+            } else {
+                alert('❌ Erreur: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Error fetching avatar details:', error);
+            alert('❌ Erreur lors de la récupération des détails');
+        }
+    }
+
+    function showAvatarDetailsModal(avatar) {
+        const statusBadge = avatar.status === 'active' 
+            ? '<span class="status-badge status-active"><i class="bi bi-check-circle-fill"></i> Actif</span>'
+            : '<span class="status-badge status-draft"><i class="bi bi-gear-fill"></i> En configuration</span>';
+
+        const modal = document.createElement('div');
+        modal.className = 'agent-details-modal';
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; display: flex; align-items: center; justify-content: center;';
+        
+        modal.innerHTML = `
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);" onclick="closeAvatarDetailsModal()"></div>
+            <div style="position: relative; background: white; border-radius: 20px; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                <div style="padding: 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 20px 20px 0 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <h2 style="margin: 0; font-size: 1.8rem; font-weight: 700;">
+                                <i class="bi bi-person-video3"></i> ${avatar.agent_name || 'Avatar sans nom'}
+                            </h2>
+                            <p style="margin: 0.5rem 0 0; opacity: 0.9;">${avatar.description || 'Aucune description'}</p>
+                        </div>
+                        <button onclick="closeAvatarDetailsModal()" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.2rem;">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+                <div style="padding: 2rem;">
+                    <div style="margin-bottom: 2rem;">
+                        <h3 style="color: #667eea; font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e9ecef;">
+                            <i class="bi bi-info-circle-fill"></i> Informations générales
+                        </h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                            <div>
+                                <div style="font-size: 0.85rem; color: #6c757d; font-weight: 600; margin-bottom: 0.3rem;">STATUT</div>
+                                <div>${statusBadge}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.85rem; color: #6c757d; font-weight: 600; margin-bottom: 0.3rem;">ID AVATAR</div>
+                                <div style="font-family: monospace; background: #f8f9fa; padding: 0.5rem; border-radius: 5px; font-size: 0.85rem;">${avatar.agent_id}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.85rem; color: #6c757d; font-weight: 600; margin-bottom: 0.3rem;">AVATAR</div>
+                                <div>${avatar.avatar_name || 'Non défini'}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.85rem; color: #6c757d; font-weight: 600; margin-bottom: 0.3rem;">VOIX</div>
+                                <div>${avatar.voice_name || avatar.voice_id || 'Non configurée'}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.85rem; color: #6c757d; font-weight: 600; margin-bottom: 0.3rem;">MODÈLE</div>
+                                <div>${avatar.model_name || avatar.gpt_model || avatar.model_id || 'Non défini'}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.85rem; color: #6c757d; font-weight: 600; margin-bottom: 0.3rem;">LANGUE</div>
+                                <div>${avatar.language || 'fr-FR'}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${avatar.system_prompt ? `
+                    <div style="margin-bottom: 2rem;">
+                        <h3 style="color: #667eea; font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e9ecef;">
+                            <i class="bi bi-chat-left-text-fill"></i> Instructions système
+                        </h3>
+                        <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 1.5rem; white-space: pre-wrap; max-height: 300px; overflow-y: auto;">
+                            ${avatar.system_prompt}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <div>
+                        <h3 style="color: #667eea; font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e9ecef;">
+                            <i class="bi bi-code-square"></i> Configuration complète
+                        </h3>
+                        <pre style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 1rem; overflow-x: auto; font-size: 0.85rem; max-height: 400px; overflow-y: auto;">${JSON.stringify(avatar, null, 2)}</pre>
+                    </div>
+                </div>
+                <div style="padding: 1.5rem 2rem; background: #f8f9fa; border-top: 1px solid #e9ecef; display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button onclick="copyAvatarConfig('${avatar.agent_id}')" style="background: #6c757d; color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 10px; cursor: pointer; font-weight: 600;">
+                        <i class="bi bi-clipboard"></i> Copier JSON
+                    </button>
+                    <a href="/avatar/step2/${avatar.agent_id}" style="background: #667eea; color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 10px; text-decoration: none; font-weight: 600; display: inline-block;">
+                        <i class="bi bi-pencil"></i> Modifier
+                    </a>
+                    <button onclick="closeAvatarDetailsModal()" style="background: #667eea; color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 10px; cursor: pointer; font-weight: 600;">
+                        Fermer
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeAvatarDetailsModal() {
+        const modal = document.querySelector('.agent-details-modal');
+        if (modal) {
+            modal.remove();
+            document.body.style.overflow = '';
+        }
+    }
+
+    async function copyAvatarConfig(avatarId) {
+        try {
+            const response = await fetch(`/avatar/api/${avatarId}/details`);
+            const result = await response.json();
+            
+            if (result.success) {
+                const jsonText = JSON.stringify(result.avatar, null, 2);
+                await navigator.clipboard.writeText(jsonText);
+                alert('✅ Configuration copiée dans le presse-papier');
+            }
+        } catch (error) {
+            console.error('Error copying config:', error);
+            alert('❌ Erreur lors de la copie');
+        }
+    }
+</script>
+{% endblock %}

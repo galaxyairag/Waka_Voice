@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Waka Afrique{% endblock %} - Chaque interaction compte</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Palette Waka - Mauve/Violet professionnel */
+            --waka-primary: #4A148C;
+            --waka-primary-light: #7B1FA2;
+            --waka-primary-pale: #E1BEE7;
+            --waka-accent-yellow: #FFC107;
+            --waka-accent-orange: #FF6F00;
+            --waka-white: #FFFFFF;
+            --waka-off-white: #F8F9FA;
+            --waka-bg-light: #F3E5F5;
+            --waka-bg-dark: #1A0033;
+            --waka-text: #2C003E;
+            --waka-text-light: #4A148C;
+            --waka-text-muted: #6A1B9A;
+            --waka-border: #CE93D8;
+            --waka-shadow: rgba(74, 20, 140, 0.15);
+            
+            /* Gradients élégants */
+            --gradient-primary: linear-gradient(135deg, #4A148C 0%, #7B1FA2 100%);
+            --gradient-accent: linear-gradient(135deg, #FFC107 0%, #FF6F00 100%);
+            --gradient-bg: linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 50%, #F3E5F5 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gradient-bg);
+            color: var(--waka-text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Effet de fond animé */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255, 193, 7, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 111, 0, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(123, 31, 162, 0.05) 0%, transparent 50%);
+            animation: backgroundShift 30s ease-in-out infinite alternate;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        @keyframes backgroundShift {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(2%, 2%) rotate(1deg); }
+        }
+
+        /* ============================================
+           HEADER
+           ============================================ */
+        .main-header {
+            background: var(--waka-white);
+            padding: 20px 0;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 2px solid var(--waka-primary-pale);
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-image {
+            width: 55px;
+            height: 55px;
+            border-radius: 12px;
+            object-fit: contain;
+            border: 2px solid var(--waka-primary-light);
+            box-shadow: 0 4px 12px rgba(74, 20, 140, 0.2);
+            transition: transform 0.3s ease;
+            background: white;
+            padding: 4px;
+        }
+
+        .logo-image:hover {
+            transform: scale(1.05) rotate(-2deg);
+        }
+
+        .logo-text h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.6rem;
+            color: var(--waka-primary);
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: 0.5px;
+        }
+
+        .logo-text p {
+            color: var(--waka-text-muted);
+            font-size: 0.8rem;
+            margin: 2px 0 0 0;
+            font-weight: 600;
+        }
+
+        /* Navigation */
+        .main-nav {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            color: var(--waka-primary);
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: transparent;
+            border: none;
+            position: relative;
+            white-space: nowrap;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+            border-radius: 3px 3px 0 0;
+        }
+
+        .nav-link:hover::before {
+            width: 100%;
+        }
+
+        .nav-link:hover {
+            color: var(--waka-primary-light);
+            transform: translateY(-2px);
+        }
+
+        .nav-link i {
+            font-size: 1.2rem;
+        }
+
+        /* Bouton CTA */
+        .btn-create-agent {
+            background: var(--gradient-accent) !important;
+            color: var(--waka-white) !important;
+            font-weight: 700 !important;
+            border-radius: 25px !important;
+            padding: 12px 24px !important;
+            box-shadow: 0 4px 16px rgba(255, 111, 0, 0.3) !important;
+        }
+
+        .btn-create-agent::before {
+            display: none !important;
+        }
+
+        .btn-create-agent:hover {
+            transform: translateY(-3px) !important;
+            box-shadow: 0 8px 24px rgba(255, 111, 0, 0.5) !important;
+        }
+
+        /* Navigation Dropdown */
+        .nav-dropdown {
+            position: relative;
+        }
+
+        .dropdown-toggle {
+            cursor: pointer;
+        }
+
+        .dropdown-icon {
+            font-size: 0.7rem;
+            margin-left: 4px;
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+
+        .nav-dropdown.show .dropdown-icon {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 10px);
+            left: 0;
+            background: var(--waka-white);
+            border: 2px solid var(--waka-primary-pale);
+            border-radius: 16px;
+            box-shadow: 0 12px 40px rgba(74, 20, 140, 0.2);
+            padding: 8px;
+            min-width: 280px;
+            z-index: 9999;
+            display: none;
+        }
+
+        .nav-dropdown.show .dropdown-menu {
+            display: block;
+            animation: dropdownFade 0.3s ease;
+        }
+
+        @keyframes dropdownFade {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            color: var(--waka-text);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-radius: 12px;
+            margin: 4px 0;
+        }
+
+        .dropdown-item:hover {
+            background: var(--waka-bg-light);
+            transform: translateX(4px);
+        }
+
+        .dropdown-item i {
+            font-size: 1.5rem;
+            color: var(--waka-primary);
+            flex-shrink: 0;
+        }
+
+        .dropdown-item div {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dropdown-item strong {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--waka-text);
+        }
+
+        .dropdown-item small {
+            font-size: 0.75rem;
+            color: var(--waka-text-muted);
+            margin-top: 2px;
+        }
+
+        /* Menu mobile */
+        .menu-toggle {
+            display: none;
+            background: var(--waka-off-white);
+            border: 1px solid var(--waka-border);
+            color: var(--waka-primary);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.4rem;
+        }
+
+        /* ============================================
+           MAIN CONTENT
+           ============================================ */
+        .main-content {
+            flex: 1;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 40px 32px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ============================================
+           FOOTER - COMPACT
+           ============================================ */
+        .main-footer {
+            background: var(--gradient-primary);
+            color: var(--waka-white);
+            padding: 24px 32px 16px;
+            margin-top: auto;
+            box-shadow: 0 -4px 24px var(--waka-shadow);
+        }
+
+        .footer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            align-items: center;
+            text-align: center;
+        }
+
+        .footer-logo-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-logo-img {
+            width: 35px;
+            height: 35px;
+            border-radius: 6px;
+            background: white;
+            padding: 3px;
+        }
+
+        .footer-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .footer-tagline {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--waka-accent-yellow);
+            margin: 0;
+        }
+
+        .footer-description {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.9);
+            max-width: 650px;
+            line-height: 1.5;
+            font-weight: 400;
+            margin: 0;
+        }
+
+        .footer-highlight {
+            color: var(--waka-accent-yellow);
+            font-weight: 700;
+        }
+
+        /* Badges technologiques */
+        .footer-tech {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tech-badge {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .tech-badge:hover {
+            background: var(--gradient-accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+        }
+
+        .tech-badge i {
+            font-size: 0.9rem;
+        }
+
+        .footer-divider {
+            width: 100%;
+            max-width: 650px;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 8px 0;
+        }
+
+        /* Microsoft Partner Badge */
+        .microsoft-partner {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        .partner-badge {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .partner-badge i {
+            font-size: 1rem;
+            color: var(--waka-accent-yellow);
+        }
+
+        .partner-id {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
+        }
+
+        .footer-copyright {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0;
+        }
+
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+
+            .main-nav {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--waka-primary);
+                flex-direction: column;
+                padding: 20px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            }
+
+            .main-nav.active {
+                display: flex;
+            }
+
+            .nav-link {
+                width: 100%;
+                justify-content: center;
+                color: white;
+            }
+
+            .logo-text h1 {
+                font-size: 1.3rem;
+            }
+
+            .logo-text p {
+                font-size: 0.7rem;
+            }
+
+            .logo-image {
+                width: 45px;
+                height: 45px;
+            }
+
+            .footer-tech {
+                gap: 8px;
+            }
+
+            .tech-badge {
+                font-size: 0.75rem;
+                padding: 6px 12px;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="main-header">
+        <div class="header-container">
+            <div class="logo-section">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" 
+                     alt="Waka Logo" 
+                     class="logo-image"
+                     onerror="this.style.display='none'">
+                <div class="logo-text">
+                    <h1>Waka Afrique</h1>
+                    <p>Chaque interaction compte</p>
+                </div>
+            </div>
+
+            <button class="menu-toggle" onclick="toggleMenu()">
+                <i class="bi bi-list"></i>
+            </button>
+
+            <nav class="main-nav" id="mainNav">
+                <a href="/home" class="nav-link">
+                    <i class="bi bi-house-fill"></i>
+                    <span>Accueil</span>
+                </a>
+                
+                <div class="nav-dropdown">
+                    <a href="#" class="nav-link" onclick="toggleDropdown(event)">
+                        <i class="bi bi-bar-chart-fill"></i>
+                        <span>Dashboards</span>
+                        <i class="bi bi-chevron-down dropdown-icon"></i>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a href="/quality" class="dropdown-item">
+                            <i class="bi bi-award-fill"></i>
+                            <div>
+                                <strong>Dashboard Qualité</strong>
+                                <small>Analyse de la qualité des conversations</small>
+                            </div>
+                        </a>
+                        <a href="/production" class="dropdown-item">
+                            <i class="bi bi-graph-up-arrow"></i>
+                            <div>
+                                <strong>Dashboard Production</strong>
+                                <small>Statistiques et métriques de production</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="nav-dropdown">
+                    <a href="#" class="nav-link btn-create-agent" onclick="toggleDropdown(event)">
+                        <i class="bi bi-plus-circle-fill"></i>
+                        <span>Créer un Agent</span>
+                        <i class="bi bi-chevron-down dropdown-icon"></i>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a href="/agents/config/step1" class="dropdown-item">
+                            <i class="bi bi-cloud-fill"></i>
+                            <div>
+                                <strong>Voix Azure</strong>
+                                <small>Voix standard Azure AI</small>
+                            </div>
+                        </a>
+                        <a href="/personal-voice/create-agent" class="dropdown-item">
+                            <i class="bi bi-mic-fill"></i>
+                            <div>
+                                <strong>Voix Waka</strong>
+                                <small>Votre voix personnalisée</small>
+                            </div>
+                        </a>
+                        <a href="/avatar/step1" class="dropdown-item">
+                            <i class="bi bi-person-video3"></i>
+                            <div>
+                                <strong>Avatar Azure</strong>
+                                <small>Agent avec avatar vidéo</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <a href="/personal-voice" class="nav-link">
+                    <i class="bi bi-mic-fill"></i>
+                    <span>Voix Personnalisées</span>
+                </a>
+                
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bi bi-robot"></i>
+                        <span>Mes Agents</span>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a href="/agents" class="dropdown-item">
+                            <i class="bi bi-headset"></i>
+                            <div>
+                                <strong>Voice</strong>
+                                <small>Agents vocaux standard</small>
+                            </div>
+                        </a>
+                        <a href="/avatar/gallery" class="dropdown-item">
+                            <i class="bi bi-person-video3"></i>
+                            <div>
+                                <strong>Mes agents Avatar</strong>
+                                <small>Agents avec avatar vidéo</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                
+                <a href="/conversations/history" class="nav-link">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Historiques</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="main-footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <!-- Logo et Slogan -->
+                <div class="footer-logo-section">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" 
+                         alt="Waka" 
+                         class="footer-logo-img"
+                         onerror="this.style.display='none'">
+                    <div class="footer-logo">Waka Afrique 🇧🇫</div>
+                </div>
+                
+                <p class="footer-tagline">
+                    Chaque interaction compte
+                </p>
+                
+                <p class="footer-description">
+                    Des <span class="footer-highlight">agents intelligents</span> qui agissent, comprennent et aident vos utilisateurs.<br>
+                    Au service de chaque interaction pour en faire une richesse.
+                </p>
+
+                <!-- Technologies -->
+                <div class="footer-tech">
+                    <span class="tech-badge">
+                        <i class="bi bi-microsoft"></i> Azure AI
+                    </span>
+                    <span class="tech-badge">
+                        <i class="bi bi-robot"></i> Agentic AI
+                    </span>
+                    <span class="tech-badge">
+                        <i class="bi bi-chat-dots-fill"></i> GPT-4o
+                    </span>
+                    <span class="tech-badge">
+                        <i class="bi bi-globe-africa"></i> Moov BF
+                    </span>
+                </div>
+
+                <div class="footer-divider"></div>
+
+                <!-- Microsoft Partner Badge -->
+                <div class="microsoft-partner">
+                    <div class="partner-badge">
+                        <i class="bi bi-shield-check"></i>
+                        Développé conformément aux exigences Azure AI
+                    </div>
+                    <div class="partner-id">
+                        Microsoft AI Cloud Partner • Partner ID: 6960001
+                    </div>
+                </div>
+
+                <p class="footer-copyright">
+                    &copy; 2025 Waka Afrique • Ouagadougou, Burkina Faso
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function toggleMenu() {
+            const nav = document.getElementById('mainNav');
+            nav.classList.toggle('active');
+        }
+
+        function toggleDropdown(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const dropdown = event.currentTarget.closest('.nav-dropdown');
+            const isOpen = dropdown.classList.contains('show');
+            
+            // Fermer tous les dropdowns
+            document.querySelectorAll('.nav-dropdown').forEach(d => {
+                d.classList.remove('show');
+            });
+            
+            // Ouvrir celui-ci s'il était fermé
+            if (!isOpen) {
+                dropdown.classList.add('show');
+            }
+        }
+
+        // Fermer les dropdowns quand on clique ailleurs
+        document.addEventListener('click', (e) => {
+            const nav = document.getElementById('mainNav');
+            const toggle = document.querySelector('.menu-toggle');
+            
+            // Fermer le menu mobile si on clique dehors
+            if (nav && nav.classList.contains('active') && 
+                !nav.contains(e.target) && 
+                toggle && !toggle.contains(e.target)) {
+                nav.classList.remove('active');
+            }
+
+            // Fermer les dropdowns si on clique dehors
+            if (!e.target.closest('.nav-dropdown')) {
+                document.querySelectorAll('.nav-dropdown').forEach(d => {
+                    d.classList.remove('show');
+                });
+            }
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% block title %}Générer un Prompt d'Agent{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="page-title mb-0">
+                <i class="bi bi-magic"></i>
+                <span>Générer un prompt d'agent</span>
+            </h2>
+            <a href="{{ url_for('agents_manager.agent_config_step4', agent_id=agent_id) }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour à l'étape 4
+            </a>
+        </div>
+        <p class="text-muted mb-0">
+            Décris ce que doit faire ton agent. L'IA <strong>gpt-5-mini</strong> va te proposer un prompt système structuré.
+        </p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="config-form">
+                <h3 class="h5 mb-3">1. Consigne pour l'IA</h3>
+                <div class="form-group mb-3">
+                    <label for="prompt_instruction">Explique le rôle et le contexte de ton agent</label>
+                    <span class="field-hint">Exemples : assistant de voyage Burkina Faso, conseiller client banque, coach santé...</span>
+                    <textarea id="prompt_instruction" class="form-control" rows="6" placeholder="Exemple : Crée un prompt pour un assistant de voyage qui conseille sur les destinations au Burkina Faso, avec un ton chaleureux et pédagogique."></textarea>
+                </div>
+                <button id="btn-generate" class="btn btn-primary w-100" type="button">
+                    <span id="btn-generate-label"><i class="bi bi-stars me-2"></i>Générer le prompt avec l'IA (gpt-5-mini)</span>
+                    <span id="btn-generate-loading" class="d-none"><span class="spinner-border spinner-border-sm me-2"></span>Génération en cours...</span>
+                </button>
+                <div id="generate-error" class="alert alert-danger mt-3 d-none" role="alert"></div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="config-form">
+                <h3 class="h5 mb-3">2. Résultat proposé</h3>
+                <div class="form-group mb-2">
+                    <label for="generated_prompt">Prompt système généré (modifiable avant validation)</label>
+                    <textarea id="generated_prompt" class="form-control" rows="14" placeholder="Le prompt généré apparaîtra ici..."></textarea>
+                    <div class="char-counter">
+                        <span id="generated_prompt_count">0</span> / 6000 caractères
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-3">
+                    <a href="{{ url_for('agents_manager.agent_config_step4', agent_id=agent_id) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i>Annuler
+                    </a>
+                    <button id="btn-validate" class="btn btn-success" type="button">
+                        <i class="bi bi-check-circle me-1"></i>Valider ce prompt pour l'agent
+                    </button>
+                </div>
+                <small class="text-muted d-block mt-2">Tu peux modifier le texte avant de valider. La validation renverra ce texte à l'écran Étape 4 dans le champ "Prompt système".</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const AGENT_ID = "{{ agent_id }}";
+</script>
+<script>
+// JS léger spécifique à cet écran (pas besoin de fichier séparé pour l'instant)
+document.addEventListener('DOMContentLoaded', function () {
+    const instructionEl = document.getElementById('prompt_instruction');
+    const generateBtn = document.getElementById('btn-generate');
+    const generateLabel = document.getElementById('btn-generate-label');
+    const generateLoading = document.getElementById('btn-generate-loading');
+    const errorBox = document.getElementById('generate-error');
+    const generatedPromptEl = document.getElementById('generated_prompt');
+    const countEl = document.getElementById('generated_prompt_count');
+    const validateBtn = document.getElementById('btn-validate');
+
+    function updateCount() {
+        if (!generatedPromptEl || !countEl) return;
+        countEl.textContent = generatedPromptEl.value.length;
+    }
+
+    if (generatedPromptEl) {
+        generatedPromptEl.addEventListener('input', updateCount);
+        updateCount();
+    }
+
+    function setLoading(isLoading) {
+        if (isLoading) {
+            generateBtn.setAttribute('disabled', 'disabled');
+            generateLabel.classList.add('d-none');
+            generateLoading.classList.remove('d-none');
+        } else {
+            generateBtn.removeAttribute('disabled');
+            generateLabel.classList.remove('d-none');
+            generateLoading.classList.add('d-none');
+        }
+    }
+
+    generateBtn.addEventListener('click', async function () {
+        const instruction = (instructionEl.value || '').trim();
+        errorBox.classList.add('d-none');
+        errorBox.textContent = '';
+
+        if (!instruction) {
+            errorBox.textContent = "Merci de saisir une consigne pour l'IA.";
+            errorBox.classList.remove('d-none');
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const resp = await fetch(`/agents/api/${AGENT_ID}/generate_prompt`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_instruction: instruction })
+            });
+
+            const data = await resp.json();
+            if (!data.success) {
+                throw new Error(data.error || 'Erreur lors de la génération du prompt');
+            }
+
+            generatedPromptEl.value = data.prompt || '';
+            updateCount();
+        } catch (err) {
+            console.error('Erreur génération prompt IA:', err);
+            errorBox.textContent = err.message || 'Erreur inattendue lors de la génération.';
+            errorBox.classList.remove('d-none');
+        } finally {
+            setLoading(false);
+        }
+    });
+
+    // Valider : renvoyer le prompt généré à Step 4 via query param (simple) ou sessionStorage
+    validateBtn.addEventListener('click', function () {
+        const value = (generatedPromptEl.value || '').trim();
+        if (!value) {
+            errorBox.textContent = 'Aucun prompt généré à valider.';
+            errorBox.classList.remove('d-none');
+            return;
+        }
+        // Stocker temporairement dans sessionStorage pour le récupérer sur Step 4
+        sessionStorage.setItem('generated_system_prompt', value);
+        window.location.href = `{{ url_for('agents_manager.agent_config_step4', agent_id=agent_id) }}`;
+    });
+});
+</script>
+{% endblock %}

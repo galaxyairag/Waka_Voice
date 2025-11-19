@@ -1,0 +1,1060 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Production & Financier - Waka Burkiné Voix{% endblock %}
+
+{% block extra_css %}
+<style>
+    .production-dashboard-page {
+        min-height: calc(100vh - 80px);
+        background: radial-gradient(circle at 0% 0%, rgba(168, 85, 247, 0.08), transparent 55%),
+                    radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.08), transparent 55%),
+                    linear-gradient(135deg, #f5f7fb 0%, #ffffff 60%, #faf5fb 100%);
+        padding: 2.5rem 0 3rem;
+    }
+
+    .production-shell {
+        background: var(--waka-off-white, #f5f6fa);
+        border-radius: 28px;
+        border: 1px solid var(--waka-border, rgba(15, 23, 42, 0.08));
+        box-shadow:
+            0 18px 45px rgba(15, 23, 42, 0.08),
+            0 0 0 1px rgba(255, 255, 255, 0.8);
+        padding: 1.75rem 1.75rem 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .production-shell::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+            linear-gradient(120deg,
+                rgba(168, 85, 247, 0.06) 0%,
+                rgba(59, 130, 246, 0.06) 30%,
+                transparent 55%,
+                rgba(139, 92, 246, 0.06) 80%,
+                transparent 100%);
+        mix-blend-mode: soft-light;
+    }
+
+    .production-header {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .production-title-block {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .production-logo-chip {
+        width: 56px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%);
+        color: white;
+        font-weight: 700;
+        font-size: 1.2rem;
+        border-radius: 14px;
+        box-shadow: 0 8px 20px rgba(168, 85, 247, 0.25);
+    }
+
+    .production-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--waka-primary-dark, #111827);
+        margin: 0;
+    }
+
+    .production-subtitle {
+        font-size: 0.9rem;
+        color: var(--waka-muted, #9ca3af);
+        margin: 0.25rem 0 0 0;
+    }
+
+    .production-controls {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .period-selector {
+        display: flex;
+        gap: 0.5rem;
+        padding: 0.35rem;
+        background: rgba(56, 189, 248, 0.08);
+        border-radius: 12px;
+        border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+
+    .period-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border: none;
+        background: transparent;
+        color: var(--waka-muted);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .period-btn:hover {
+        background: rgba(56, 189, 248, 0.1);
+        color: #0ea5e9;
+    }
+
+    .period-btn.active {
+        background: linear-gradient(135deg, #22c55e 0%, #0ea5e9 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+    }
+
+    .price-input-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.35rem 0.75rem;
+        background: rgba(15, 23, 42, 0.02);
+        border-radius: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.4);
+    }
+
+    .price-input-group label {
+        font-weight: 500;
+        font-size: 0.8rem;
+        color: #4b5563;
+        margin-bottom: 0;
+    }
+
+    .price-input-group input {
+        width: 110px;
+        padding: 0.35rem 0.6rem;
+        border-radius: 8px;
+        border: 1px solid rgba(37, 99, 235, 0.4);
+        font-size: 0.85rem;
+    }
+
+    .chart-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        margin-bottom: 1.5rem;
+    }
+
+    .chart-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid rgba(56, 189, 248, 0.1);
+    }
+
+    .chart-card-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--waka-primary-dark);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .chart-card-title i {
+        color: #0ea5e9;
+    }
+
+    .chart-card-info {
+        font-size: 0.75rem;
+        color: var(--waka-muted);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 360px;
+        width: 100%;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.75rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 14px;
+        padding: 1rem 1.1rem;
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .stat-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle at 0 0, #dbeafe, #e0f2fe);
+        color: #2563eb;
+        font-size: 1.2rem;
+    }
+
+    .stat-content-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #6b7280;
+        margin-bottom: 0.15rem;
+    }
+
+    .stat-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 0;
+    }
+
+    .section-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 1.5rem 0 0.75rem;
+    }
+
+    .section-title-main {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--waka-primary-dark);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-title-main i {
+        color: #22c55e;
+    }
+
+    .section-title-badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.65rem;
+        border-radius: 999px;
+        background: rgba(22, 163, 74, 0.08);
+        color: #15803d;
+        border: 1px solid rgba(22, 163, 74, 0.25);
+    }
+
+    .loading-spinner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 260px;
+        color: #0ea5e9;
+    }
+
+    .loading-spinner p {
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    @media (max-width: 991px) {
+        .production-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .production-controls {
+            flex-wrap: wrap;
+            justify-content: flex-start;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="production-dashboard-page">
+    <div class="container">
+        <div class="production-shell">
+            <div class="production-header">
+                <div class="production-title-block">
+                    <div class="production-logo-chip">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                    <div>
+                        <h1 class="production-title">Dashboard Production & Financier</h1>
+                        <p class="production-subtitle">Suivi des volumes, temps et marges en temps réel</p>
+                    </div>
+                </div>
+                <div class="production-controls">
+                    <div class="period-selector">
+                        <button class="period-btn" data-period="7">7 jours</button>
+                        <button class="period-btn active" data-period="30">30 jours</button>
+                        <button class="period-btn" data-period="90">90 jours</button>
+                    </div>
+                    <div class="price-input-group">
+                        <label for="price-per-minute">Prix/minute ($)</label>
+                        <input type="number" id="price-per-minute" value="0.1" step="0.01" min="0">
+                    </div>
+                    <button class="btn btn-primary" id="generate-report-btn" style="margin-left: 0.5rem;" onclick="window.location.href='/production/report?period=' + currentPeriod + '&price=' + currentPrice">
+                        <i class="bi bi-file-earmark-text"></i> Générer Rapport
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPIs -->
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="bi bi-chat-dots"></i></div>
+                    <div>
+                        <div class="stat-content-title">Total conversations</div>
+                        <p class="stat-value" id="total-conversations">-</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: radial-gradient(circle at 0 0,#fef3c7,#fee2e2); color:#f97316;"><i class="bi bi-clock-history"></i></div>
+                    <div>
+                        <div class="stat-content-title">Durée totale (min)</div>
+                        <p class="stat-value" id="total-duration">-</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: radial-gradient(circle at 0 0,#fef3c7,#fee2e2); color:#dc2626;"><i class="bi bi-cash-coin"></i></div>
+                    <div>
+                        <div class="stat-content-title">Coût total</div>
+                        <p class="stat-value" id="total-cost">-</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: radial-gradient(circle at 0 0,#dcfce7,#bbf7d0); color:#16a34a;"><i class="bi bi-currency-dollar"></i></div>
+                    <div>
+                        <div class="stat-content-title">Chiffre d'affaires</div>
+                        <p class="stat-value" id="total-revenue">-</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: radial-gradient(circle at 0 0,#f5f3ff,#e0f2fe); color:#7c3aed;"><i class="bi bi-graph-up-arrow"></i></div>
+                    <div>
+                        <div class="stat-content-title">Marge brute</div>
+                        <p class="stat-value" id="total-margin">-</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: radial-gradient(circle at 0 0,#fdf2f8,#eff6ff); color:#db2777;"><i class="bi bi-percent"></i></div>
+                    <div>
+                        <div class="stat-content-title">Marge %</div>
+                        <p class="stat-value" id="margin-percentage">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section Production -->
+            <div class="section-title-row">
+                <div class="section-title-main">
+                    <i class="bi bi-cpu"></i>
+                    <span>Métriques de production</span>
+                </div>
+                <span class="section-title-badge">Activité quotidienne</span>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <div class="chart-card-title">
+                        <i class="bi bi-bar-chart"></i>
+                        Évolution du nombre de conversations par jour
+                    </div>
+                    <div class="chart-card-info">
+                        <i class="bi bi-info-circle"></i>
+                        <span>Volume total de conversations par date</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="conversationsChart-container">
+                    <div class="loading-spinner" id="loading-conversations">
+                        <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Chargement des conversations...</p>
+                    </div>
+                    <canvas id="conversationsChart" style="display:none;"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <div class="chart-card-title">
+                        <i class="bi bi-clock"></i>
+                        Durée moyenne, max et min par jour
+                    </div>
+                    <div class="chart-card-info">
+                        <i class="bi bi-info-circle"></i>
+                        <span>Suivi détaillé des durées de conversations</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="durationStatsChart-container">
+                    <div class="loading-spinner" id="loading-duration">
+                        <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Chargement des durées...</p>
+                    </div>
+                    <canvas id="durationStatsChart" style="display:none;"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <div class="chart-card-title">
+                        <i class="bi bi-arrow-left-right"></i>
+                        Conversations et durée moyenne par interaction
+                    </div>
+                    <div class="chart-card-info">
+                        <i class="bi bi-info-circle"></i>
+                        <span>Comparaison volume vs durée moyenne par interaction</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="interactionsStatsChart-container">
+                    <div class="loading-spinner" id="loading-interactions">
+                        <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Chargement des statistiques d'interaction...</p>
+                    </div>
+                    <canvas id="interactionsStatsChart" style="display:none;"></canvas>
+                </div>
+            </div>
+
+            <!-- Section Financier -->
+            <div class="section-title-row" style="margin-top: 2rem;">
+                <div class="section-title-main">
+                    <i class="bi bi-bank"></i>
+                    <span>Métriques financières</span>
+                </div>
+                <span class="section-title-badge" style="background: rgba(234,179,8,0.08); border-color: rgba(234,179,8,0.25); color:#a16207;">Coûts & revenus</span>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <div class="chart-card-title">
+                        <i class="bi bi-pie-chart"></i>
+                        Répartition des coûts par type
+                    </div>
+                    <div class="chart-card-info">
+                        <i class="bi bi-info-circle"></i>
+                        <span>Détail des coûts (inputs text/cached/audio, outputs text/audio)</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="costBreakdownChart-container">
+                    <div class="loading-spinner" id="loading-cost-breakdown">
+                        <div class="spinner-border text-warning" role="status" style="width: 2.5rem; height: 2.5rem;">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Chargement de la répartition des coûts...</p>
+                    </div>
+                    <canvas id="costBreakdownChart" style="display:none;"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <div class="chart-card-title">
+                        <i class="bi bi-pie-chart"></i>
+                        Répartition des coûts par modèle
+                    </div>
+                    <div class="chart-card-info">
+                        <i class="bi bi-info-circle"></i>
+                        <span>Contribution de chaque modèle aux coûts</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="costDistributionChart-container">
+                    <div class="loading-spinner" id="loading-cost-dist">
+                        <div class="spinner-border text-warning" role="status" style="width: 2.5rem; height: 2.5rem;">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Chargement de la répartition des coûts par modèle...</p>
+                    </div>
+                    <canvas id="costDistributionChart" style="display:none;"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <div class="chart-card-title">
+                        <i class="bi bi-graph-up"></i>
+                        Évolution coûts vs chiffre d'affaires
+                    </div>
+                    <div class="chart-card-info">
+                        <i class="bi bi-info-circle"></i>
+                        <span>Comparaison quotidienne coûts / revenus</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="financialEvolutionChart-container">
+                    <div class="loading-spinner" id="loading-financial">
+                        <div class="spinner-border text-success" role="status" style="width: 2.5rem; height: 2.5rem;">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Chargement de l'évolution financière...</p>
+                    </div>
+                    <canvas id="financialEvolutionChart" style="display:none;"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <div class="chart-card-title">
+                        <i class="bi bi-piggy-bank"></i>
+                        Évolution de la marge brute et de la marge %
+                    </div>
+                    <div class="chart-card-info">
+                        <i class="bi bi-info-circle"></i>
+                        <span>Suivi quotidien de la rentabilité</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="marginEvolutionChart-container">
+                    <div class="loading-spinner" id="loading-margin">
+                        <div class="spinner-border text-info" role="status" style="width: 2.5rem; height: 2.5rem;">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Chargement de la marge...</p>
+                    </div>
+                    <canvas id="marginEvolutionChart" style="display:none;"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    let currentPeriod = 30;
+    let currentPrice = 0.1;
+    let charts = {};
+
+    function showCanvas(idCanvas, idLoader) {
+        const canvas = document.getElementById(idCanvas);
+        const loader = document.getElementById(idLoader);
+        if (loader) loader.style.display = 'none';
+        if (canvas) canvas.style.display = 'block';
+    }
+
+    // Gestion des boutons de période
+    document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentPeriod = parseInt(this.dataset.period);
+            loadAllData();
+        });
+    });
+
+    // Gestion du prix par minute
+    document.getElementById('price-per-minute').addEventListener('change', function() {
+        currentPrice = parseFloat(this.value);
+        loadFinancialData();
+    });
+
+    function loadAllData() {
+        loadConversationsByDay();
+        loadDurationStats();
+        loadInteractionsStats();
+        loadCostBreakdown();
+        loadCostDistribution();
+        loadFinancialData();
+    }
+
+    function loadFinancialData() {
+        loadFinancialEvolution();
+        loadMarginEvolution();
+        updateKPIs();
+    }
+
+    // 1. Évolution du nombre de conversations avec tendance
+    function loadConversationsByDay() {
+        fetch(`/api/production/conversations-by-day?period=${currentPeriod}`)
+            .then(res => res.json())
+            .then(data => {
+                if (charts.conversations) charts.conversations.destroy();
+
+                const ctx = document.getElementById('conversationsChart').getContext('2d');
+                showCanvas('conversationsChart', 'loading-conversations');
+                
+                // Préparer les datasets
+                const datasets = [{
+                    label: 'Nombre de conversations',
+                    data: data.data,
+                    borderColor: '#0ea5e9',
+                    backgroundColor: 'rgba(14,165,233,0.12)',
+                    fill: true,
+                    tension: 0.4,
+                    order: 1
+                }];
+                
+                // Ajouter ligne de tendance si disponible
+                if (data.trend && data.trend.length > 0) {
+                    datasets.push({
+                        label: 'Tendance linéaire',
+                        data: data.trend,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'transparent',
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false,
+                        tension: 0,
+                        order: 2
+                    });
+                }
+                
+                // Déterminer la couleur de l'indice selon le statut
+                let evolutionColor = '#6b7280';
+                let evolutionIcon = '➡️';
+                if (data.evolution_status === 'hausse') {
+                    evolutionColor = '#22c55e';
+                    evolutionIcon = '📈';
+                } else if (data.evolution_status === 'baisse') {
+                    evolutionColor = '#ef4444';
+                    evolutionIcon = '📉';
+                } else if (data.evolution_status === 'stable') {
+                    evolutionIcon = '🟡';
+                }
+                
+                charts.conversations = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: true },
+                            title: {
+                                display: data.evolution_index !== undefined,
+                                text: `${evolutionIcon} Évolution: ${data.evolution_index > 0 ? '+' : ''}${data.evolution_index}% (${data.evolution_status})`,
+                                color: evolutionColor,
+                                font: { size: 13, weight: 'bold' },
+                                padding: { bottom: 10 }
+                            }
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            });
+    }
+
+    // 2. Durée moyenne, max, min avec tendance
+    function loadDurationStats() {
+        fetch(`/api/production/duration-stats-by-day?period=${currentPeriod}`)
+            .then(res => res.json())
+            .then(data => {
+                if (charts.duration) charts.duration.destroy();
+
+                const ctx = document.getElementById('durationStatsChart').getContext('2d');
+                showCanvas('durationStatsChart', 'loading-duration');
+                
+                const datasets = [
+                    {
+                        label: 'Durée moyenne',
+                        data: data.avg,
+                        borderColor: '#22c55e',
+                        backgroundColor: 'rgba(34,197,94,0.12)',
+                        fill: true,
+                        order: 1
+                    },
+                    {
+                        label: 'Durée max',
+                        data: data.max,
+                        borderColor: '#f97316',
+                        backgroundColor: 'rgba(249,115,22,0.08)',
+                        fill: false,
+                        order: 3
+                    },
+                    {
+                        label: 'Durée min',
+                        data: data.min,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59,130,246,0.08)',
+                        fill: false,
+                        order: 3
+                    }
+                ];
+                
+                // Ajouter ligne de tendance
+                if (data.trend && data.trend.length > 0) {
+                    datasets.push({
+                        label: 'Tendance durée moy.',
+                        data: data.trend,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'transparent',
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false,
+                        tension: 0,
+                        order: 2
+                    });
+                }
+                
+                // Couleur indice
+                let evolutionColor = '#6b7280';
+                let evolutionIcon = '➡️';
+                if (data.evolution_status === 'hausse') {
+                    evolutionColor = '#f97316';
+                    evolutionIcon = '⚠️';
+                } else if (data.evolution_status === 'baisse') {
+                    evolutionColor = '#22c55e';
+                    evolutionIcon = '✅';
+                } else if (data.evolution_status === 'stable') {
+                    evolutionIcon = '🟡';
+                }
+                
+                charts.duration = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: true },
+                            title: {
+                                display: data.evolution_index !== undefined,
+                                text: `${evolutionIcon} Évolution durée moy.: ${data.evolution_index > 0 ? '+' : ''}${data.evolution_index}% (${data.evolution_status})`,
+                                color: evolutionColor,
+                                font: { size: 13, weight: 'bold' },
+                                padding: { bottom: 10 }
+                            }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, title: { display: true, text: 'Durée (minutes)' } }
+                        }
+                    }
+                });
+            });
+    }
+
+    // 3. Évolution quotidienne des interactions
+    function loadInteractionsStats() {
+        fetch(`/api/production/interactions-stats?period=${currentPeriod}`)
+            .then(res => res.json())
+            .then(data => {
+                if (charts.interactions) charts.interactions.destroy();
+
+                const ctx = document.getElementById('interactionsStatsChart').getContext('2d');
+                showCanvas('interactionsStatsChart', 'loading-interactions');
+                charts.interactions = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [
+                            {
+                                label: 'Nb moyen d\'interactions/conv',
+                                data: data.avg_interaction_count,
+                                borderColor: '#0ea5e9',
+                                backgroundColor: 'rgba(14,165,233,0.12)',
+                                fill: true,
+                                tension: 0.4,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'Durée moyenne d\'interaction (min)',
+                                data: data.avg_interaction_duration,
+                                borderColor: '#eab308',
+                                backgroundColor: 'rgba(234,179,8,0.12)',
+                                fill: true,
+                                tension: 0.4,
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: true }
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: { display: true, text: 'Nb interactions' }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: { display: true, text: 'Durée (min)' },
+                                grid: { drawOnChartArea: false }
+                            }
+                        }
+                    }
+                });
+            });
+    }
+
+    // 4. Répartition détaillée des coûts par type
+    function loadCostBreakdown() {
+        fetch(`/api/production/cost-breakdown-by-type?period=${currentPeriod}`)
+            .then(res => res.json())
+            .then(data => {
+                if (charts.costBreakdown) charts.costBreakdown.destroy();
+
+                const ctx = document.getElementById('costBreakdownChart').getContext('2d');
+                showCanvas('costBreakdownChart', 'loading-cost-breakdown');
+                charts.costBreakdown = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            data: data.data,
+                            backgroundColor: [
+                                'rgba(59,130,246,0.85)',    // Inputs Text - bleu
+                                'rgba(147,51,234,0.85)',    // Inputs Cached - violet
+                                'rgba(34,197,94,0.85)',     // Inputs Audio - vert
+                                'rgba(249,115,22,0.85)',    // Outputs Text - orange
+                                'rgba(239,68,68,0.85)'      // Outputs Audio - rouge
+                            ],
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'right' },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed || 0;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                        return label + ': $' + value.toFixed(4) + ' (' + percentage + '%)';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+    }
+
+    // 5. Répartition des coûts par modèle
+    function loadCostDistribution() {
+        fetch(`/api/production/cost-distribution?period=${currentPeriod}`)
+            .then(res => res.json())
+            .then(data => {
+                if (charts.costDist) charts.costDist.destroy();
+
+                const ctx = document.getElementById('costDistributionChart').getContext('2d');
+                showCanvas('costDistributionChart', 'loading-cost-dist');
+                charts.costDist = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            data: data.data,
+                            backgroundColor: [
+                                'rgba(14,165,233,0.85)',
+                                'rgba(234,179,8,0.85)',
+                                'rgba(34,197,94,0.85)',
+                                'rgba(239,68,68,0.85)',
+                                'rgba(37,99,235,0.85)',
+                                'rgba(244,114,182,0.85)'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'right' },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.label + ': $' + context.parsed.toFixed(4);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+    }
+
+    // 6. Évolution financière
+    function loadFinancialEvolution() {
+        fetch(`/api/production/financial-evolution?period=${currentPeriod}&price=${currentPrice}`)
+            .then(res => res.json())
+            .then(data => {
+                if (charts.financial) charts.financial.destroy();
+
+                const ctx = document.getElementById('financialEvolutionChart').getContext('2d');
+                showCanvas('financialEvolutionChart', 'loading-financial');
+                charts.financial = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [
+                            {
+                                label: 'Coûts',
+                                data: data.costs,
+                                borderColor: '#dc2626',
+                                backgroundColor: 'rgba(248,113,113,0.15)',
+                                fill: true
+                            },
+                            {
+                                label: "Chiffre d'affaires",
+                                data: data.revenues,
+                                borderColor: '#16a34a',
+                                backgroundColor: 'rgba(74,222,128,0.15)',
+                                fill: true
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: true }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, title: { display: true, text: 'Montant ($)' } }
+                        }
+                    }
+                });
+            });
+    }
+
+    // 7. Évolution de la marge
+    function loadMarginEvolution() {
+        fetch(`/api/production/margin-evolution?period=${currentPeriod}&price=${currentPrice}`)
+            .then(res => res.json())
+            .then(data => {
+                if (charts.margin) charts.margin.destroy();
+
+                const ctx = document.getElementById('marginEvolutionChart').getContext('2d');
+                showCanvas('marginEvolutionChart', 'loading-margin');
+                charts.margin = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [
+                            {
+                                label: 'Marge brute ($)',
+                                data: data.gross_margin,
+                                borderColor: '#eab308',
+                                backgroundColor: 'rgba(234,179,8,0.15)',
+                                fill: true,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'Marge %',
+                                data: data.margin_percentage,
+                                borderColor: '#0ea5e9',
+                                backgroundColor: 'rgba(14,165,233,0.12)',
+                                fill: true,
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: true }
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: { display: true, text: 'Marge brute ($)' }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: { display: true, text: 'Marge (%)' },
+                                grid: { drawOnChartArea: false }
+                            }
+                        }
+                    }
+                });
+            });
+    }
+
+    // KPIs
+    function updateKPIs() {
+        fetch(`/api/production/conversations-by-day?period=${currentPeriod}`)
+            .then(res => res.json())
+            .then(convData => {
+                const arr = Array.isArray(convData.data) ? convData.data : [];
+                const totalConv = arr.reduce((a, b) => a + b, 0);
+                document.getElementById('total-conversations').textContent = totalConv;
+            });
+
+        fetch(`/api/production/duration-stats-by-day?period=${currentPeriod}`)
+            .then(res => res.json())
+            .then(durData => {
+                const arr = Array.isArray(durData.avg) ? durData.avg : [];
+                const totalDuration = arr.reduce((a, b) => a + b, 0);
+                document.getElementById('total-duration').textContent = totalDuration.toFixed(1);
+            });
+
+        fetch(`/api/production/cost-distribution?period=${currentPeriod}`)
+            .then(res => res.json())
+            .then(costData => {
+                const arr = Array.isArray(costData.data) ? costData.data : [];
+                const totalCost = arr.reduce((a, b) => a + b, 0);
+                document.getElementById('total-cost').textContent = '$' + totalCost.toFixed(4);
+            });
+
+        fetch(`/api/production/financial-evolution?period=${currentPeriod}&price=${currentPrice}`)
+            .then(res => res.json())
+            .then(finData => {
+                const revArr = Array.isArray(finData.revenues) ? finData.revenues : [];
+                const costArr = Array.isArray(finData.costs) ? finData.costs : [];
+                const totalRevenue = revArr.reduce((a, b) => a + b, 0);
+                const totalCost = costArr.reduce((a, b) => a + b, 0);
+                const margin = totalRevenue - totalCost;
+                const marginPct = totalRevenue > 0 ? (margin / totalRevenue * 100) : 0;
+
+                document.getElementById('total-revenue').textContent = '$' + totalRevenue.toFixed(2);
+                document.getElementById('total-margin').textContent = '$' + margin.toFixed(2);
+                document.getElementById('margin-percentage').textContent = marginPct.toFixed(1) + '%';
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadAllData();
+    });
+</script>
+{% endblock %}

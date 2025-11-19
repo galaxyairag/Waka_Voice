@@ -1,0 +1,1475 @@
+{% extends "base.html" %}
+
+{% block title %}Mes Agents - Waka Burkiné Voix{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================
+       AGENTS PAGE STYLING
+       ============================================ */
+    .agents-header {
+        background: linear-gradient(135deg, var(--waka-primary) 0%, var(--waka-primary-light) 100%);
+        color: white;
+        padding: 3rem 0;
+        border-radius: 20px;
+        margin-bottom: 3rem;
+        box-shadow: 0 10px 40px rgba(74, 20, 140, 0.3);
+    }
+
+    .agents-header h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+    }
+
+    .agents-header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    .agents-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+
+    .stat-card {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        padding: 1.5rem 2.5rem;
+        border-radius: 15px;
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--waka-accent-yellow);
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        opacity: 0.9;
+    }
+
+    /* ============================================
+       AGENT CARDS GRID
+       ============================================ */
+    .agents-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .agent-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .agent-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--gradient-primary);
+    }
+
+    .agent-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(74, 20, 140, 0.2);
+        border-color: var(--waka-primary-light);
+    }
+
+    .agent-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: var(--gradient-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 8px 20px rgba(74, 20, 140, 0.3);
+    }
+
+    .agent-name {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--waka-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .agent-description {
+        color: #6c757d;
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+
+    .agent-meta {
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: column;
+        gap: 0.8rem;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: var(--waka-bg-light);
+        border-radius: 10px;
+    }
+
+    .meta-item {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.8rem;
+        font-size: 0.85rem;
+    }
+
+    .meta-item i {
+        color: var(--waka-primary);
+        font-size: 1rem;
+        width: 20px;
+        text-align: center;
+    }
+
+    .meta-label {
+        font-weight: 600;
+        color: var(--waka-text-muted);
+        min-width: 80px;
+    }
+
+    .meta-value {
+        color: var(--waka-text);
+    }
+
+    .agent-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+        margin-top: 1.5rem;
+    }
+
+    .btn-agent-action {
+        flex: 1 1 auto;
+        min-width: 45px;
+        padding: 0.8rem 1.2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border: 2px solid;
+        white-space: nowrap;
+    }
+
+    .btn-test {
+        background: var(--waka-primary);
+        color: white;
+        border-color: var(--waka-primary);
+    }
+
+    .btn-test:hover {
+        background: var(--waka-primary-light);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(74, 20, 140, 0.3);
+        color: white;
+    }
+
+    .btn-call {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        color: white;
+        border-color: #48bb78;
+        font-weight: 700;
+    }
+
+    .btn-call:hover {
+        background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        color: white;
+    }
+
+    .btn-info {
+        background: white;
+        color: #17a2b8;
+        border-color: #17a2b8;
+        padding: 0.8rem;
+    }
+
+    .btn-info:hover {
+        background: #17a2b8;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .btn-edit {
+        background: white;
+        color: var(--waka-primary);
+        border-color: var(--waka-border);
+    }
+
+    .btn-edit:hover {
+        background: var(--waka-bg-light);
+        border-color: var(--waka-primary);
+        transform: translateY(-2px);
+        color: var(--waka-primary);
+    }
+
+    .btn-delete {
+        background: white;
+        color: #dc3545;
+        border-color: #dc3545;
+        padding: 0.8rem;
+    }
+
+    .btn-delete:hover {
+        background: #dc3545;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* ============================================
+       EMPTY STATE
+       ============================================ */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .empty-state-icon {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: var(--gradient-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 4rem;
+        margin: 0 auto 2rem;
+        box-shadow: 0 10px 30px rgba(74, 20, 140, 0.3);
+    }
+
+    .empty-state h2 {
+        font-size: 2rem;
+        color: var(--waka-primary);
+        margin-bottom: 1rem;
+        font-weight: 700;
+    }
+
+    .empty-state p {
+        color: #6c757d;
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+
+    .btn-create-first {
+        background: var(--gradient-accent);
+        color: var(--waka-text);
+        padding: 1.2rem 3rem;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        border: 2px solid var(--waka-accent-orange);
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.8rem;
+        box-shadow: 0 8px 25px rgba(255, 111, 0, 0.3);
+    }
+
+    .btn-create-first:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 12px 35px rgba(255, 111, 0, 0.5);
+        color: var(--waka-text);
+    }
+
+    /* ============================================
+       MODAL STYLING
+       ============================================ */
+    .agent-details-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(5px);
+    }
+
+    .modal-content {
+        position: relative;
+        background: white;
+        border-radius: 20px;
+        width: 90%;
+        max-width: 900px;
+        max-height: 90vh;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .modal-header {
+        padding: 1.5rem 2rem;
+        background: linear-gradient(135deg, var(--waka-primary) 0%, var(--waka-primary-light) 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .modal-subtitle {
+        margin: 0.5rem 0 0 0;
+        font-size: 0.95rem;
+        opacity: 0.9;
+        font-weight: 400;
+    }
+
+    .modal-close {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .modal-close:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(90deg);
+    }
+
+    .modal-body {
+        padding: 2rem;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .details-section {
+        margin-bottom: 2rem;
+    }
+
+    .details-section h3 {
+        color: var(--waka-primary);
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--waka-border);
+    }
+
+    .json-display {
+        background: #f8f9fa;
+        border: 1px solid var(--waka-border);
+        border-radius: 10px;
+        padding: 1rem;
+        overflow-x: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 0.85rem;
+        line-height: 1.6;
+        color: #333;
+    }
+
+    .text-display {
+        background: #f8f9fa;
+        border: 1px solid var(--waka-border);
+        border-radius: 10px;
+        padding: 1rem;
+        white-space: pre-wrap;
+        font-family: system-ui;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        color: #333;
+    }
+
+    .modal-footer {
+        padding: 1.5rem 2rem;
+        background: #f8f9fa;
+        border-top: 1px solid var(--waka-border);
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        background: var(--waka-primary);
+        color: white;
+        border: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background: var(--waka-primary-light);
+        transform: translateY(-2px);
+    }
+
+    /* ============================================
+       DETAIL GRID & ITEMS
+       ============================================ */
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .detail-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .detail-value {
+        font-size: 1rem;
+        color: var(--waka-text);
+        font-weight: 500;
+    }
+
+    .detail-code {
+        font-family: 'Courier New', monospace;
+        font-size: 0.85rem;
+        background: #f8f9fa;
+        padding: 0.5rem;
+        border-radius: 5px;
+        border: 1px solid var(--waka-border);
+        word-break: break-all;
+    }
+
+    /* ============================================
+       STATUS & TOOL BADGES
+       ============================================ */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-configured {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .status-draft {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .tools-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+    }
+
+    .tool-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: linear-gradient(135deg, var(--waka-primary) 0%, var(--waka-primary-light) 100%);
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        box-shadow: 0 2px 8px rgba(74, 20, 140, 0.2);
+    }
+
+    .no-data {
+        color: #6c757d;
+        font-style: italic;
+        margin: 0;
+    }
+
+    /* ============================================
+       PROMPT DISPLAY
+       ============================================ */
+    .prompt-display {
+        background: #f8f9fa;
+        border: 1px solid var(--waka-border);
+        border-radius: 10px;
+        padding: 1.5rem;
+        white-space: pre-wrap;
+        font-family: system-ui;
+        font-size: 0.95rem;
+        line-height: 1.7;
+        color: #333;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    /* ============================================
+       COLLAPSIBLE JSON
+       ============================================ */
+    .json-collapsible {
+        border: 1px solid var(--waka-border);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .json-collapsible summary {
+        background: #f8f9fa;
+        padding: 1rem 1.5rem;
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--waka-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .json-collapsible summary:hover {
+        background: #e9ecef;
+    }
+
+    .json-collapsible summary::marker {
+        content: '▶ ';
+    }
+
+    .json-collapsible[open] summary::marker {
+        content: '▼ ';
+    }
+
+    .json-collapsible .json-display {
+        margin: 0;
+        border: none;
+        border-radius: 0;
+        border-top: 1px solid var(--waka-border);
+    }
+
+    /* ============================================
+       FILTERS & SEARCH
+       ============================================ */
+    .filters-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .search-box {
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 0.8rem 1rem 0.8rem 2.5rem;
+        border: 2px solid var(--waka-border);
+        border-radius: 10px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%234A148C' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: 0.8rem center;
+        background-size: 1.2rem;
+    }
+
+    .search-box input:focus {
+        outline: none;
+        border-color: var(--waka-primary);
+        box-shadow: 0 0 0 3px rgba(74, 20, 140, 0.1);
+    }
+
+    .filter-select {
+        padding: 0.8rem 1rem;
+        border: 2px solid var(--waka-border);
+        border-radius: 10px;
+        font-size: 0.95rem;
+        color: var(--waka-text);
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: var(--waka-primary);
+        box-shadow: 0 0 0 3px rgba(74, 20, 140, 0.1);
+    }
+
+    /* ============================================
+       GROUPED STATUS SECTIONS
+       ============================================ */
+    .status-section {
+        margin-bottom: 3rem;
+    }
+
+    .status-section-header {
+        background: linear-gradient(135deg, var(--waka-primary) 0%, var(--waka-primary-light) 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+        border-radius: 15px;
+        margin-bottom: 1.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 5px 20px rgba(74, 20, 140, 0.2);
+    }
+
+    .status-section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .status-count-badge {
+        background: rgba(255, 255, 255, 0.3);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .view-toggle {
+        background: white;
+        border: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--waka-primary);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .view-toggle:hover {
+        background: var(--waka-primary);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .view-toggle.active {
+        background: var(--waka-primary);
+        color: white;
+    }
+
+    /* ============================================
+       RESPONSIVE
+       ============================================ */
+    @media (max-width: 768px) {
+        .agents-header h1 {
+            font-size: 2rem;
+        }
+
+        .agents-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .agents-stats {
+            gap: 1rem;
+        }
+
+        .stat-card {
+            padding: 1rem 1.5rem;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+        }
+
+        .filters-section {
+            flex-direction: column;
+        }
+
+        .search-box,
+        .filter-select {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header Section -->
+    <div class="agents-header text-center">
+        <h1>
+            <i class="bi bi-robot me-3"></i>
+            Mes Agents Vocaux
+        </h1>
+        <p>Gérez et configurez vos agents intelligents</p>
+        
+        <div class="agents-stats">
+            <div class="stat-card">
+                <div class="stat-number">{{ total or 0 }}</div>
+                <div class="stat-label">Agents Totaux</div>
+            </div>
+            {% for status_key, status_agents in grouped_by_status.items() %}
+            <div class="stat-card">
+                <div class="stat-number">{{ status_agents|length }}</div>
+                <div class="stat-label">{{ status_key }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Boutons de création -->
+        <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="/agents/config/step1" class="btn" style="background: var(--gradient-primary); color: white; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="bi bi-plus-circle"></i>
+                Créer un agent (Voix Standard)
+            </a>
+            <a href="/personal-voice/create-agent" class="btn" style="background: var(--gradient-accent); color: var(--waka-text); padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="bi bi-mic-fill"></i>
+                Créer un agent (Voix Personnalisée)
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters & Search -->
+    <div class="filters-section">
+        <div class="search-box">
+            <input type="text" 
+                   id="searchAgents" 
+                   placeholder="Rechercher un agent..."
+                   value="{{ request.args.get('search', '') }}"
+                   onkeyup="filterAgentsLive()">
+        </div>
+        <select class="filter-select" id="filterStatus" onchange="applyFilters()">
+            <option value="">Tous les statuts</option>
+            {% for status_key in grouped_by_status.keys() %}
+            <option value="{{ status_key }}" {{ 'selected' if current_filters.status == status_key else '' }}>
+                {{ status_key }} ({{ grouped_by_status[status_key]|length }})
+            </option>
+            {% endfor %}
+        </select>
+        <select class="filter-select" id="filterModel" onchange="applyFilters()">
+            <option value="">Tous les modèles</option>
+            {% for model in unique_models %}
+            <option value="{{ model }}" {{ 'selected' if current_filters.model == model else '' }}>
+                {{ model }}
+            </option>
+            {% endfor %}
+        </select>
+        <input type="date" 
+               class="filter-select" 
+               id="dateFrom" 
+               value="{{ current_filters.date_from or '' }}"
+               onchange="applyFilters()"
+               placeholder="Date début">
+        <input type="date" 
+               class="filter-select" 
+               id="dateTo" 
+               value="{{ current_filters.date_to or '' }}"
+               onchange="applyFilters()"
+               placeholder="Date fin">
+        <button class="btn btn-secondary" onclick="resetFilters()" style="padding: 0.8rem 1.5rem; border-radius: 10px;">
+            <i class="bi bi-x-circle"></i> Réinitialiser
+        </button>
+    </div>
+
+    <!-- Pagination Info -->
+    {% if total > 0 %}
+    <div style="text-align: center; margin-bottom: 1rem; color: #6c757d;">
+        <p>Affichage de {{ ((page - 1) * page_size) + 1 }} à {{ [page * page_size, total]|min }} sur {{ total }} agents</p>
+    </div>
+
+    <!-- View Toggle -->
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <button class="view-toggle {{ 'active' if request.args.get('view') == 'grouped' else '' }}" 
+                onclick="toggleView('grouped')">
+            <i class="bi bi-collection"></i> Vue groupée par statut
+        </button>
+        <button class="view-toggle {{ 'active' if request.args.get('view') != 'grouped' else '' }}" 
+                onclick="toggleView('list')"
+                style="margin-left: 1rem;">
+            <i class="bi bi-list-ul"></i> Vue liste
+        </button>
+    </div>
+    {% endif %}
+
+    <!-- Agents Grid -->
+    <div id="agentsContainer">
+        {% if agents and agents|length > 0 %}
+        
+        <!-- Vue groupée par statut -->
+        {% if request.args.get('view') == 'grouped' %}
+            {% for status_key, status_agents in grouped_by_status.items() %}
+            <div class="status-section">
+                <div class="status-section-header">
+                    <h2 class="status-section-title">
+                        <i class="bi bi-folder-fill"></i>
+                        <span>{{ status_key }}</span>
+                    </h2>
+                    <span class="status-count-badge">{{ status_agents|length }} agent(s)</span>
+                </div>
+                <div class="agents-grid">
+                    {% for agent in status_agents[:page_size] %}
+                    <div class="agent-card" data-status="{{ agent.status or 'draft' }}">
+                        <div class="agent-icon">
+                            <i class="bi bi-robot"></i>
+                        </div>
+                        <h3 class="agent-name">{{ agent.agent_name or 'Agent sans nom' }}</h3>
+                        <p class="agent-description">
+                            {{ agent.role or 'Description non disponible' }}
+                        </p>
+                        <div class="agent-meta">
+                            <div class="meta-item">
+                                <i class="bi bi-mic-fill"></i>
+                                <span class="meta-label">Voix :</span>
+                                <span class="meta-value">{{ agent.session_config.voice.name if agent.session_config and agent.session_config.voice else 'Non configurée' }}</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="bi bi-cpu"></i>
+                                <span class="meta-label">Modèle :</span>
+                                <span class="meta-value">{{ agent.model_name or agent.model_id or 'Non défini' }}</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="bi bi-calendar"></i>
+                                <span class="meta-label">Créé le :</span>
+                                <span class="meta-value">{{ agent.created_at[:10] if agent.created_at else 'N/A' }}</span>
+                            </div>
+                        </div>
+                        <div class="agent-actions">
+                            {% if agent.current_step == 5 or agent.status in ['deployed', 'actif'] or 'step5' in (agent.status or '') %}
+                            <a href="/agents/call/{{ agent.agent_id }}" class="btn btn-agent-action btn-call" title="Lancer une conversation">
+                                <i class="bi bi-telephone-fill"></i>
+                                Appeler
+                            </a>
+                            <button class="btn btn-agent-action btn-info" onclick="copyEndpoint('{{ agent.agent_id }}')" title="Copier l'endpoint WebSocket">
+                                <i class="bi bi-link-45deg"></i>
+                            </button>
+                            {% else %}
+                            <a href="/agents/config/{{ agent.agent_id }}/step{{ agent.current_step or 2 }}" class="btn btn-agent-action btn-test">
+                                <i class="bi bi-arrow-right-circle"></i>
+                                Continuer
+                            </a>
+                            {% endif %}
+                            <button class="btn btn-agent-action btn-info" onclick="viewAgentDetails('{{ agent.agent_id }}')">
+                                <i class="bi bi-info-circle"></i>
+                            </button>
+                            <a href="/agents/config/{{ agent.agent_id }}/step2" class="btn btn-agent-action btn-edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <button class="btn btn-agent-action btn-delete" onclick="deleteAgent('{{ agent.agent_id }}', '{{ agent.agent_name or 'Agent' }}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        
+        {% else %}
+        <!-- Vue liste normale avec pagination -->
+        <div class="agents-grid" id="agentsGrid">
+            {% for agent in agents %}
+            <div class="agent-card" data-status="{{ agent.status or 'draft' }}" data-language="{{ agent.voice_config.voice_name[:2] if agent.voice_config and agent.voice_config.voice_name else 'fr' }}">
+                <div class="agent-icon">
+                    <i class="bi bi-robot"></i>
+                </div>
+                <h3 class="agent-name">{{ agent.agent_name or 'Agent sans nom' }}</h3>
+                <p class="agent-description">
+                    {{ agent.role or 'Description non disponible' }}
+                </p>
+                <div class="agent-meta">
+                    <div class="meta-item">
+                        <i class="bi bi-mic-fill"></i>
+                        <span class="meta-label">Voix :</span>
+                        <span class="meta-value">{{ agent.session_config.voice.name if agent.session_config and agent.session_config.voice else 'Non configurée' }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="bi bi-cpu"></i>
+                        <span class="meta-label">Modèle :</span>
+                        <span class="meta-value">{{ agent.model_name or agent.model_id or 'Non défini' }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="bi bi-gear-fill"></i>
+                        <span class="meta-label">Étape :</span>
+                        <span class="meta-value">{{ agent.current_step or 1 }} / 5</span>
+                    </div>
+                    <div class="meta-item">
+                        {% if agent.status == 'deployed' %}
+                        <i class="bi bi-check-circle-fill" style="color: #28a745;"></i>
+                        <span class="meta-label">Statut :</span>
+                        <span class="meta-value">Déployé</span>
+                        {% elif agent.current_step == 5 %}
+                        <i class="bi bi-check-circle-fill" style="color: #17a2b8;"></i>
+                        <span class="meta-label">Statut :</span>
+                        <span class="meta-value">Configuré</span>
+                        {% else %}
+                        <i class="bi bi-exclamation-circle-fill" style="color: #ffc107;"></i>
+                        <span class="meta-label">Statut :</span>
+                        <span class="meta-value">En cours</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="agent-actions">
+                    {% if agent.current_step == 5 or agent.status in ['deployed', 'actif'] or 'step5' in (agent.status or '') %}
+                    <a href="/agents/call/{{ agent.agent_id }}" class="btn btn-agent-action btn-call" title="Lancer une conversation">
+                        <i class="bi bi-telephone-fill"></i>
+                        Appeler
+                    </a>
+                    <button class="btn btn-agent-action btn-info" onclick="copyEndpoint('{{ agent.agent_id }}')" title="Copier l'endpoint WebSocket">
+                        <i class="bi bi-link-45deg"></i>
+                    </button>
+                    {% else %}
+                    <a href="/agents/config/{{ agent.agent_id }}/step{{ agent.current_step or 2 }}" class="btn btn-agent-action btn-test">
+                        <i class="bi bi-arrow-right-circle"></i>
+                        Continuer
+                    </a>
+                    {% endif %}
+                    <button class="btn btn-agent-action btn-info" onclick="viewAgentDetails('{{ agent.agent_id }}')">
+                        <i class="bi bi-info-circle"></i>
+                        Détails
+                    </button>
+                    <a href="/agents/config/{{ agent.agent_id }}/step2" class="btn btn-agent-action btn-edit">
+                        <i class="bi bi-pencil"></i>
+                        Modifier
+                    </a>
+                    <button class="btn btn-agent-action btn-delete" onclick="deleteAgent('{{ agent.agent_id }}', '{{ agent.agent_name or 'Agent' }}')">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Pagination Controls (seulement en vue liste) -->
+        {% if request.args.get('view') != 'grouped' and total_pages > 1 %}
+        <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 3rem; flex-wrap: wrap;">
+            <!-- Bouton Précédent -->
+            {% if page > 1 %}
+            <a href="?page={{ page - 1 }}{% if current_filters.status %}&status={{ current_filters.status }}{% endif %}{% if current_filters.model %}&model={{ current_filters.model }}{% endif %}{% if current_filters.date_from %}&date_from={{ current_filters.date_from }}{% endif %}{% if current_filters.date_to %}&date_to={{ current_filters.date_to }}{% endif %}" 
+               class="btn btn-secondary" style="padding: 0.8rem 1.5rem; border-radius: 10px;">
+                <i class="bi bi-chevron-left"></i> Précédent
+            </a>
+            {% else %}
+            <button class="btn btn-secondary" disabled style="padding: 0.8rem 1.5rem; border-radius: 10px; opacity: 0.5;">
+                <i class="bi bi-chevron-left"></i> Précédent
+            </button>
+            {% endif %}
+
+            <!-- Numéros de page -->
+            <div style="display: flex; gap: 0.5rem;">
+                {% for p in range(1, total_pages + 1) %}
+                    {% if p == page %}
+                    <span style="padding: 0.8rem 1.2rem; background: var(--waka-primary); color: white; border-radius: 10px; font-weight: 700;">
+                        {{ p }}
+                    </span>
+                    {% elif p <= 3 or p > total_pages - 3 or (p >= page - 1 and p <= page + 1) %}
+                    <a href="?page={{ p }}{% if current_filters.status %}&status={{ current_filters.status }}{% endif %}{% if current_filters.model %}&model={{ current_filters.model }}{% endif %}{% if current_filters.date_from %}&date_from={{ current_filters.date_from }}{% endif %}{% if current_filters.date_to %}&date_to={{ current_filters.date_to }}{% endif %}"
+                       style="padding: 0.8rem 1.2rem; background: white; border: 2px solid var(--waka-border); color: var(--waka-text); border-radius: 10px; text-decoration: none; font-weight: 600; transition: all 0.3s ease;">
+                        {{ p }}
+                    </a>
+                    {% elif p == 4 or p == total_pages - 3 %}
+                    <span style="padding: 0.8rem 1.2rem;">...</span>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- Bouton Suivant -->
+            {% if page < total_pages %}
+            <a href="?page={{ page + 1 }}{% if current_filters.status %}&status={{ current_filters.status }}{% endif %}{% if current_filters.model %}&model={{ current_filters.model }}{% endif %}{% if current_filters.date_from %}&date_from={{ current_filters.date_from }}{% endif %}{% if current_filters.date_to %}&date_to={{ current_filters.date_to }}{% endif %}" 
+               class="btn btn-secondary" style="padding: 0.8rem 1.5rem; border-radius: 10px;">
+                Suivant <i class="bi bi-chevron-right"></i>
+            </a>
+            {% else %}
+            <button class="btn btn-secondary" disabled style="padding: 0.8rem 1.5rem; border-radius: 10px; opacity: 0.5;">
+                Suivant <i class="bi bi-chevron-right"></i>
+            </button>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-robot"></i>
+            </div>
+            <h2>Aucun agent pour le moment</h2>
+            <p>Commencez par créer votre premier agent vocal intelligent</p>
+            <a href="/agents/config/step1" class="btn btn-create-first">
+                <i class="bi bi-plus-circle-fill"></i>
+                <span>Créer mon premier agent</span>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // ============================================
+    // FILTER & SEARCH FUNCTIONS
+    // ============================================
+    function applyFilters() {
+        const status = document.getElementById('filterStatus').value;
+        const model = document.getElementById('filterModel').value;
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        
+        // Construire l'URL avec les paramètres
+        let url = '/agents?page=1';
+        if (status) url += `&status=${encodeURIComponent(status)}`;
+        if (model) url += `&model=${encodeURIComponent(model)}`;
+        if (dateFrom) url += `&date_from=${dateFrom}`;
+        if (dateTo) url += `&date_to=${dateTo}`;
+        
+        window.location.href = url;
+    }
+
+    function resetFilters() {
+        window.location.href = '/agents';
+    }
+
+    function filterAgentsLive() {
+        const searchTerm = document.getElementById('searchAgents').value.toLowerCase();
+        const agentCards = document.querySelectorAll('.agent-card');
+        
+        agentCards.forEach(card => {
+            const name = card.querySelector('.agent-name').textContent.toLowerCase();
+            const description = card.querySelector('.agent-description').textContent.toLowerCase();
+            
+            if (name.includes(searchTerm) || description.includes(searchTerm)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    function toggleView(viewType) {
+        const currentUrl = new URL(window.location.href);
+        
+        if (viewType === 'grouped') {
+            currentUrl.searchParams.set('view', 'grouped');
+        } else {
+            currentUrl.searchParams.delete('view');
+        }
+        
+        window.location.href = currentUrl.toString();
+    }
+
+    // ============================================
+    // AGENT MANAGEMENT FUNCTIONS
+    // ============================================
+    function testAgent(agentId) {
+        console.log('Testing agent:', agentId);
+        window.location.href = `/agents/config/${agentId}/step5`;
+    }
+
+    function editAgent(agentId) {
+        console.log('Editing agent:', agentId);
+        window.location.href = `/agents/config/${agentId}/step2`;
+    }
+
+    async function deleteAgent(agentId, agentName) {
+        if (!confirm(`Êtes-vous sûr de vouloir supprimer l'agent "${agentName}" ?\n\nCette action est irréversible.`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/agents/api/${agentId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Afficher un message de succès
+                alert('✅ Agent supprimé avec succès');
+                // Recharger la page pour mettre à jour la liste
+                window.location.reload();
+            } else {
+                alert('❌ Erreur lors de la suppression: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Error deleting agent:', error);
+            alert('❌ Erreur lors de la suppression de l\'agent');
+        }
+    }
+
+    async function viewAgentDetails(agentId) {
+        try {
+            const response = await fetch(`/agents/api/${agentId}/details`);
+            const result = await response.json();
+
+            if (result.success) {
+                // Afficher les détails dans un modal
+                showAgentDetailsModal(result.agent);
+            } else {
+                alert('❌ Erreur: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Error fetching agent details:', error);
+            alert('❌ Erreur lors de la récupération des détails');
+        }
+    }
+
+    function showAgentDetailsModal(agent) {
+        // Formater les outils
+        const toolsHtml = (agent.selected_tools || []).map(tool => 
+            `<span class="tool-badge"><i class="bi bi-wrench-adjustable"></i> ${tool}</span>`
+        ).join('');
+
+        // Formater le statut
+        let statusBadge = '';
+        const status = agent.status || '';
+        
+        if (status === 'deployed' || status === 'actif') {
+            statusBadge = '<span class="status-badge status-active"><i class="bi bi-check-circle-fill"></i> Déployé</span>';
+        } else if (status.includes('step5') || agent.current_step === 5) {
+            statusBadge = '<span class="status-badge status-configured"><i class="bi bi-check-circle-fill"></i> Configuré</span>';
+        } else if (status.includes('step')) {
+            const stepNum = status.match(/step(\d+)/)?.[1] || agent.current_step || 1;
+            statusBadge = `<span class="status-badge status-draft"><i class="bi bi-gear-fill"></i> En cours (Étape ${stepNum}/5)</span>`;
+        } else {
+            statusBadge = '<span class="status-badge status-draft"><i class="bi bi-clock-fill"></i> Brouillon</span>';
+        }
+
+        // Récupérer la voix depuis session_config ou voice_config
+        const voiceName = agent.session_config?.voice?.name || 
+                         agent.voice_config?.voice_name || 
+                         'Non configurée';
+
+        // Récupérer le prompt système depuis instructions ou system_prompt
+        const systemPrompt = agent.instructions || agent.system_prompt || '';
+
+        // Créer le modal dynamiquement
+        const modal = document.createElement('div');
+        modal.className = 'agent-details-modal';
+        modal.innerHTML = `
+            <div class="modal-overlay" onclick="closeAgentDetailsModal()"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h2><i class="bi bi-robot"></i> ${agent.agent_name || 'Agent sans nom'}</h2>
+                        <p class="modal-subtitle">${agent.role || 'Aucune description'}</p>
+                    </div>
+                    <button class="modal-close" onclick="closeAgentDetailsModal()">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Informations générales -->
+                    <div class="details-section">
+                        <h3><i class="bi bi-info-circle-fill"></i> Informations générales</h3>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">Statut</span>
+                                <span class="detail-value">${statusBadge}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">ID Agent</span>
+                                <span class="detail-value detail-code">${agent.agent_id}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Étape de configuration</span>
+                                <span class="detail-value">${agent.current_step || 1} / 5</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Type de configuration</span>
+                                <span class="detail-value">${agent.config_type === 'personnalise' ? 'Personnalisée' : 'Template'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Créé le</span>
+                                <span class="detail-value">${agent.created_at ? new Date(agent.created_at).toLocaleString('fr-FR') : 'N/A'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Modifié le</span>
+                                <span class="detail-value">${agent.updated_at ? new Date(agent.updated_at).toLocaleString('fr-FR') : 'N/A'}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configuration du modèle -->
+                    <div class="details-section">
+                        <h3><i class="bi bi-cpu-fill"></i> Configuration du modèle</h3>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">Modèle</span>
+                                <span class="detail-value">${agent.model_name || agent.model_id || 'Non défini'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">ID Modèle</span>
+                                <span class="detail-value detail-code">${agent.model_id || 'N/A'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Température</span>
+                                <span class="detail-value">${agent.temperature !== undefined ? agent.temperature : 'N/A'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Max Tokens</span>
+                                <span class="detail-value">${agent.max_tokens || 'N/A'}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configuration vocale -->
+                    <div class="details-section">
+                        <h3><i class="bi bi-mic-fill"></i> Configuration vocale</h3>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">Voix sélectionnée</span>
+                                <span class="detail-value">${voiceName}</span>
+                            </div>
+                            ${agent.session_config?.voice?.type ? `
+                            <div class="detail-item">
+                                <span class="detail-label">Type</span>
+                                <span class="detail-value">${agent.session_config.voice.type}</span>
+                            </div>
+                            ` : ''}
+                            ${agent.session_config?.voice?.rate ? `
+                            <div class="detail-item">
+                                <span class="detail-label">Vitesse (Rate)</span>
+                                <span class="detail-value">${agent.session_config.voice.rate}x</span>
+                            </div>
+                            ` : ''}
+                            ${agent.session_config?.voice?.temperature !== undefined ? `
+                            <div class="detail-item">
+                                <span class="detail-label">Température vocale</span>
+                                <span class="detail-value">${agent.session_config.voice.temperature}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Outils sélectionnés -->
+                    <div class="details-section">
+                        <h3><i class="bi bi-tools"></i> Outils sélectionnés (${(agent.selected_tools || []).length})</h3>
+                        <div class="tools-container">
+                            ${toolsHtml || '<p class="no-data">Aucun outil sélectionné</p>'}
+                        </div>
+                    </div>
+
+                    <!-- Prompt système -->
+                    <div class="details-section">
+                        <h3><i class="bi bi-chat-left-text-fill"></i> Instructions système</h3>
+                        <div class="prompt-display">${agent.instructions || agent.system_prompt || '<p class="no-data">Aucune instruction définie</p>'}</div>
+                    </div>
+
+                    <!-- Configuration Session -->
+                    ${agent.session_config ? `
+                    <div class="details-section">
+                        <h3><i class="bi bi-gear-fill"></i> Configuration Session</h3>
+                        <details class="json-collapsible">
+                            <summary>Voir la configuration JSON</summary>
+                            <pre class="json-display">${JSON.stringify(agent.session_config, null, 2)}</pre>
+                        </details>
+                    </div>
+                    ` : ''}
+
+                    <!-- Configuration complète -->
+                    <div class="details-section">
+                        <h3><i class="bi bi-code-square"></i> Configuration complète</h3>
+                        <details class="json-collapsible">
+                            <summary>Voir le JSON complet</summary>
+                            <pre class="json-display">${JSON.stringify(agent, null, 2)}</pre>
+                        </details>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="copyAgentConfig('${agent.agent_id}')">
+                        <i class="bi bi-clipboard"></i> Copier JSON
+                    </button>
+                    <a href="/agents/config/${agent.agent_id}/step2" class="btn btn-secondary">
+                        <i class="bi bi-pencil"></i> Modifier
+                    </a>
+                    <button class="btn btn-primary" onclick="closeAgentDetailsModal()">
+                        Fermer
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        // Empêcher le scroll du body
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeAgentDetailsModal() {
+        const modal = document.querySelector('.agent-details-modal');
+        if (modal) {
+            modal.remove();
+            document.body.style.overflow = '';
+        }
+    }
+
+    async function copyAgentConfig(agentId) {
+        try {
+            const response = await fetch(`/agents/api/${agentId}/details`);
+            const result = await response.json();
+            
+            if (result.success) {
+                const jsonText = JSON.stringify(result.agent, null, 2);
+                await navigator.clipboard.writeText(jsonText);
+                alert('✅ Configuration copiée dans le presse-papier');
+            }
+        } catch (error) {
+            console.error('Error copying config:', error);
+            alert('❌ Erreur lors de la copie');
+        }
+    }
+
+    async function copyEndpoint(agentId) {
+        try {
+            const response = await fetch(`/agents/api/${agentId}/details`);
+            const result = await response.json();
+            
+            if (result.success && result.agent.websocket_url) {
+                await navigator.clipboard.writeText(result.agent.websocket_url);
+                alert('✅ Endpoint WebSocket copié dans le presse-papier');
+            } else {
+                alert('❌ Endpoint non disponible pour cet agent');
+            }
+        } catch (error) {
+            console.error('Error copying endpoint:', error);
+            alert('❌ Erreur lors de la copie de l\'endpoint');
+        }
+    }
+
+    async function copyEndpoint(agentId) {
+        try {
+            const response = await fetch(`/agents/api/${agentId}/details`);
+            const result = await response.json();
+            
+            if (result.success && result.agent.websocket_url) {
+                await navigator.clipboard.writeText(result.agent.websocket_url);
+                alert('✅ Endpoint WebSocket copié dans le presse-papier');
+            } else {
+                alert('❌ Endpoint non disponible pour cet agent');
+            }
+        } catch (error) {
+            console.error('Error copying endpoint:', error);
+            alert('❌ Erreur lors de la copie de l\'endpoint');
+        }
+    }
+
+    // ============================================
+    // LOAD AGENTS FROM API
+    // ============================================
+    async function loadAgents() {
+        try {
+            // TODO: Fetch agents from CosmosDB API
+            // const response = await fetch('/api/agents');
+            // const agents = await response.json();
+            // renderAgents(agents);
+            
+            console.log('Loading agents from database...');
+        } catch (error) {
+            console.error('Error loading agents:', error);
+        }
+    }
+
+    function renderAgents(agents) {
+        const container = document.getElementById('agentsContainer');
+        const emptyState = container.querySelector('.empty-state');
+        
+        if (agents.length === 0) {
+            emptyState.style.display = 'block';
+        } else {
+            emptyState.style.display = 'none';
+            // TODO: Render agent cards dynamically
+        }
+    }
+
+    // Load agents on page load
+    document.addEventListener('DOMContentLoaded', loadAgents);
+</script>
+{% endblock %}

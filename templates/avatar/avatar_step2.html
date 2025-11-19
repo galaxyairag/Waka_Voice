@@ -2021,15 +2021,21 @@ document.getElementById('voiceLiveForm').addEventListener('submit', function(e) 
     const voiceName = document.getElementById('voiceName').value;
     const avatarCharacter = document.getElementById('avatarCharacter').value;
     const avatarStyle = document.getElementById('avatarStyle').value;
-    
+
     console.log('📤 Formulaire soumis:');
     console.log('  - voiceName:', voiceName);
     console.log('  - avatarCharacter:', avatarCharacter);
     console.log('  - avatarStyle:', avatarStyle);
-    
+
     if (!voiceName) {
         e.preventDefault();
         alert('Veuillez sélectionner une voix');
+        return false;
+    }
+
+    if (!avatarCharacter) {
+        e.preventDefault();
+        alert('Veuillez sélectionner un avatar en cliquant sur l\'une des cartes ci-dessus');
         return false;
     }
 });
@@ -2244,20 +2250,9 @@ function renderAvatarPage() {
         const card = document.createElement('div');
         card.className = 'avatar-card';
         card.dataset.character = character;
-        
-        // Add selection to first avatar on first page
-        if (currentPage === 1 && index === 0) {
-            card.classList.add('selected');
-            // Update hidden input with first avatar
-            const avatarCharacterInput = document.getElementById('avatarCharacter');
-            if (avatarCharacterInput) {
-                avatarCharacterInput.value = character;
-                console.log('✅ Avatar par défaut sélectionné:', character);
-            }
-            // Update styles for first avatar
-            updateAvatarStyles(character);
-        }
-        
+
+        // Ne PAS sélectionner automatiquement - l'utilisateur doit choisir explicitement
+
         card.innerHTML = `
             <div class="avatar-card-icon">${emoji}</div>
             <div class="avatar-card-name">${displayName}</div>

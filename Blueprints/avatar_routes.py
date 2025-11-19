@@ -136,7 +136,7 @@ def avatar_config_step2(agent_id):
     if request.method == 'POST':
         # Traiter le formulaire de voix et rediriger vers step3
         try:
-            from configuration.cosmos_config import update_avatar_config
+            from configuration.cosmos_config import update_avatar_config, get_avatar_config
             from flask import redirect, url_for
             
             # Récupérer toutes les données du formulaire de voix
@@ -158,9 +158,32 @@ def avatar_config_step2(agent_id):
             
             logger.info(f"🎭 Sauvegarde avatar character: {voice_data.get('avatar_character')}")
             logger.info(f"🎭 Sauvegarde avatar style: {voice_data.get('avatar_style')}")
-            
-            # Nettoyer les valeurs None
-            voice_data = {k: v for k, v in voice_data.items() if v is not None and v != ''}
+
+            # Récupérer la config existante pour préserver avatar_character et avatar_style
+            existing_config = get_avatar_config(agent_id)
+
+            # Nettoyer les valeurs None et vides, SAUF pour avatar_character et avatar_style
+            # qui peuvent avoir été mis à jour via l'API JavaScript
+            cleaned_voice_data = {}
+            for k, v in voice_data.items():
+                # Garder les champs même s'ils sont vides pour avatar_character et avatar_style
+                # car ils ont pu être mis à jour par l'API JavaScript avant la soumission du formulaire
+                if k in ['avatar_character', 'avatar_style']:
+                    # Si la valeur du formulaire est vide, essayer de récupérer depuis la config existante
+                    if not v and existing_config:
+                        existing_value = existing_config.get(k)
+                        if existing_value:
+                            cleaned_voice_data[k] = existing_value
+                            logger.info(f"🔄 Préservation de {k} depuis config existante: {existing_value}")
+                        elif v is not None:
+                            cleaned_voice_data[k] = v
+                    elif v:
+                        cleaned_voice_data[k] = v
+                # Pour les autres champs, nettoyer normalement
+                elif v is not None and v != '':
+                    cleaned_voice_data[k] = v
+
+            voice_data = cleaned_voice_data
             
             # Sauvegarder
             update_avatar_config(agent_id, voice_data)

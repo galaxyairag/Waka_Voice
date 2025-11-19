@@ -2308,6 +2308,13 @@ function renderAvatarPage() {
                     const result = await response.json();
                     if (result.success) {
                         console.log('✅ Avatar character mis à jour dans Cosmos DB:', result.character);
+                        console.log('🔍 Vérification - character dans DB:', result.verified_character);
+                        if (result.verified_character !== result.character) {
+                            console.error('❌ ALERTE: Le character dans DB ne correspond pas !', {
+                                envoyé: result.character,
+                                dansBD: result.verified_character
+                            });
+                        }
                     } else {
                         console.warn('⚠️ Erreur mise à jour Cosmos DB:', result.error);
                     }
@@ -2366,6 +2373,28 @@ function updateAvatarStyles(character) {
         console.log(`⚠️ Aucun style pour l'avatar ${character} - utilisation du style par défaut`);
         if (styleGroup) styleGroup.style.display = 'none';
         styleInput.value = 'casual-sitting'; // Default fallback style
+
+        // Mettre à jour dans Cosmos DB avec le style par défaut
+        const agentId = window.location.pathname.split('/').pop();
+        if (agentId && agentId !== 'step2') {
+            fetch(`/avatar/api/${agentId}/update_avatar_character`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    character: character,
+                    style: 'casual-sitting'
+                })
+            }).then(response => response.json())
+              .then(result => {
+                  if (result.success) {
+                      console.log('✅ Avatar sans styles mis à jour avec style par défaut:', result.verified_character);
+                  }
+              })
+              .catch(error => console.error('❌ Erreur mise à jour avatar sans styles:', error));
+        }
+
         return;
     }
 
@@ -2403,6 +2432,7 @@ function updateAvatarStyles(character) {
                     const result = await response.json();
                     if (result.success) {
                         console.log('✅ Avatar style mis à jour dans Cosmos DB:', result.style);
+                        console.log('🔍 Vérification - character dans DB:', result.verified_character);
                     } else {
                         console.warn('⚠️ Erreur mise à jour Cosmos DB:', result.error);
                     }

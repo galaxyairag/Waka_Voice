@@ -970,13 +970,17 @@ def get_avatar_details(agent_id):
 def update_avatar_character(agent_id):
     """Mettre à jour le character et le style de l'avatar directement"""
     try:
-        from configuration.cosmos_config import update_avatar_config
+        from configuration.cosmos_config import update_avatar_config, get_avatar_config
 
         data = request.get_json()
         character = data.get('character')
         style = data.get('style')
 
+        logger.info(f"🔄 API update_avatar_character appelée - agent_id: {agent_id}")
+        logger.info(f"📦 Données reçues: character={character}, style={style}")
+
         if not character:
+            logger.warning("⚠️ Character manquant dans la requête")
             return jsonify({
                 'success': False,
                 'error': 'Character requis'
@@ -990,19 +994,28 @@ def update_avatar_character(agent_id):
         if style:
             update_data['avatar_style'] = style
 
+        logger.info(f"📝 Données à mettre à jour dans Cosmos: {update_data}")
+
+        # Mettre à jour
         update_avatar_config(agent_id, update_data)
 
+        # Vérifier que la mise à jour a bien été effectuée
+        updated_config = get_avatar_config(agent_id)
+        actual_character = updated_config.get('avatar_character') if updated_config else None
+
         logger.info(f"✅ Avatar character mis à jour pour {agent_id}: {character} (style: {style})")
+        logger.info(f"🔍 Vérification après mise à jour - avatar_character dans DB: {actual_character}")
 
         return jsonify({
             'success': True,
             'message': f'Avatar character mis à jour: {character}',
             'character': character,
-            'style': style
+            'style': style,
+            'verified_character': actual_character  # Pour vérifier
         })
 
     except Exception as e:
-        logger.exception("Erreur mise à jour avatar character")
+        logger.exception("❌ Erreur mise à jour avatar character")
         return jsonify({
             'success': False,
             'error': str(e)

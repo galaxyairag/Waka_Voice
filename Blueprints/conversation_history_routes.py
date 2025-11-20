@@ -326,6 +326,51 @@ def get_available_models():
             'error': str(e)
         }), 500
 
+@conversation_history_bp.route('/api/statuses', methods=['GET'])
+def get_available_statuses():
+    """API pour récupérer la liste des status disponibles depuis la base de données"""
+    try:
+        container = get_call_history_container()
+        query = "SELECT DISTINCT c.status FROM c WHERE IS_DEFINED(c.status)"
+        
+        db_statuses = set()
+        try:
+            items = list(container.query_items(
+                query=query,
+                enable_cross_partition_query=True
+            ))
+            db_statuses = {item['status'] for item in items if item.get('status')}
+        except Exception as e:
+            logger.warning(f"Erreur lors de la récupération des status DB: {e}")
+        
+        # Labels pour l'affichage
+        status_labels = {
+            'completed': 'Terminé',
+            'in_progress': 'En cours',
+            'failed': 'Échoué',
+            'cancelled': 'Annulé'
+        }
+        
+        # Créer la liste avec labels
+        statuses = []
+        for status in sorted(db_statuses):
+            statuses.append({
+                'value': status,
+                'label': status_labels.get(status, status)
+            })
+        
+        return jsonify({
+            'success': True,
+            'statuses': statuses
+        })
+        
+    except Exception as e:
+        logger.exception("Erreur lors de la récupération des status")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @conversation_history_bp.route('/api/end/<call_id>', methods=['POST'])
 def end_conversation(call_id):
     """API pour clôturer manuellement une conversation"""

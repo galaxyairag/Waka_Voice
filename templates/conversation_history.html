@@ -542,6 +542,36 @@
     border-left: 5px solid var(--waka-danger);
     margin: 20px 0;
 }
+
+/* Spinner de chargement */
+.spinner-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+}
+
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid var(--waka-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.spinner-text {
+    margin-top: 20px;
+    color: var(--waka-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+}
 </style>
 {% endblock %}
 
@@ -614,10 +644,7 @@
                 <label class="filter-label">Status</label>
                 <select id="statusFilter" class="filter-input">
                     <option value="">Tous les status</option>
-                    <option value="completed">Terminé</option>
-                    <option value="in_progress">En cours</option>
-                    <option value="failed">Échoué</option>
-                    <option value="cancelled">Annulé</option>
+                    <!-- Chargé dynamiquement -->
                 </select>
             </div>
         </div>
@@ -634,8 +661,9 @@
 
     <!-- Liste des conversations -->
     <div id="conversationsContainer">
-        <div class="loading">
-            <i class="bi bi-hourglass-split"></i> Chargement des conversations...
+        <div class="spinner-container">
+            <div class="spinner"></div>
+            <div class="spinner-text">Chargement des conversations...</div>
         </div>
     </div>
 
@@ -730,6 +758,7 @@ let currentCallIdToDelete = null;
 document.addEventListener('DOMContentLoaded', () => {
     loadConversations();
     loadAvailableModels();
+    loadAvailableStatuses();
 });
 
 // Charger les modèles disponibles
@@ -756,10 +785,59 @@ async function loadAvailableModels() {
     }
 }
 
+// Charger les status disponibles
+async function loadAvailableStatuses() {
+    try {
+        const response = await fetch('/conversations/api/statuses');
+        const data = await response.json();
+        
+        if (data.success && data.statuses) {
+            const select = document.getElementById('statusFilter');
+            // Garder l'option par défaut
+            select.innerHTML = '<option value="">Tous les status</option>';
+            
+            // Ajouter les status disponibles
+            data.statuses.forEach(status => {
+                const option = document.createElement('option');
+                option.value = status.value;
+                option.textContent = status.label;
+                select.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Erreur chargement status:', error);
+    }
+}
+
+// Charger les status disponibles
+async function loadAvailableStatuses() {
+    try {
+        const response = await fetch('/conversations/api/statuses');
+        const data = await response.json();
+        
+        if (data.success && data.statuses) {
+            const select = document.getElementById('statusFilter');
+            // Garder l'option par défaut
+            select.innerHTML = '<option value="">Tous les status</option>';
+            
+            // Ajouter les status disponibles
+            data.statuses.forEach(status => {
+                const option = document.createElement('option');
+                option.value = status.value;
+                option.textContent = status.label;
+                select.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Erreur chargement status:', error);
+    }
+}
+
 // Charger les conversations et les modèles au démarrage
 document.addEventListener('DOMContentLoaded', () => {
     loadConversations();
     loadAvailableModels();
+    loadAvailableStatuses();
 });
 
 // Charger les modèles disponibles

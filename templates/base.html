@@ -831,6 +831,11 @@
                     <i class="bi bi-clock-history"></i>
                     <span>Historiques</span>
                 </a>
+                
+                <a href="#" class="nav-link" id="avatarStudioBtn">
+                    <i class="bi bi-camera-video-fill"></i>
+                    <span>Avatar Studio</span>
+                </a>
             </nav>
         </div>
     </header>
@@ -874,6 +879,38 @@
                     <i class="bi bi-code-slash"></i>
                     <span>Équipe GalaxyAI</span>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AVATAR STUDIO MODAL -->
+    <div class="chatbot-modal" id="avatarStudioModal">
+        <div class="chatbot-header">
+            <div class="chatbot-avatar" style="background: linear-gradient(135deg, #FF6F00 0%, #FFC107 100%);">
+                <i class="bi bi-camera-video-fill"></i>
+            </div>
+            <div class="chatbot-title">
+                <h3 style="background: linear-gradient(135deg, #FF6F00 0%, #FFC107 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Avatar Studio</h3>
+                <p>Création d'avatars personnalisés</p>
+            </div>
+            <button class="chatbot-close" id="avatarStudioClose" aria-label="Fermer">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        
+        <div class="chatbot-body">
+            <div class="chatbot-dev-icon">
+                🎬
+            </div>
+            <div class="chatbot-message">
+                <h4>Fonctionnalité en développement</h4>
+                <p>
+                    L'Avatar Studio vous permettra de créer et personnaliser vos propres avatars vidéo pour vos agents conversationnels.
+                </p>
+            </div>
+            <div class="chatbot-team-badge" style="background: linear-gradient(135deg, #FF6F00 0%, #FFC107 100%);">
+                <i class="bi bi-code-slash"></i>
+                <span>Équipe GalaxyAI</span>
             </div>
         </div>
     </div>
@@ -1003,6 +1040,33 @@
             document.addEventListener('click', (e) => {
                 if (!chatbotModal.contains(e.target) && !chatbotToggle.contains(e.target)) {
                     chatbotModal.classList.remove('show');
+                }
+            });
+        }
+
+        // ========================================
+        // Avatar Studio Modal Toggle
+        // ========================================
+        const avatarStudioBtn = document.getElementById('avatarStudioBtn');
+        const avatarStudioModal = document.getElementById('avatarStudioModal');
+        const avatarStudioClose = document.getElementById('avatarStudioClose');
+
+        if (avatarStudioBtn && avatarStudioModal && avatarStudioClose) {
+            avatarStudioBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                avatarStudioModal.classList.toggle('show');
+                // Fermer le chatbot si ouvert
+                if (chatbotModal) chatbotModal.classList.remove('show');
+            });
+
+            avatarStudioClose.addEventListener('click', () => {
+                avatarStudioModal.classList.remove('show');
+            });
+
+            // Fermer le modal si on clique à l'extérieur
+            document.addEventListener('click', (e) => {
+                if (!avatarStudioModal.contains(e.target) && !avatarStudioBtn.contains(e.target)) {
+                    avatarStudioModal.classList.remove('show');
                 }
             });
         }

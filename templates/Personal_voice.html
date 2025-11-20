@@ -1121,9 +1121,17 @@
         }
 
         const voiceTalentName = `${firstName} ${lastName}`;
+        const submitBtn = document.getElementById('submitConsentBtn');
+        const originalBtnText = submitBtn.innerHTML;
 
         try {
+            // Désactiver le bouton et afficher le spinner
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="bi bi-hourglass-split spinner-border spinner-border-sm"></i> Envoi en cours...';
+            
             // 1. Upload de l'audio
+            submitBtn.innerHTML = '<i class="bi bi-cloud-upload spinner-border spinner-border-sm"></i> Upload audio...';
+            
             const formData = new FormData();
             formData.append('audio', consentAudioBlob, 'consent.wav');
             formData.append('type', 'consent');
@@ -1138,10 +1146,17 @@
 
             if (!uploadData.success) {
                 showNotification(`Erreur upload: ${uploadData.error}`, 'error');
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                console.error('Erreur upload:', uploadData);
                 return;
             }
+            
+            console.log('✅ Upload réussi:', uploadData.blob_url);
 
             // 2. Créer le consentement
+            submitBtn.innerHTML = '<i class="bi bi-file-earmark-check spinner-border spinner-border-sm"></i> Création consentement...';
+            
             const consentResponse = await fetch('/creer-une-voix/api/consents', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1159,14 +1174,21 @@
 
             if (consentData.success) {
                 consentId = consentData.consent_id;
+                submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Succès!';
                 showNotification('Consentement envoyé avec succès!');
-                goToStep(3);
+                setTimeout(() => goToStep(3), 500);
             } else {
                 showNotification(`Erreur: ${consentData.error}`, 'error');
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                console.error('Erreur consentement:', consentData);
             }
 
         } catch (error) {
             showNotification(`Erreur: ${error.message}`, 'error');
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
+            console.error('Erreur exception:', error);
         }
     }
 

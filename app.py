@@ -431,14 +431,15 @@ if __name__ == '__main__':
         print("\n✅ SECRET_KEY personnalisée configurée")
     
     # Afficher les routes disponibles
+    port = app.config['PORT']
     print("\n📋 Routes disponibles :")
-    print("   - http://localhost:5000/")
-    print("   - http://localhost:5000/health")
-    print("   - http://localhost:5000/agents/config/step1")
-    print("   - http://localhost:5000/api/azure-voices/health")
+    print(f"   - http://localhost:{port}/")
+    print(f"   - http://localhost:{port}/health")
+    print(f"   - http://localhost:{port}/agents/config/step1")
+    print(f"   - http://localhost:{port}/api/azure-voices/health")
     
     print("\n" + "="*60)
-    print(f"🌐 Serveur démarré sur http://{app.config['HOST']}:{app.config['PORT']}")
+    print(f"🌐 Serveur démarré sur http://{app.config['HOST']}:{port}")
     print("="*60 + "\n")
     
     # Démarrer l'application

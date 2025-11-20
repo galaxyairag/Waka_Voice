@@ -282,7 +282,10 @@ def get_consent_text(locale):
 def upload_audio():
     """Upload d'un fichier audio vers Azure Blob Storage"""
     try:
+        logger.info("📤 Début upload audio vers Blob Storage")
+        
         if 'audio' not in request.files:
+            logger.error("❌ Aucun fichier audio dans la requête")
             return jsonify({
                 'success': False,
                 'error': 'Aucun fichier audio fourni'
@@ -291,17 +294,22 @@ def upload_audio():
         audio_file = request.files['audio']
         audio_type = request.form.get('type', 'consent')  # 'consent' ou 'voice'
         project_id = request.form.get('project_id', '')
+        
+        logger.info(f"📁 Fichier: {audio_file.filename}, Type: {audio_type}, Projet: {project_id}")
 
         # Générer un nom de fichier unique
         file_extension = audio_file.filename.rsplit('.', 1)[-1] if '.' in audio_file.filename else 'wav'
         blob_name = f"{project_id}/{audio_type}_{uuid.uuid4().hex[:8]}.{file_extension}"
+        
+        logger.info(f"🏷️ Nom blob généré: {blob_name}")
 
         # Upload vers Blob Storage
         blob_service_client = get_blob_service_client()
         if not blob_service_client:
+            logger.error("❌ Blob Storage client non configuré (BLOB_CONNECTION_STRING manquant)")
             return jsonify({
                 'success': False,
-                'error': 'Blob Storage non configuré'
+                'error': 'Blob Storage non configuré - vérifier BLOB_CONNECTION_STRING'
             }), 500
 
         container_client = blob_service_client.get_container_client(BLOB_CONTAINER_ENREGISTREMENTS)
@@ -309,11 +317,19 @@ def upload_audio():
         # Créer le container s'il n'existe pas
         try:
             container_client.create_container()
-        except:
-            pass  # Container existe déjà
+            logger.info(f"✅ Container '{BLOB_CONTAINER_ENREGISTREMENTS}' créé")
+        except Exception as e:
+            logger.debug(f"Container '{BLOB_CONTAINER_ENREGISTREMENTS}' existe déjà: {e}")
 
         blob_client = container_client.get_blob_client(blob_name)
-        blob_client.upload_blob(audio_file, overwrite=True)
+        
+        # Lire le contenu du fichier
+        audio_data = audio_file.read()
+        logger.info(f"📊 Taille fichier: {len(audio_data)} bytes")
+        
+        # Upload
+        blob_client.upload_blob(audio_data, overwrite=True)
+        logger.info(f"✅ Blob uploadé: {blob_name}")
 
         # Générer une URL SAS pour accès temporaire
         sas_token = generate_blob_sas(

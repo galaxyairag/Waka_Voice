@@ -513,7 +513,8 @@ def create_personal_voice():
 
         project_id = data.get('project_id')
         consent_id = data.get('consent_id')
-        container_url = data.get('container_url')  # URL du conteneur blob avec SAS
+        # Support ancien format (audio_url) et nouveau format (container_url)
+        container_url = data.get('container_url') or data.get('audio_url')
         audio_prefix = data.get('audio_prefix', '')  # Préfixe optionnel pour les fichiers
         audio_extensions = data.get('audio_extensions', ['.wav'])  # Extensions avec point
         voice_name = data.get('voice_name', '')
@@ -521,9 +522,15 @@ def create_personal_voice():
 
         # Validation des entrées
         if not all([project_id, consent_id, container_url]):
+            logger.error(f"❌ Paramètres manquants - project_id: {project_id}, consent_id: {consent_id}, container_url: {container_url}")
             return jsonify({
                 'success': False,
-                'error': 'project_id, consent_id et container_url sont requis'
+                'error': 'project_id, consent_id et container_url (ou audio_url) sont requis',
+                'received': {
+                    'project_id': project_id,
+                    'consent_id': consent_id, 
+                    'container_url': container_url
+                }
             }), 400
 
         # Générer un ID unique pour la voix personnelle

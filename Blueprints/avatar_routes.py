@@ -321,6 +321,151 @@ def avatar_config_step4(agent_id):
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+@avatar_bp.route('/api/<agent_id>/generate_prompt_stream', methods=['POST'])
+def generate_prompt_stream_api(agent_id):
+    """
+    API endpoint pour générer un prompt système via GPT-5-mini avec streaming
+    """
+    from openai import OpenAI
+    import os
+    from flask import Response, stream_with_context
+    import json
+    
+    try:
+        data = request.get_json()
+        user_instruction = data.get('user_instruction', '') or data.get('instruction', '')
+        
+        if not user_instruction:
+            return jsonify({
+                'success': False,
+                'error': 'Instruction utilisateur manquante'
+            }), 400
+        
+        # Initialiser le client OpenAI
+        azure_endpoint = os.getenv('AZURE_OPENAI_SUMMARY_ENDPOINT')
+        api_key = os.getenv('AZURE_OPENAI_SUMMARY_KEY')
+        deployment_name = os.getenv('AZURE_OPENAI_GPT5_MINI_DEPLOYMENT', 'gpt-5-mini')
+        
+        if not azure_endpoint or not api_key:
+            return jsonify({
+                'success': False,
+                'error': 'Configuration Azure OpenAI manquante'
+            }), 500
+        
+        base_url = f"{azure_endpoint}openai/v1/"
+        
+        client = OpenAI(
+            base_url=base_url,
+            api_key=api_key
+        )
+        
+        # Prompt de génération (même que version non-streaming)
+        generation_prompt = f"""Tu es un assistant expert en création de prompts système pour des agents IA conversationnels vocaux.
+
+L'utilisateur souhaite créer un agent avatar avec les caractéristiques suivantes :
+{user_instruction}
+
+Génère un prompt système professionnel, détaillé et efficace pour cet agent avatar.
+
+Le prompt DOIT obligatoirement inclure :
+
+**1. RÔLE** :
+   - Si spécifié dans la consigne → utiliser ce rôle
+   - Sinon → "Agent conversationnel généraliste"
+
+**2. TON** :
+   - Par défaut → "familier et chaleureux"
+   - Sauf si l'utilisateur spécifie un autre ton (professionnel, formel, etc.)
+
+**3. PREMIER MESSAGE** :
+   - Souhaiter chaleureusement la bienvenue
+   - Expliquer brièvement 3 missions principales maximum
+   - Mentionner qu'il peut faire des dizaines de choses au service de l'utilisateur
+
+**4. DEMANDE DU PRÉNOM** :
+   - Demander le prénom de l'utilisateur pour personnaliser la conversation
+   - Ne pas insister si l'utilisateur ne veut pas le donner
+
+**5. SALUTATIONS** :
+   - Saluer uniquement dans le PREMIER message
+   - Ne PAS saluer à chaque message suivant
+
+**6. UTILISATION DES TOOLS** :
+   - Quand il utilise un tool, ANNONCER à l'utilisateur ce qu'il fait
+   - Répondre immédiatement avec le résultat dès réception
+
+**7. COLLECTE D'EMAIL** :
+   - Demander de l'épeler en 3 parties :
+     1. Partie avant le @
+     2. Partie après le @ et avant le point
+     3. Partie après le point
+
+**8. COLLECTE DE CV/INFORMATIONS** :
+   - UNE seule demande par message
+   - Reformuler l'information reçue
+   - Puis demander l'information suivante dans le message suivant
+
+**9. CONTEXTE CULTUREL** :
+   - Si un pays est mentionné dans la consigne :
+     * Lister au moins 20 expressions courantes et citations de ce pays
+     * Adopter une attitude et des références culturelles du pays
+     * Utiliser ces expressions MODÉRÉMENT et naturellement dans les conversations (pas à chaque phrase)
+     * Varier les expressions utilisées pour maintenir la diversité
+
+**10. FIN DE CONVERSATION** :
+   - Si l'agent utilise l'outil "end_conversation"
+   - NE PAS réanimer la conversation même si l'utilisateur parle après
+   - La conversation est définitivement terminée
+
+Structure le prompt en sections claires (Rôle, Ton, Comportement, Consignes spécifiques, etc.)
+Fais environ 300-500 mots.
+
+Réponds uniquement avec le prompt système, sans introduction ni explication."""
+
+        def generate():
+            try:
+                # Stream avec OpenAI
+                stream = client.chat.completions.create(
+                    model=deployment_name,
+                    messages=[
+                        {"role": "system", "content": "Tu es un expert en création de prompts système pour agents IA."},
+                        {"role": "user", "content": generation_prompt}
+                    ],
+                    temperature=1,
+                    stream=True
+                )
+                
+                for chunk in stream:
+                    if chunk.choices and len(chunk.choices) > 0:
+                        delta = chunk.choices[0].delta
+                        if delta.content:
+                            # Envoyer en format SSE
+                            yield f"data: {json.dumps({'content': delta.content})}\n\n"
+                
+                # Signal de fin
+                yield "data: [DONE]\n\n"
+                
+            except Exception as e:
+                logger.exception("Erreur streaming génération prompt")
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        
+        return Response(
+            stream_with_context(generate()),
+            mimetype='text/event-stream',
+            headers={
+                'Cache-Control': 'no-cache',
+                'X-Accel-Buffering': 'no'
+            }
+        )
+        
+    except Exception as e:
+        logger.exception("Erreur endpoint streaming")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 @avatar_bp.route('/api/<agent_id>/generate_prompt', methods=['POST'])
 def generate_prompt_api(agent_id):
     """

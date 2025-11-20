@@ -175,7 +175,81 @@ DELETE /personal-voice/api/personal-voices/{voice_id}
 
 ---
 
-### 5. Synthèse vocale
+### 5. Suivi des opérations asynchrones
+
+#### Vérifier le statut d'une opération via Operation-Location
+```http
+POST /personal-voice/api/operations/status
+Content-Type: application/json
+
+{
+  "operation_location": "https://eastus.api.cognitive.microsoft.com/customvoice/operations/abc123..."
+}
+```
+
+**Réponse:**
+```json
+{
+  "success": true,
+  "status": "Running" | "Succeeded" | "Failed" | "NotStarted",
+  "data": { ... }
+}
+```
+
+#### Polling du statut de création d'une voix
+```http
+GET /personal-voice/api/personal-voices/{voice_id}/poll
+```
+
+**Réponse:**
+```json
+{
+  "success": true,
+  "voice_id": "voice-abc123",
+  "status": "Succeeded",
+  "speaker_profile_id": "spkr_profile_abc123",
+  "is_complete": true,
+  "data": { ... }
+}
+```
+
+**Note:** Cette route met automatiquement à jour le statut dans Cosmos DB et retourne `is_complete: true` quand la création est terminée (succès ou échec).
+
+#### Lister toutes les opérations en cours
+```http
+GET /personal-voice/api/operations/pending
+```
+
+**Réponse:**
+```json
+{
+  "success": true,
+  "pending_voices": [
+    {
+      "voice_id": "voice-abc123",
+      "status": "Running",
+      "created_at": "2025-11-19T10:00:00Z"
+    }
+  ],
+  "pending_consents": [
+    {
+      "consent_id": "consent-def456",
+      "status": "Running",
+      "created_at": "2025-11-19T10:05:00Z"
+    }
+  ],
+  "total_pending": 2
+}
+```
+
+**Utilisation recommandée:**
+- Appeler `/poll` toutes les 5-10 secondes après création d'une voix
+- Arrêter le polling quand `is_complete: true`
+- Utiliser `/operations/pending` pour un dashboard de suivi global
+
+---
+
+### 6. Synthèse vocale
 
 #### Synthétiser du texte avec une voix personnelle
 ```http
@@ -261,11 +335,22 @@ POST /personal-voice/api/personal-voices
 → Retourne: personal_voice_id, speaker_profile_id
 ```
 
-### Étape 6: Vérifier le statut de création
+### Étape 6: Vérifier le statut de création (Polling)
 ```bash
-GET /personal-voice/api/personal-voices/{voice_id}
+# Polling automatique toutes les 5 secondes
+GET /personal-voice/api/personal-voices/{voice_id}/poll
 → Vérifie status: "NotStarted" | "Running" | "Succeeded" | "Failed"
+→ Met à jour automatiquement Cosmos DB
+→ Retourne is_complete: true quand terminé
+
+# Alternative: vérifier via operation_location
+POST /personal-voice/api/operations/status
+{
+  "operation_location": "<operation_location du step 5>"
+}
 ```
+
+**Recommandation:** Utiliser la route `/poll` qui gère automatiquement la mise à jour Cosmos DB.
 
 ### Étape 7: Utiliser la voix pour la synthèse
 ```bash

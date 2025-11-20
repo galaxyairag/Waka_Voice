@@ -425,6 +425,47 @@ def create_consent():
             'error': str(e)
         }), 500
 
+@personal_voice_bp.route('/api/operations/status', methods=['POST'])
+def check_operation_status():
+    """Vérifier le statut d'une opération asynchrone Azure via Operation-Location"""
+    try:
+        data = request.get_json()
+        operation_location = data.get('operation_location')
+        
+        if not operation_location:
+            return jsonify({
+                'success': False,
+                'error': 'operation_location requis'
+            }), 400
+        
+        # Appeler l'URL d'opération Azure
+        response = requests.get(operation_location, headers=get_headers())
+        
+        if response.status_code == 200:
+            result = response.json()
+            status = result.get('status', 'Unknown')
+            
+            logger.info(f"📊 Statut opération: {status}")
+            
+            return jsonify({
+                'success': True,
+                'status': status,
+                'data': result
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f"Erreur Azure API: {response.status_code}",
+                'details': response.text
+            }), response.status_code
+            
+    except Exception as e:
+        logger.exception("Erreur vérification statut opération")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @personal_voice_bp.route('/api/consents/<consent_id>', methods=['GET'])
 def get_consent(consent_id):
     """Obtenir le statut d'un consentement"""
@@ -433,9 +474,26 @@ def get_consent(consent_id):
         response = requests.get(url, headers=get_headers())
 
         if response.status_code == 200:
+            result = response.json()
+            
+            # Mettre à jour le statut dans Cosmos DB si changé
+            try:
+                from configuration.personal_voice_storage import get_personal_voice_consents_container
+                container = get_personal_voice_consents_container()
+                consent_doc = container.read_item(item=consent_id, partition_key=consent_id)
+                
+                if consent_doc.get('status') != result.get('status'):
+                    consent_doc['status'] = result.get('status')
+                    consent_doc['updated_at'] = datetime.utcnow().isoformat() + 'Z'
+                    consent_doc['azure_response'] = result
+                    container.replace_item(item=consent_id, body=consent_doc)
+                    logger.info(f"✅ Statut consentement mis à jour: {consent_id} -> {result.get('status')}")
+            except Exception as cosmos_error:
+                logger.warning(f"⚠️ Impossible de mettre à jour Cosmos DB: {cosmos_error}")
+            
             return jsonify({
                 'success': True,
-                'consent': response.json()
+                'consent': result
             })
         else:
             return jsonify({
@@ -532,6 +590,69 @@ def create_personal_voice():
             'error': str(e)
         }), 500
 
+@personal_voice_bp.route('/api/personal-voices/<voice_id>/poll', methods=['GET'])
+def poll_voice_creation_status(voice_id):
+    """Polling du statut de création d'une voix personnelle avec mise à jour Cosmos DB"""
+    try:
+        # Récupérer depuis Cosmos DB pour avoir l'operation_location
+        from configuration.personal_voice_storage import get_personal_voices_container
+        container = get_personal_voices_container()
+        
+        voice_doc = container.read_item(item=voice_id, partition_key=voice_id)
+        operation_location = voice_doc.get('operation_location')
+        
+        if not operation_location:
+            # Fallback: appeler l'API directement
+            url = f"{get_custom_voice_base_url()}/personalvoices/{voice_id}?api-version={CUSTOM_VOICE_API_VERSION}"
+            response = requests.get(url, headers=get_headers())
+        else:
+            # Utiliser l'operation_location pour un suivi précis
+            response = requests.get(operation_location, headers=get_headers())
+        
+        if response.status_code == 200:
+            result = response.json()
+            current_status = result.get('status', 'Unknown')
+            
+            # Mettre à jour Cosmos DB
+            voice_doc['status'] = current_status
+            voice_doc['updated_at'] = datetime.utcnow().isoformat() + 'Z'
+            
+            if result.get('speakerProfileId'):
+                voice_doc['speaker_profile_id'] = result.get('speakerProfileId')
+            
+            # Si terminé avec succès ou échec, mettre à jour les infos
+            if current_status == 'Succeeded':
+                voice_doc['trained_at'] = datetime.utcnow().isoformat() + 'Z'
+                logger.info(f"✅ Voix {voice_id} créée avec succès")
+            elif current_status == 'Failed':
+                voice_doc['error_message'] = result.get('error', {}).get('message', 'Erreur inconnue')
+                logger.error(f"❌ Échec création voix {voice_id}: {voice_doc['error_message']}")
+            
+            voice_doc['azure_response'] = result
+            container.replace_item(item=voice_id, body=voice_doc)
+            
+            return jsonify({
+                'success': True,
+                'voice_id': voice_id,
+                'status': current_status,
+                'speaker_profile_id': voice_doc.get('speaker_profile_id', ''),
+                'is_complete': current_status in ['Succeeded', 'Failed'],
+                'data': result
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f"Erreur Azure API: {response.status_code}",
+                'details': response.text
+            }), response.status_code
+            
+    except Exception as e:
+        logger.exception(f"Erreur polling voix {voice_id}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @personal_voice_bp.route('/api/personal-voices/<voice_id>', methods=['GET', 'DELETE'])
 def manage_personal_voice(voice_id):
     """Obtenir les détails ou supprimer une voix personnelle"""
@@ -553,9 +674,11 @@ def manage_personal_voice(voice_id):
                         voice['speaker_profile_id'] = result.get('speakerProfileId')
                         voice['status'] = result.get('status')
                         voice['updated_at'] = datetime.utcnow().isoformat() + 'Z'
+                        voice['azure_response'] = result
                         container.replace_item(item=voice_id, body=voice)
-                    except:
-                        pass
+                        logger.info(f"✅ Voix {voice_id} mise à jour dans Cosmos DB")
+                    except Exception as cosmos_error:
+                        logger.warning(f"⚠️ Impossible de mettre à jour Cosmos: {cosmos_error}")
 
                 return jsonify({
                     'success': True,
@@ -671,6 +794,45 @@ def synthesize_speech():
 
     except Exception as e:
         logger.exception("Erreur synthèse vocale")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@personal_voice_bp.route('/api/operations/pending', methods=['GET'])
+def list_pending_operations():
+    """Liste toutes les opérations de création de voix en cours"""
+    try:
+        from configuration.personal_voice_storage import get_personal_voices_container, get_personal_voice_consents_container
+        
+        voices_container = get_personal_voices_container()
+        consents_container = get_personal_voice_consents_container()
+        
+        # Requête pour les voix en cours de création
+        voices_query = "SELECT * FROM c WHERE c.status IN ('NotStarted', 'Running')"
+        pending_voices = list(voices_container.query_items(
+            query=voices_query,
+            enable_cross_partition_query=True
+        ))
+        
+        # Requête pour les consentements en cours
+        consents_query = "SELECT * FROM c WHERE c.status IN ('NotStarted', 'Running')"
+        pending_consents = list(consents_container.query_items(
+            query=consents_query,
+            enable_cross_partition_query=True
+        ))
+        
+        logger.info(f"📊 {len(pending_voices)} voix et {len(pending_consents)} consentements en cours")
+        
+        return jsonify({
+            'success': True,
+            'pending_voices': pending_voices,
+            'pending_consents': pending_consents,
+            'total_pending': len(pending_voices) + len(pending_consents)
+        })
+        
+    except Exception as e:
+        logger.exception("Erreur récupération opérations en cours")
         return jsonify({
             'success': False,
             'error': str(e)

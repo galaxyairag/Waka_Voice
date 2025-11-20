@@ -1,13 +1,36 @@
 """
 Blueprint pour la gestion des avatars Azure AI
 """
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, session, g
 import logging
 import os
 
 logger = logging.getLogger(__name__)
 
 avatar_bp = Blueprint('avatar', __name__, url_prefix='/avatar')
+
+
+@avatar_bp.before_request
+def load_avatar_config():
+    """Charge la config avatar dans g pour éviter requêtes redondantes"""
+    agent_id = request.view_args.get('agent_id') if request.view_args else None
+    if agent_id:
+        try:
+            from configuration.cosmos_config import get_avatar_config
+            g.avatar_config = get_avatar_config(agent_id)
+        except Exception as e:
+            logger.warning(f"Erreur chargement config avatar {agent_id}: {e}")
+            g.avatar_config = None
+
+
+def validate_uuid(uuid_string):
+    """Valide un UUID"""
+    try:
+        import uuid
+        uuid.UUID(uuid_string)
+        return True
+    except (ValueError, AttributeError):
+        return False
 
 @avatar_bp.route('/')
 def index():
@@ -134,8 +157,12 @@ def avatar_config_step2(agent_id):
     """
     Step 2: Configuration de la voix pour avatars
     """
-    from configuration.cosmos_config import get_avatar_config, update_avatar_config
+    from configuration.cosmos_config import update_avatar_config
     from flask import redirect, url_for
+    
+    # Validation UUID
+    if not validate_uuid(agent_id):
+        return jsonify({"success": False, "error": "agent_id invalide"}), 400
     
     if request.method == 'POST':
         try:
@@ -155,11 +182,10 @@ def avatar_config_step2(agent_id):
             voice_data = {k: v for k, v in voice_data.items() if v not in [None, '']}
             
             # Préserver les champs avatar déjà configurés (via API AJAX)
-            existing_config = get_avatar_config(agent_id)
-            if existing_config:
+            if g.avatar_config:
                 for field in ['avatar_character', 'avatar_style', 'avatar_background_image', 'avatar_background_color', 'avatar_customized']:
-                    if field in existing_config and existing_config[field]:
-                        voice_data[field] = existing_config[field]
+                    if field in g.avatar_config and g.avatar_config[field]:
+                        voice_data[field] = g.avatar_config[field]
             
             # Sauvegarder
             update_avatar_config(agent_id, voice_data)
@@ -173,7 +199,7 @@ def avatar_config_step2(agent_id):
     
     # GET: afficher le formulaire
     try:
-        config = get_avatar_config(agent_id)
+        config = g.avatar_config
         
         if not config:
             logger.error(f"Avatar {agent_id} non trouvé")
@@ -199,8 +225,12 @@ def avatar_config_step3(agent_id):
     """
     Step 3: Sélection des Tools
     """
-    from configuration.cosmos_config import get_avatar_config, update_avatar_config
+    from configuration.cosmos_config import update_avatar_config
     from flask import redirect, url_for
+    
+    # Validation UUID
+    if not validate_uuid(agent_id):
+        return jsonify({"success": False, "error": "agent_id invalide"}), 400
     
     if request.method == 'POST':
         try:
@@ -225,9 +255,7 @@ def avatar_config_step3(agent_id):
     
     # GET: afficher le formulaire
     try:
-        config = get_avatar_config(agent_id)
-        
-        if not config:
+        if not g.avatar_config:
             logger.error(f"Avatar {agent_id} non trouvé")
             return jsonify({"success": False, "error": "Avatar non trouvé"}), 404
         
@@ -247,54 +275,50 @@ def avatar_config_step4(agent_id):
     """
     Step 4: Prompt/Instructions pour avatars
     """
-    if request.method == 'GET':
-        try:
-            # Récupérer la config depuis Cosmos DB
-            from configuration.cosmos_config import get_avatar_config
-            config = get_avatar_config(agent_id)
-            
-            if not config:
-                config = {
-                    'agent_id': agent_id,
-                    'voice_type': 'avatar'
-                }
-            
-            logger.info(f"📄 Rendu Step 4 (Prompt) pour avatar (agent: {agent_id})")
-            
-            return render_template(
-                'avatar/avatar_step4.html',
-                agent_id=agent_id,
-                config=config,
-                voice_type='avatar'
-            )
-            
-        except Exception as e:
-            logger.exception("Erreur dans avatar_config_step4 GET")
-            return jsonify({"success": False, "error": str(e)}), 500
+    from configuration.cosmos_config import update_avatar_config
+    from flask import redirect, url_for
     
-    else:  # POST - soumission finale du prompt
+    # Validation UUID
+    if not validate_uuid(agent_id):
+        return jsonify({"success": False, "error": "agent_id invalide"}), 400
+    
+    if request.method == 'POST':
         try:
-            from configuration.cosmos_config import update_avatar_config
-            from flask import redirect, url_for
-            
             system_prompt = request.form.get('system_prompt', '')
             
             prompt_data = {
                 'system_prompt': system_prompt,
                 'instructions': system_prompt,  # Compatibility
-                'current_step': 4,  # Configuration terminée (4 étapes)
+                'current_step': 4,
                 'status': 'completed'
             }
             
             update_avatar_config(agent_id, prompt_data)
-            logger.info(f"✅ Prompt final sauvegardé pour avatar {agent_id}, configuration terminée (4/4)")
+            logger.info(f"✅ Avatar {agent_id} configuration terminée")
 
-            # Rediriger vers la galerie des avatars
+            # Rediriger vers la galerie
             return redirect(url_for('avatar.avatar_gallery'))
             
         except Exception as e:
-            logger.exception("Erreur dans avatar_config_step4 POST")
+            logger.exception("Erreur step4 POST")
             return jsonify({"success": False, "error": str(e)}), 500
+    
+    # GET: afficher le formulaire
+    try:
+        if not g.avatar_config:
+            logger.error(f"Avatar {agent_id} non trouvé")
+            return jsonify({"success": False, "error": "Avatar non trouvé"}), 404
+        
+        return render_template(
+            'avatar/avatar_step4.html',
+            agent_id=agent_id,
+            config=g.avatar_config,
+            voice_type='avatar'
+        )
+        
+    except Exception as e:
+        logger.exception("Erreur step4 GET")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @avatar_bp.route('/api/<agent_id>/generate_prompt', methods=['POST'])
@@ -932,60 +956,59 @@ def get_avatar_details(agent_id):
         }), 500
 
 
-@avatar_bp.route('/api/<agent_id>/update_avatar_character', methods=['POST'])
-def update_avatar_character(agent_id):
-    """Mettre à jour le character et le style de l'avatar directement"""
+@avatar_bp.route('/api/<agent_id>/update', methods=['PATCH'])
+def update_avatar_partial(agent_id):
+    """
+    Mise à jour partielle générique d'un avatar
+    Supporte tous les champs de configuration avatar
+    """
     try:
-        from configuration.cosmos_config import update_avatar_config, get_avatar_config
-
+        from configuration.cosmos_config import update_avatar_config
+        import uuid
+        
+        # Validation de l'UUID
+        try:
+            uuid.UUID(agent_id)
+        except ValueError:
+            return jsonify({'success': False, 'error': 'agent_id invalide'}), 400
+        
         data = request.get_json()
-        character = data.get('character')
-        style = data.get('style')
-
-        logger.info(f"🔄 API update_avatar_character appelée - agent_id: {agent_id}")
-        logger.info(f"📦 Données reçues: character={character}, style={style}")
-
-        if not character:
-            logger.warning("⚠️ Character manquant dans la requête")
-            return jsonify({
-                'success': False,
-                'error': 'Character requis'
-            }), 400
-
-        # Mettre à jour dans Cosmos DB
-        update_data = {
-            'avatar_character': character
-        }
-
-        if style:
-            update_data['avatar_style'] = style
-
-        logger.info(f"📝 Données à mettre à jour dans Cosmos: {update_data}")
-
-        # Mettre à jour
+        if not data:
+            return jsonify({'success': False, 'error': 'Aucune donnée fournie'}), 400
+        
+        # Champs autorisés pour mise à jour
+        allowed_fields = [
+            'avatar_character', 'avatar_style', 'avatar_customized',
+            'avatar_background_color', 'avatar_background_image',
+            'voice_name', 'voice_type', 'voice_locale', 'voice_gender',
+            'custom_voice_endpoint', 'speaker_profile_id',
+            'agent_name', 'description', 'system_prompt',
+            'temperature', 'max_tokens', 'top_p'
+        ]
+        
+        # Filtrer uniquement les champs autorisés
+        update_data = {k: v for k, v in data.items() if k in allowed_fields}
+        
+        if not update_data:
+            return jsonify({'success': False, 'error': 'Aucun champ valide à mettre à jour'}), 400
+        
+        # Mise à jour
         update_avatar_config(agent_id, update_data)
-
-        # Vérifier que la mise à jour a bien été effectuée
-        updated_config = get_avatar_config(agent_id)
-        actual_character = updated_config.get('avatar_character') if updated_config else None
-
-        logger.info(f"✅ Avatar character mis à jour pour {agent_id}: {character} (style: {style})")
-        logger.info(f"🔍 Vérification après mise à jour - avatar_character dans DB: {actual_character}")
-
+        
+        logger.info(f"✅ Avatar {agent_id} mis à jour: {', '.join(update_data.keys())}")
+        
         return jsonify({
             'success': True,
-            'message': f'Avatar character mis à jour: {character}',
-            'character': character,
-            'style': style,
-            'verified_character': actual_character  # Pour vérifier
+            'updated_fields': list(update_data.keys()),
+            'message': f'{len(update_data)} champ(s) mis à jour'
         })
-
+        
+    except ValueError as e:
+        logger.error(f"Erreur validation: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 404
     except Exception as e:
-        logger.exception("❌ Erreur mise à jour avatar character")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+        logger.exception("Erreur mise à jour avatar")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @avatar_bp.route('/call/<agent_id>', methods=['GET'])

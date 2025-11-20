@@ -417,29 +417,23 @@ def update_avatar_config(agent_id, update_data):
     try:
         # Récupérer la config existante
         existing_config = get_avatar_config(agent_id)
-
+        
         if not existing_config:
-            logger.error(f"❌ Configuration avatar '{agent_id}' non trouvée pour mise à jour")
-            raise ValueError(f"Avatar config {agent_id} not found")
-
-        logger.info(f"🔍 Config existante avant mise à jour: id={existing_config.get('id')}, agent_id={existing_config.get('agent_id')}")
-        logger.info(f"🔍 Données à fusionner: {update_data}")
-
+            raise ValueError(f"Avatar {agent_id} non trouvé")
+        
         # Fusionner les données
         existing_config.update(update_data)
-
-        logger.info(f"🔍 Config après fusion: avatar_character={existing_config.get('avatar_character')}, avatar_style={existing_config.get('avatar_style')}")
-
+        existing_config['updated_at'] = datetime.utcnow().isoformat() + 'Z'
+        
         # Sauvegarder via upsert
         updated_item = container.upsert_item(existing_config)
-
-        logger.info(f"✅ Configuration avatar '{agent_id}' mise à jour dans Cosmos DB")
-        logger.info(f"🔍 Vérification après upsert: avatar_character={updated_item.get('avatar_character')}")
-
+        
+        logger.info(f"✅ Avatar {agent_id} mis à jour: {', '.join(update_data.keys())}")
+        
         return updated_item
         
     except exceptions.CosmosHttpResponseError as e:
-        logger.error(f"❌ Erreur lors de la mise à jour de l'avatar: {e}")
+        logger.error(f"❌ Erreur mise à jour avatar {agent_id}: {e}")
         raise
 
 

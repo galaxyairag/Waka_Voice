@@ -668,6 +668,8 @@
     let audioChunks = [];
     window.callId = null; // ID unique pour cette session d'appel (global pour accès par les tools)
     let sessionTokens = null; // Tokens globaux de la conversation (mis à jour par response.done)
+    let isSpeaking = false; // Flag pour indiquer si l'assistant parle
+    let audioProcessor = null; // Référence au ScriptProcessor pour pouvoir le mettre en pause
 
     // Fonction pour générer un UUID
     function generateUUID() {
@@ -1128,12 +1130,17 @@
             // Use AudioContext to capture raw PCM audio
             audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
             const source = audioContext.createMediaStreamSource(stream);
-            const processor = audioContext.createScriptProcessor(4096, 1, 1);
+            audioProcessor = audioContext.createScriptProcessor(4096, 1, 1);
 
-            source.connect(processor);
-            processor.connect(audioContext.destination);
+            source.connect(audioProcessor);
+            audioProcessor.connect(audioContext.destination);
 
-            processor.onaudioprocess = (e) => {
+            audioProcessor.onaudioprocess = (e) => {
+                // Ne pas envoyer d'audio si l'assistant parle (évite l'écho)
+                if (isSpeaking) {
+                    return;
+                }
+                
                 if (websocket && websocket.readyState === WebSocket.OPEN) {
                     const inputData = e.inputBuffer.getChannelData(0);
                     
@@ -1310,6 +1317,9 @@
                 return;
             }
             
+            // 🎤 Mettre le flag isSpeaking à true pour bloquer l'envoi du micro
+            isSpeaking = true;
+            
             // Decode base64 to PCM16 audio
             const audioData = atob(base64Audio);
             const arrayBuffer = new ArrayBuffer(audioData.length);
@@ -1351,6 +1361,19 @@
             
             // Retirer de la liste quand terminé
             source.onended = () => {
+                const index = activeSources.indexOf(source);
+                if (index > -1) {
+                    activeSources.splice(index, 1);
+                }
+                
+                // 🎤 Réactiver le micro seulement quand TOUS les chunks sont finis
+                if (activeSources.length === 0 && audioQueue.length === 0) {
+                    isSpeaking = false;
+                    console.log('🎤 Assistant terminé - Micro réactivé');
+                }
+                
+                resolve();
+            };
                 const index = activeSources.indexOf(source);
                 if (index > -1) {
                     activeSources.splice(index, 1);

@@ -611,15 +611,19 @@
                     </div>
                 </div>
                 <h3 class="agent-name">{{ avatar.agent_name or 'Avatar sans nom' }}</h3>
+                {% if avatar.description %}
                 <p class="agent-description">
-                    {{ avatar.description or 'Description non disponible' }}
+                    {{ avatar.description }}
                 </p>
+                {% endif %}
                 <div class="agent-meta">
+                    {% if avatar.avatar_character %}
                     <div class="meta-item">
-                        <i class="bi bi-person-badge"></i>
+                        <i class="bi bi-person-video3"></i>
                         <span class="meta-label">Avatar :</span>
-                        <span class="meta-value">{{ avatar.avatar_name or 'Non défini' }}</span>
+                        <span class="meta-value">{{ avatar.avatar_character }}{% if avatar.avatar_style %} - {{ avatar.avatar_style }}{% endif %}</span>
                     </div>
+                    {% endif %}
                     <div class="meta-item">
                         <i class="bi bi-mic-fill"></i>
                         <span class="meta-label">Voix :</span>
@@ -881,7 +885,7 @@
                             <h2 style="margin: 0; font-size: 1.8rem; font-weight: 700;">
                                 <i class="bi bi-person-video3"></i> ${avatar.agent_name || 'Avatar sans nom'}
                             </h2>
-                            <p style="margin: 0.5rem 0 0; opacity: 0.9;">${avatar.description || 'Aucune description'}</p>
+                            ${avatar.description ? `<p style="margin: 0.5rem 0 0; opacity: 0.9;">${avatar.description}</p>` : ''}
                         </div>
                         <button onclick="closeAvatarDetailsModal()" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.2rem;">
                             <i class="bi bi-x-lg"></i>
@@ -903,10 +907,6 @@
                                 <div style="font-family: monospace; background: #f8f9fa; padding: 0.5rem; border-radius: 5px; font-size: 0.85rem;">${avatar.agent_id}</div>
                             </div>
                             <div>
-                                <div style="font-size: 0.85rem; color: #6c757d; font-weight: 600; margin-bottom: 0.3rem;">AVATAR</div>
-                                <div>${avatar.avatar_name || 'Non défini'}</div>
-                            </div>
-                            <div>
                                 <div style="font-size: 0.85rem; color: #6c757d; font-weight: 600; margin-bottom: 0.3rem;">VOIX</div>
                                 <div>${avatar.voice_name || avatar.voice_id || 'Non configurée'}</div>
                             </div>
@@ -917,6 +917,55 @@
                             <div>
                                 <div style="font-size: 0.85rem; color: #6c757d; font-weight: 600; margin-bottom: 0.3rem;">LANGUE</div>
                                 <div>${avatar.language || 'fr-FR'}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 2rem;">
+                        <h3 style="color: #667eea; font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e9ecef;">
+                            <i class="bi bi-person-video3"></i> Configuration Avatar
+                        </h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                            <div>
+                                <div style="font-size: 0.85rem; color: #6c757d; font-weight: 600; margin-bottom: 0.3rem;">PERSONNAGE</div>
+                                <div style="background: #f8f9fa; padding: 0.5rem; border-radius: 5px;">
+                                    ${avatar.avatar_character || 'Non défini'}
+                                </div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.85rem; color: #6c757d; font-weight: 600; margin-bottom: 0.3rem;">STYLE</div>
+                                <div style="background: #f8f9fa; padding: 0.5rem; border-radius: 5px;">
+                                    ${avatar.avatar_style || 'Non défini'}
+                                </div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.85rem; color: #6c757d; font-weight: 600; margin-bottom: 0.3rem;">RÉSOLUTION</div>
+                                <div style="background: #f8f9fa; padding: 0.5rem; border-radius: 5px;">
+                                    ${avatar.avatar_video_width && avatar.avatar_video_height ? avatar.avatar_video_width + 'x' + avatar.avatar_video_height : 'Non défini'}
+                                </div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.85rem; color: #6c757d; font-weight: 600; margin-bottom: 0.3rem;">PERSONNALISÉ</div>
+                                <div>${avatar.avatar_customized ? '✅ Oui' : '❌ Non'}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.85rem; color: #6c757d; font-weight: 600; margin-bottom: 0.3rem;">COULEUR FOND</div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    ${avatar.avatar_background_color ? `
+                                        <div style="width: 30px; height: 30px; border-radius: 5px; border: 2px solid #dee2e6; background: ${avatar.avatar_background_color};"></div>
+                                        <span style="font-family: monospace; font-size: 0.85rem;">${avatar.avatar_background_color}</span>
+                                    ` : 'Non défini'}
+                                </div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.85rem; color: #6c757d; font-weight: 600; margin-bottom: 0.3rem;">IMAGE FOND</div>
+                                <div style="font-size: 0.85rem; word-break: break-all;">
+                                    ${avatar.avatar_background_image ? `
+                                        <a href="${avatar.avatar_background_image}" target="_blank" style="color: #667eea; text-decoration: none;">
+                                            <i class="bi bi-image"></i> Voir l'image
+                                        </a>
+                                    ` : 'Non défini'}
+                                </div>
                             </div>
                         </div>
                     </div>

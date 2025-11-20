@@ -19,95 +19,22 @@ def get_tool_definition():
     return {
         "type": "function",
         "name": "get_weather_forecast",
-        "description": """OUTIL PRIORITAIRE pour la MÉTÉO - Prévisions météo détaillées pour toute ville.
-        
-UTILISATION OBLIGATOIRE pour:
-- Météo, temps qu'il fait, prévisions
-- Température, pluie, vent, humidité
-- Climat, chaleur, froid, ensoleillé
-
-NE JAMAIS utiliser search_web pour la météo.
-
-EXEMPLE:
-{
-  "city": "Ouagadougou",
-  "country": "Burkina Faso",
-  "days": 3
-}""",
+        "description": "Prévisions météo pour une ville (température, pluie, vent).",
         "parameters": {
             "type": "object",
             "properties": {
                 "city": {
                     "type": "string",
-                    "description": """Nom de la VILLE pour les prévisions météo.
-                    
-EXEMPLES VALIDES:
-Burkina Faso:
-- "Ouagadougou" (capitale)
-- "Bobo-Dioulasso"
-- "Koudougou"
-- "Ouahigouya"
-
-Afrique de l'Ouest:
-- "Abidjan" (Côte d'Ivoire)
-- "Dakar" (Sénégal)
-- "Accra" (Ghana)
-- "Bamako" (Mali)
-- "Niamey" (Niger)
-
-Europe:
-- "Paris" (France)
-- "Londres" (UK)
-- "Berlin" (Allemagne)
-
-CONVERSION depuis langage naturel:
-- "la météo à Ouaga" → "Ouagadougou"
-- "temps qu'il fait à Paris" → "Paris"
-- "prévisions pour Bobo" → "Bobo-Dioulasso"
-
-FORMAT: Nom complet de la ville (ex: "Ouagadougou", pas "OUA" ni "Ouaga")"""
+                    "description": "Nom de la ville (ex: Ouagadougou, Paris)."
                 },
                 "country": {
                     "type": "string",
-                    "description": """Nom du PAYS (optionnel, par défaut 'Burkina Faso').
-                    
-EXEMPLES:
-- "Burkina Faso" (par défaut)
-- "France"
-- "Senegal" ou "Sénégal"
-- "Cote d'Ivoire" ou "Côte d'Ivoire"
-- "Ghana"
-
-QUAND UTILISER:
-- Si la ville est ambigüe (ex: Paris, France vs Paris, Texas)
-- Si l'utilisateur mentionne le pays explicitement
-- Par défaut: laisse "Burkina Faso" pour les villes burkinabè
-
-CONVERSION:
-- "météo à Paris en France" → country="France"
-- "temps à Ouaga" → country="Burkina Faso" (défaut)
-- "prévisions Dakar Sénégal" → country="Senegal"
-
-FORMAT: Nom complet du pays en anglais ou français (ex: "France", "Burkina Faso")""",
+                    "description": "Pays (défaut: Burkina Faso).",
                     "default": "Burkina Faso"
                 },
                 "days": {
                     "type": "integer",
-                    "description": """Nombre de JOURS de prévisions (entre 1 et 5).
-                    
-EXEMPLES:
-- 1 = Aujourd'hui uniquement (météo actuelle)
-- 3 = Aujourd'hui + 2 jours (par défaut)
-- 5 = 5 jours de prévisions (maximum)
-
-CONVERSION depuis langage naturel:
-- "météo aujourd'hui" → 1
-- "prévisions pour demain" → 2
-- "météo de la semaine" → 5
-- "temps des prochains jours" → 3 (défaut)
-- Aucune mention → 3 (défaut)
-
-FORMAT: Nombre entier entre 1 et 5 (ex: 3, pas "trois" ni "3.0")""",
+                    "description": "Nb jours prévisions (1-5, défaut 3).",
                     "default": 3
                 }
             },

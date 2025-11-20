@@ -985,6 +985,10 @@
 {% endblock %}
 
 {% block content %}
+{% set avatar_config = avatar_config or {} %}
+<script>
+    window.initialAvatarConfig = {{ avatar_config | tojson | safe }};
+</script>
 <div class="container-fluid px-0">
     <!-- En-tête avec progression -->
     <div class="page-header">
@@ -1445,16 +1449,6 @@
                     0.5 (lent) à 1.5 (rapide), défaut 1.0
                 </div>
             </div>
-
-            <!-- Output Audio Timestamps -->
-            <div class="form-group">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="enableOutputTimestamps" name="enable_output_timestamps">
-                    <label class="form-check-label" for="enableOutputTimestamps">
-                        Activer les timestamps audio
-                    </label>
-                </div>
-            </div>
         </div>
 
         <!-- Section : Avatar Configuration -->
@@ -1464,7 +1458,7 @@
                     <i class="bi bi-person-video3"></i>
                 </div>
                 <div>
-                    <h3 class="section-title">Avatar (Optionnel)</h3>
+                    <h3 class="section-title">Configuration Avatar</h3>
                     <p class="section-description">Configuration de l'avatar vidéo pour accompagner la voix</p>
                 </div>
                 <div class="tooltip-wrapper" style="margin-left: auto;">
@@ -1485,20 +1479,7 @@
                 </div>
             </div>
 
-            <!-- Activer Avatar -->
-            <div class="form-group">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="enableAvatar" name="enable_avatar">
-                    <label class="form-check-label" for="enableAvatar">
-                        <strong>Activer l'avatar vidéo</strong>
-                    </label>
-                </div>
-                <div class="form-help">
-                    Active le streaming vidéo d'un avatar parlant en temps réel
-                </div>
-            </div>
-
-            <div id="avatarConfigSection" style="display: block;">
+            <div id="avatarConfigSection">
                 <!-- Avatar Character -->
                 <div class="form-group">
                     <label class="form-label">
@@ -1537,7 +1518,7 @@
                         </button>
                     </div>
                     
-                    <input type="hidden" id="avatarCharacter" name="avatar_character" value="">
+                    <input type="hidden" id="avatarCharacter" name="avatar_character" value="{{ avatar_config.avatar_character if avatar_config.avatar_character else '' }}">
                 </div>
 
                 <!-- Avatar Style -->
@@ -1566,13 +1547,13 @@
                     <div class="avatar-style-grid" id="avatarStyleGrid">
                         <!-- Styles dynamiques selon le personnage -->
                     </div>
-                    <input type="hidden" id="avatarStyle" name="avatar_style" value="casual-sitting">
+                    <input type="hidden" id="avatarStyle" name="avatar_style" value="{{ avatar_config.avatar_style if avatar_config.avatar_style else '' }}">
                 </div>
 
                 <!-- Custom Avatar -->
                 <div class="form-group">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="avatarCustomized" name="avatar_customized">
+                        <input class="form-check-input" type="checkbox" id="avatarCustomized" name="avatar_customized" {% if avatar_config.avatar_customized %}checked{% endif %}>
                         <label class="form-check-label" for="avatarCustomized">
                             Utiliser un avatar personnalisé (Custom Avatar)
                         </label>
@@ -1605,9 +1586,9 @@
                         </div>
                     </label>
                     <div class="d-flex align-items-center">
-                        <input type="text" class="form-control" id="avatarBackgroundColor" name="avatar_background_color" 
-                               placeholder="#FFFFFFFF" value="#FFFFFFFF" style="max-width: 200px;">
-                        <input type="color" id="avatarColorPicker" value="#ffffff" 
+                           <input type="text" class="form-control" id="avatarBackgroundColor" name="avatar_background_color" 
+                               placeholder="#FFFFFFFF" value="{{ avatar_config.avatar_background_color | upper if avatar_config.avatar_background_color else '' }}" style="max-width: 200px;">
+                           <input type="color" id="avatarColorPicker" value="{{ avatar_config.avatar_background_color[0:7] | upper if avatar_config.avatar_background_color else '#FFFFFF' }}" 
                                style="margin-left: 10px; width: 50px; height: 40px; border: none; cursor: pointer;">
                     </div>
                     <div class="form-help">
@@ -1666,8 +1647,8 @@
                     <input type="file" id="backgroundFileInput" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp" style="display: none;">
                     
                     <!-- URL de l'image sélectionnée -->
-                    <input type="url" class="form-control" id="avatarBackgroundImage" name="avatar_background_image" 
-                           placeholder="https://example.com/background.jpg" readonly>
+                          <input type="url" class="form-control" id="avatarBackgroundImage" name="avatar_background_image" 
+                              placeholder="https://example.com/background.jpg" value="{{ avatar_config.avatar_background_image or '' }}" readonly>
                     <div class="form-help">
                         Sélectionnez une image depuis la galerie ou uploadez la vôtre
                     </div>
@@ -1716,8 +1697,8 @@
                             <p class="resolution-card-label">qHD</p>
                         </div>
                     </div>
-                    <input type="hidden" id="avatarVideoWidth" name="avatar_video_width" value="1920">
-                    <input type="hidden" id="avatarVideoHeight" name="avatar_video_height" value="1080">
+                    <input type="hidden" id="avatarVideoWidth" name="avatar_video_width" value="{{ avatar_config.avatar_video_width or 1920 }}">
+                    <input type="hidden" id="avatarVideoHeight" name="avatar_video_height" value="{{ avatar_config.avatar_video_height or 1080 }}">
                 </div>
 
                 <!-- Video Bitrate -->
@@ -1742,8 +1723,8 @@
                             </div>
                         </div>
                     </label>
-                    <input type="number" class="form-control" id="avatarVideoBitrate" name="avatar_video_bitrate" 
-                           min="500000" max="10000000" step="100000" value="2000000">
+                          <input type="number" class="form-control" id="avatarVideoBitrate" name="avatar_video_bitrate" 
+                              min="500000" max="10000000" step="100000" value="{{ avatar_config.avatar_video_bitrate or 2000000 }}">
                     <div class="form-help">
                         Débit vidéo en bits par seconde (défaut : 2000000 = 2 Mbps)
                     </div>
@@ -1893,7 +1874,7 @@ async function loadPersonalVoices() {
     voicesGrid.style.display = 'none';
     
     try {
-        const response = await fetch('/personal-voice/api/personal-voices');
+        const response = await fetch('/creer-une-voix/api/personal-voices');
         
         if (!response.ok) {
             const errorData = await response.json();
@@ -2136,8 +2117,21 @@ const avatarStyles = {
     ]
 };
 
+const initialAvatarConfig = window.initialAvatarConfig || {};
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Load real avatar images from API
+    const avatarCharacterGrid = document.getElementById('avatarCharacterGrid');
+    const avatarCharacterInput = document.getElementById('avatarCharacter');
+    const avatarStyleInput = document.getElementById('avatarStyle');
+
+    if (initialAvatarConfig.avatar_character && avatarCharacterInput) {
+        avatarCharacterInput.value = initialAvatarConfig.avatar_character;
+    }
+    if (initialAvatarConfig.avatar_style && avatarStyleInput) {
+        avatarStyleInput.value = initialAvatarConfig.avatar_style;
+    }
+
+    // Load real avatar images from API (with pagination)
     loadAvatarImages();
     
     // Pagination event listeners
@@ -2163,42 +2157,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Toggle avatar config section
-    const enableAvatar = document.getElementById('enableAvatar');
-    const avatarConfigSection = document.getElementById('avatarConfigSection');
-    
-    if (enableAvatar && avatarConfigSection) {
-        enableAvatar.addEventListener('change', function() {
-            avatarConfigSection.style.display = this.checked ? 'block' : 'none';
-        });
-    }
-    
     // Avatar character selection
-    const avatarCharacterGrid = document.getElementById('avatarCharacterGrid');
-    const avatarCharacterInput = document.getElementById('avatarCharacter');
-    
     if (avatarCharacterGrid) {
         avatarCharacterGrid.addEventListener('click', function(e) {
             const card = e.target.closest('.avatar-card');
             if (card) {
-                // Remove selection from all cards
                 avatarCharacterGrid.querySelectorAll('.avatar-card').forEach(c => c.classList.remove('selected'));
-                // Add selection to clicked card
                 card.classList.add('selected');
-                // Update hidden input
-                const character = card.dataset.character;
+                const character = (card.dataset.character || '').toLowerCase();
                 avatarCharacterInput.value = character;
-                // Update styles for selected character
                 updateAvatarStyles(character);
             }
         });
-        
-        // Initialize with default selection
-        const defaultCard = avatarCharacterGrid.querySelector('[data-character="lisa"]');
-        if (defaultCard) {
-            defaultCard.classList.add('selected');
-            updateAvatarStyles('lisa');
-        }
     }
     
     // Resolution selection
@@ -2223,6 +2193,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const colorPicker = document.getElementById('avatarColorPicker');
     
     if (colorInput && colorPicker) {
+        const normalizedColor = (colorInput.value || '#FFFFFFFF').toUpperCase();
+        colorInput.value = normalizedColor;
+        colorPicker.value = normalizedColor.substring(0, 7);
+
         colorPicker.addEventListener('input', function() {
             colorInput.value = this.value.toUpperCase() + 'FF';
         });
@@ -2233,9 +2207,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
-    // Load avatars with pagination
-    loadAvatarImages();
+
+    restoreResolutionSelection();
+    restoreBackgroundPreview();
 });
 
 // Pagination variables
@@ -2340,39 +2314,6 @@ function renderAvatarPage() {
             }
             // Update styles for selected avatar
             updateAvatarStyles(character);
-
-            // Mettre à jour directement dans Cosmos DB
-            const agentId = window.location.pathname.split('/').pop();
-            if (agentId && agentId !== 'step2') {
-                try {
-                    const response = await fetch(`/avatar/api/${agentId}/update_avatar_character`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            character: character,
-                            style: avatarCharacterInput ? document.getElementById('avatarStyle').value : null
-                        })
-                    });
-
-                    const result = await response.json();
-                    if (result.success) {
-                        console.log('✅ Avatar character mis à jour dans Cosmos DB:', result.character);
-                        console.log('🔍 Vérification - character dans DB:', result.verified_character);
-                        if (result.verified_character !== result.character) {
-                            console.error('❌ ALERTE: Le character dans DB ne correspond pas !', {
-                                envoyé: result.character,
-                                dansBD: result.verified_character
-                            });
-                        }
-                    } else {
-                        console.warn('⚠️ Erreur mise à jour Cosmos DB:', result.error);
-                    }
-                } catch (error) {
-                    console.error('❌ Erreur appel API:', error);
-                }
-            }
         });
 
         grid.appendChild(card);
@@ -2390,6 +2331,59 @@ function renderAvatarPage() {
     }
     if (paginationInfo) {
         paginationInfo.textContent = `Page ${currentPage} sur ${totalPages}`;
+    }
+
+    applySavedAvatarSelection();
+}
+
+function applySavedAvatarSelection() {
+    const grid = document.getElementById('avatarCharacterGrid');
+    const characterInput = document.getElementById('avatarCharacter');
+    const styleInput = document.getElementById('avatarStyle');
+    if (!grid || !characterInput) return;
+
+    const savedCharacter = (characterInput.value || '').toLowerCase();
+    if (!savedCharacter) return;
+
+    const targetCard = grid.querySelector(`[data-character="${savedCharacter}"]`);
+    if (!targetCard) return;
+
+    grid.querySelectorAll('.avatar-card').forEach(c => c.classList.remove('selected'));
+    targetCard.classList.add('selected');
+
+    const preferredStyle = styleInput ? styleInput.value : null;
+    updateAvatarStyles(targetCard.dataset.character, preferredStyle);
+}
+
+function restoreResolutionSelection() {
+    const resolutionOptions = document.getElementById('resolutionOptions');
+    const widthInput = document.getElementById('avatarVideoWidth');
+    const heightInput = document.getElementById('avatarVideoHeight');
+    if (!resolutionOptions || !widthInput || !heightInput) return;
+
+    const savedWidth = widthInput.value;
+    const savedHeight = heightInput.value;
+    if (!savedWidth || !savedHeight) return;
+
+    const target = resolutionOptions.querySelector(`.resolution-card[data-width="${savedWidth}"][data-height="${savedHeight}"]`);
+    if (!target) return;
+
+    resolutionOptions.querySelectorAll('.resolution-card').forEach(c => c.classList.remove('selected'));
+    target.classList.add('selected');
+}
+
+function restoreBackgroundPreview() {
+    const backgroundInput = document.getElementById('avatarBackgroundImage');
+    const previewWrapper = document.getElementById('backgroundPreview');
+    const previewImg = document.getElementById('backgroundPreviewImg');
+
+    if (!backgroundInput || !previewWrapper || !previewImg) return;
+
+    if (backgroundInput.value) {
+        previewImg.src = backgroundInput.value;
+        previewWrapper.style.display = 'block';
+    } else {
+        previewWrapper.style.display = 'none';
     }
 }
 
@@ -2409,7 +2403,7 @@ function getStylesCount(character) {
     return avatarStyles[character] ? avatarStyles[character].length : 0;
 }
 
-function updateAvatarStyles(character) {
+function updateAvatarStyles(character, preferredStyle = null) {
     const styleGrid = document.getElementById('avatarStyleGrid');
     const styleInput = document.getElementById('avatarStyle');
     const styleGroup = document.getElementById('avatarStyleGroup');
@@ -2417,35 +2411,13 @@ function updateAvatarStyles(character) {
     if (!styleGrid) return;
 
     // Check if avatar has styles
-    const styles = avatarStyles[character];
+    const normalizedCharacter = (character || '').toLowerCase();
+    const styles = avatarStyles[normalizedCharacter];
 
     if (!styles || styles.length === 0) {
-        // No styles for this avatar - hide the style section and set default value
-        console.log(`⚠️ Aucun style pour l'avatar ${character} - utilisation du style par défaut`);
+        console.log(`⚠️ Aucun style disponible pour l'avatar ${normalizedCharacter}`);
         if (styleGroup) styleGroup.style.display = 'none';
-        styleInput.value = 'casual-sitting'; // Default fallback style
-
-        // Mettre à jour dans Cosmos DB avec le style par défaut
-        const agentId = window.location.pathname.split('/').pop();
-        if (agentId && agentId !== 'step2') {
-            fetch(`/avatar/api/${agentId}/update_avatar_character`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    character: character,
-                    style: 'casual-sitting'
-                })
-            }).then(response => response.json())
-              .then(result => {
-                  if (result.success) {
-                      console.log('✅ Avatar sans styles mis à jour avec style par défaut:', result.verified_character);
-                  }
-              })
-              .catch(error => console.error('❌ Erreur mise à jour avatar sans styles:', error));
-        }
-
+        styleInput.value = '';
         return;
     }
 
@@ -2455,50 +2427,27 @@ function updateAvatarStyles(character) {
 
     styles.forEach((style, index) => {
         const card = document.createElement('div');
-        card.className = 'avatar-style-card' + (index === 0 ? ' selected' : '');
+        const isPreferred = preferredStyle ? style.id === preferredStyle : index === 0;
+        card.className = 'avatar-style-card' + (isPreferred ? ' selected' : '');
         card.dataset.style = style.id;
         card.innerHTML = `<span style="font-size: 1.5rem;">${style.icon}</span><br>${style.name}`;
 
-        card.addEventListener('click', async function() {
+        card.addEventListener('click', function() {
             styleGrid.querySelectorAll('.avatar-style-card').forEach(c => c.classList.remove('selected'));
             this.classList.add('selected');
             styleInput.value = this.dataset.style;
-
-            // Mettre à jour directement dans Cosmos DB
-            const agentId = window.location.pathname.split('/').pop();
-            const currentCharacter = document.getElementById('avatarCharacter').value;
-            if (agentId && agentId !== 'step2' && currentCharacter) {
-                try {
-                    const response = await fetch(`/avatar/api/${agentId}/update_avatar_character`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            character: currentCharacter,
-                            style: this.dataset.style
-                        })
-                    });
-
-                    const result = await response.json();
-                    if (result.success) {
-                        console.log('✅ Avatar style mis à jour dans Cosmos DB:', result.style);
-                        console.log('🔍 Vérification - character dans DB:', result.verified_character);
-                    } else {
-                        console.warn('⚠️ Erreur mise à jour Cosmos DB:', result.error);
-                    }
-                } catch (error) {
-                    console.error('❌ Erreur appel API:', error);
-                }
-            }
+            console.log('✅ Style sélectionné:', this.dataset.style);
         });
 
         styleGrid.appendChild(card);
     });
 
-    // Set default value
-    if (styles.length > 0) {
-        styleInput.value = styles[0].id;
+    if (preferredStyle) {
+        const selectedCard = styleGrid.querySelector(`.avatar-style-card[data-style="${preferredStyle}"]`);
+        if (selectedCard) {
+            selectedCard.classList.add('selected');
+            styleInput.value = preferredStyle;
+        }
     }
 }
 </script>

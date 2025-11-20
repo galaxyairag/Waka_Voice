@@ -695,10 +695,45 @@ def call_agent(agent_id):
         
         # Extraire la voix configurée
         voice_config = session_config.get('voice', {})
-        voice_name = voice_config.get('name', 'fr-FR-DeniseNeural')
+        voice_name = voice_config.get('name', 'en-US-AndrewMultilingualNeural')
         voice_type = voice_config.get('type', 'azure-standard')
+        
+        # Mapping des noms de voix OpenAI vers Azure (pour compatibilité)
+        OPENAI_TO_AZURE_VOICES = {
+            'alloy': 'en-US-AndrewMultilingualNeural',
+            'echo': 'en-US-BrianMultilingualNeural',
+            'fable': 'en-US-EmmaMultilingualNeural',
+            'onyx': 'en-US-GuyNeural',
+            'nova': 'en-US-AriaNeural',
+            'shimmer': 'en-US-JennyNeural'
+        }
+        
+        # Convertir les noms de voix OpenAI en noms Azure si nécessaire
+        if voice_name in OPENAI_TO_AZURE_VOICES:
+            original_voice = voice_name
+            voice_name = OPENAI_TO_AZURE_VOICES[voice_name]
+            logger.info(f"🔄 Conversion voix OpenAI → Azure: '{original_voice}' → '{voice_name}'")
+        
+        # Valider et normaliser le voice_type selon la doc Voice Live
+        # Valeurs acceptées: "azure-standard", "azure-custom", "openai"
+        # Corriger si nécessaire
+        if voice_type == 'azure':
+            voice_type = 'azure-standard'
+        elif voice_type not in ['azure-standard', 'azure-custom', 'openai']:
+            logger.warning(f"⚠️ Type de voix invalide '{voice_type}', utilisation de 'azure-standard'")
+            voice_type = 'azure-standard'
+        
         voice_rate = voice_config.get('rate', '1.0')
         voice_temperature = voice_config.get('temperature', 0.7)
+        
+        # GPT-5 et dérivés ne supportent pas le paramètre temperature pour la voix
+        # Détecter si le modèle est GPT-5 ou un dérivé
+        model_id_lower = model_id.lower()
+        is_gpt5_model = 'gpt-5' in model_id_lower or 'gpt5' in model_id_lower
+        
+        if is_gpt5_model and voice_temperature is not None:
+            logger.info(f"🚫 Modèle GPT-5 détecté ({model_id}) - Suppression du paramètre voice.temperature")
+            voice_temperature = None
         
         # Utiliser le prompt système sauvegardé directement (déjà formaté avec toutes les variables)
         system_instructions = agent_config.get('system_prompt') or agent_config.get('instructions', '')

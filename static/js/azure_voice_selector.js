@@ -51,7 +51,7 @@ class AzureVoiceSelector {
                 voicesContainer.innerHTML = '<div class="loading-spinner">Chargement des voix personnalisées...</div>';
             }
 
-            const response = await fetch('/personal-voice/api/personal-voices');
+            const response = await fetch('/creer-une-voix/api/personal-voices');
             const data = await response.json();
 
             if (!data.success) {

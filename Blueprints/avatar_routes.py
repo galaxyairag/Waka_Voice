@@ -166,29 +166,39 @@ def avatar_config_step2(agent_id):
     
     if request.method == 'POST':
         try:
-            # Données de configuration voix uniquement
-            voice_data = {
-                'voice_type': request.form.get('voice_type', 'personal'),
+            # Debug: afficher tous les champs du formulaire reçus
+            logger.info(f"📥 Formulaire reçu - Tous les champs: {dict(request.form)}")
+            
+            # Récupérer tous les champs du formulaire (voix + avatar)
+            step2_data = {
+                'voice_type': request.form.get('voice_type'),
                 'voice_name': request.form.get('voice_name'),
                 'custom_voice_endpoint': request.form.get('custom_voice_endpoint'),
                 'speaker_profile_id': request.form.get('speaker_profile_id'),
                 'voice_locale': request.form.get('voice_locale'),
                 'voice_gender': request.form.get('voice_gender'),
+                'avatar_character': request.form.get('avatar_character'),
+                'avatar_style': request.form.get('avatar_style'),
+                'avatar_customized': request.form.get('avatar_customized') == 'on',
+                'avatar_background_color': request.form.get('avatar_background_color'),
+                'avatar_background_image': request.form.get('avatar_background_image'),
+                'avatar_video_width': request.form.get('avatar_video_width'),
+                'avatar_video_height': request.form.get('avatar_video_height'),
+                'avatar_bitrate': request.form.get('avatar_bitrate'),
                 'current_step': 3,
                 'status': 'step2_completed'
             }
             
-            # Nettoyer les valeurs vides
-            voice_data = {k: v for k, v in voice_data.items() if v not in [None, '']}
+            logger.info(f"📋 Données brutes extraites: avatar_character='{step2_data.get('avatar_character')}', avatar_style='{step2_data.get('avatar_style')}'")
             
-            # Préserver les champs avatar déjà configurés (via API AJAX)
-            if g.avatar_config:
-                for field in ['avatar_character', 'avatar_style', 'avatar_background_image', 'avatar_background_color', 'avatar_customized']:
-                    if field in g.avatar_config and g.avatar_config[field]:
-                        voice_data[field] = g.avatar_config[field]
+            # Nettoyer les valeurs None et les chaînes vides
+            step2_data = {k: v for k, v in step2_data.items() if v not in [None, '']}
+            
+            # Log pour debug
+            logger.info(f"📝 Données Step 2 après nettoyage: {step2_data}")
             
             # Sauvegarder
-            update_avatar_config(agent_id, voice_data)
+            update_avatar_config(agent_id, step2_data)
             logger.info(f"✅ Step 2 complété pour avatar {agent_id}")
             
             return redirect(url_for('avatar.avatar_config_step3', agent_id=agent_id))
@@ -213,7 +223,8 @@ def avatar_config_step2(agent_id):
             model_name=config.get('model_name'),
             model_description=config.get('model_description'),
             model_family=config.get('model_family'),
-            voice_type='avatar'
+            voice_type='avatar',
+            avatar_config=config
         )
         
     except Exception as e:
@@ -503,68 +514,18 @@ def generate_prompt_api(agent_id):
             api_key=api_key
         )
         
-        # Créer le prompt pour générer le system prompt
-        generation_prompt = f"""Tu es un assistant expert en création de prompts système pour des agents IA conversationnels vocaux.
-
-L'utilisateur souhaite créer un agent avatar avec les caractéristiques suivantes :
+        # Créer le prompt pour générer le system prompt (VERSION OPTIMISÉE - CONCISE)
+        generation_prompt = f"""Crée un prompt système CONCIS (150-200 mots max) pour un agent IA vocal avec :
 {user_instruction}
 
-Génère un prompt système professionnel, détaillé et efficace pour cet agent avatar.
+INCLURE obligatoirement :
+1. Rôle et ton (familier par défaut)
+2. Missions principales (3 max)
+3. Comportement : saluer au 1er message seulement, demander le prénom, utiliser les tools disponibles
+4. Si email/CV : collecter UNE info par message
+5. Si pays mentionné : connaître 5-10 expressions culturelles, les utiliser MODÉRÉMENT
 
-Le prompt DOIT obligatoirement inclure :
-
-**1. RÔLE** :
-   - Si spécifié dans la consigne → utiliser ce rôle
-   - Sinon → "Agent conversationnel généraliste"
-
-**2. TON** :
-   - Par défaut → "familier et chaleureux"
-   - Sauf si l'utilisateur spécifie un autre ton (professionnel, formel, etc.)
-
-**3. PREMIER MESSAGE** :
-   - Souhaiter chaleureusement la bienvenue
-   - Expliquer brièvement 3 missions principales maximum
-   - Mentionner qu'il peut faire des dizaines de choses au service de l'utilisateur
-
-**4. DEMANDE DU PRÉNOM** :
-   - Demander le prénom de l'utilisateur pour personnaliser la conversation
-   - Ne pas insister si l'utilisateur ne veut pas le donner
-
-**5. SALUTATIONS** :
-   - Saluer uniquement dans le PREMIER message
-   - Ne PAS saluer à chaque message suivant
-
-**6. UTILISATION DES TOOLS** :
-   - Quand il utilise un tool, ANNONCER à l'utilisateur ce qu'il fait
-   - Répondre immédiatement avec le résultat dès réception
-
-**7. COLLECTE D'EMAIL** :
-   - Demander de l'épeler en 3 parties :
-     1. Partie avant le @
-     2. Partie après le @ et avant le point
-     3. Partie après le point
-
-**8. COLLECTE DE CV/INFORMATIONS** :
-   - UNE seule demande par message
-   - Reformuler l'information reçue
-   - Puis demander l'information suivante dans le message suivant
-
-**9. CONTEXTE CULTUREL** :
-   - Si un pays est mentionné dans la consigne :
-     * Lister au moins 20 expressions courantes et citations de ce pays
-     * Adopter une attitude et des références culturelles du pays
-     * Utiliser ces expressions MODÉRÉMENT et naturellement dans les conversations (pas à chaque phrase)
-     * Varier les expressions utilisées pour maintenir la diversité
-
-**10. FIN DE CONVERSATION** :
-   - Si l'agent utilise l'outil "end_conversation"
-   - NE PAS réanimer la conversation même si l'utilisateur parle après
-   - La conversation est définitivement terminée
-
-Structure le prompt en sections claires (Rôle, Ton, Comportement, Consignes spécifiques, etc.)
-Fais environ 300-500 mots.
-
-Réponds uniquement avec le prompt système, sans introduction ni explication."""
+Réponds uniquement avec le prompt, concis et efficace."""
 
         response = client.chat.completions.create(
             model=deployment_name,
@@ -586,134 +547,28 @@ Réponds uniquement avec le prompt système, sans introduction ni explication.""
 
         all_tools = get_tools_definition()
 
-        tools_section = """
+        # Section outils optimisée - Liste compacte
+        tools_list = ", ".join([tool.get("name", "") for tool in all_tools])
+        
+        tools_section = f"""
 
-## 🛠️ OUTILS DISPONIBLES - DÉFINITIONS COMPLÈTES
+## 🛠️ OUTILS DISPONIBLES
 
-IMPORTANT: Ces outils sont déjà configurés et prêts à être appelés. Utilise-les ACTIVEMENT!
+Tu as accès à ces outils: {tools_list}
 
-### 📋 RÈGLES IMPÉRATIVES
+### 📋 RÈGLES
 
-1. ✅ **Annonce** avant d'appeler: "Je vérifie...", "J'envoie...", "Je cherche..."
-2. ✅ **Appelle IMMÉDIATEMENT** dès que tu as les infos nécessaires
-3. ✅ **Réponds avec le résultat** dès réception
-4. ❌ **NE propose JAMAIS** - AGIS directement!
+1. ✅ Annonce avant d'appeler: "Je vérifie...", "Je cherche..."
+2. ✅ Appelle IMMÉDIATEMENT dès que tu as les infos
+3. ❌ NE propose JAMAIS - AGIS directement!
 
----
+### 💡 EXEMPLES
 
-### 🌟 OUTILS PRIORITAIRES (Utilise-les en premier!)
-
-"""
-
-        # Liste des tools prioritaires avec documentation complète
-        priority_tools = {
-            "get_weather_forecast": {
-                "emoji": "🌤️",
-                "usage": "Dès que météo/temps/température mentionné",
-                "params": "city (ville), country (pays, optionnel), days (1-5 jours)"
-            },
-            "send_email": {
-                "emoji": "📧",
-                "usage": "Envoi d'email/mail/courriel",
-                "params": "to (destinataire), subject (sujet), body (message)"
-            },
-            "create_cv": {
-                "emoji": "📄",
-                "usage": "Créer/enregistrer CV/candidature",
-                "params": "name, email, phone, experience, education, skills"
-            },
-            "end_conversation": {
-                "emoji": "👋",
-                "usage": "Au revoir/fin/partir - Termine la conversation",
-                "params": "reason (motif de fin)"
-            },
-            "search_web": {
-                "emoji": "🔍",
-                "usage": "Recherche générale/Google/infos actuelles",
-                "params": "query (recherche)"
-            },
-            "convert_currency": {
-                "emoji": "💱",
-                "usage": "Conversion monétaire/devises",
-                "params": "amount, from_currency, to_currency"
-            },
-            "translate_text": {
-                "emoji": "🌐",
-                "usage": "Traduction de texte",
-                "params": "text, source_lang, target_lang"
-            },
-            "calculate": {
-                "emoji": "🧮",
-                "usage": "Calculs mathématiques",
-                "params": "expression (ex: '2+2', '10*5')"
-            }
-        }
-
-        for tool in all_tools:
-            tool_name = tool.get("name", "")
-            if tool_name in priority_tools:
-                info = priority_tools[tool_name]
-                tools_section += f"""
-#### {info['emoji']} **{tool_name}**
-- **Utilisation**: {info['usage']}
-- **Paramètres**: {info['params']}
-- **Appel JSON**:
-```json
-{{
-  "type": "function",
-  "name": "{tool_name}",
-  "parameters": {{ ... }}
-}}
-```
-
-"""
-
-        tools_section += """
----
-
-### 🔧 TOUS LES OUTILS DISPONIBLES
-
-"""
-
-        # Lister TOUS les tools avec leur nom et description courte
-        for tool in all_tools:
-            tool_name = tool.get("name", "")
-            description = tool.get("description", "").split('\n')[0].strip()[:80]
-            tools_section += f"- **{tool_name}**: {description}...\n"
-
-        tools_section += """
-
----
-
-### 💡 EXEMPLES CONCRETS
-
-**✅ EXCELLENT**:
-User: "Quel temps à Paris?"
-Agent: "Je vérifie la météo..." [APPELLE get_weather_forecast{"city":"Paris"}]
-→ "Il fait 18°C, ciel dégagé!"
-
-**❌ MAUVAIS**:
-Agent: "Voulez-vous que je vérifie?" → NON! Appelle directement!
-
-**✅ EXCELLENT**:
-User: "Traduis bonjour en anglais"
-Agent: "Je traduis..." [APPELLE translate_text{"text":"bonjour","target_lang":"en"}]
-→ "Traduction: Hello"
-
-**✅ EXCELLENT**:
-User: "Combien font 15 fois 7?"
-Agent: "Je calcule..." [APPELLE calculate{"expression":"15*7"}]
-→ "15 × 7 = 105"
-
----
-
-### ⚡ RAPPELS IMPORTANTS
-
-1. Les tools sont DÉJÀ configurés - appelle-les directement!
-2. Collecte les infos manquantes PUIS appelle immédiatement
-3. Pour email: demande to, subject, body PUIS envoie
-4. Pour météo: appelle dès que tu as la ville
-5. Pour end_conversation: appelle dès "au revoir"
+**Météo**: "Quel temps à Paris?" → Appelle get_weather_forecast{{"city":"Paris"}}
+**Traduction**: "Traduis bonjour" → Appelle translate_text{{"text":"bonjour","target_lang":"en"}}
+**Calcul**: "15 fois 7?" → Appelle calculate{{"expression":"15*7"}}
+**Email**: Demande to/subject/body puis appelle send_email
+**Fin**: "Au revoir" → Appelle end_conversation{{"reason":"salutations"}}
 """
 
         # Concaténer le prompt généré avec la section tools
@@ -737,15 +592,14 @@ Agent: "Je calcule..." [APPELLE calculate{"expression":"15*7"}]
 @avatar_bp.route('/api/avatars', methods=['GET'])
 def list_avatars():
     """
-    Liste des avatars Azure disponibles via Azure AI Avatar API
-    Retourne tous les avatars pré-construits disponibles pour TTS Avatar
+    Liste des avatars Azure disponibles via Azure TTS Avatar API
+    Endpoint: https://{region}.tts.speech.microsoft.com/cognitiveservices/avatar/list
     """
     try:
         import os
         import requests
         
         # Récupérer les credentials Azure Speech pour Avatar
-        # Priorité aux variables spécifiques AVATAR, sinon fallback sur AZURE_SPEECH
         speech_key = os.getenv('AVATAR_SPEECH_KEY') or os.getenv('AZURE_SPEECH_KEY')
         speech_region = os.getenv('AVATAR_SPEECH_REGION') or os.getenv('AZURE_SPEECH_REGION', 'eastus2')
         
@@ -758,52 +612,49 @@ def list_avatars():
         
         logger.info(f"🎭 Avatar - Région: {speech_region}")
         
-        # URL de l'API Azure Avatar
-        # https://learn.microsoft.com/azure/ai-services/speech-service/text-to-speech-avatar/avatar-gestures-with-ssml
-        api_url = f"https://{speech_region}.api.cognitive.microsoft.com/avatar/prebuilt/v1/models"
+        # API endpoint pour lister les avatars
+        api_url = f"https://{speech_region}.tts.speech.microsoft.com/cognitiveservices/avatar/list"
         
         headers = {
-            'Ocp-Apim-Subscription-Key': speech_key,
-            'Content-Type': 'application/json'
+            'Ocp-Apim-Subscription-Key': speech_key
         }
         
         logger.info(f"🔍 Appel API Azure Avatar: {api_url}")
         
         response = requests.get(api_url, headers=headers, timeout=10)
-        response.raise_for_status()
         
-        data = response.json()
-        
-        # Transformer les données Azure en format attendu par le frontend
-        avatars = []
-        for avatar in data.get('value', []):
-            properties = avatar.get('properties', {})
-            avatar_info = {
-                'avatar_id': avatar.get('id', ''),
-                'avatar_name': avatar.get('name', ''),
-                'character': avatar.get('character', ''),
-                'description': avatar.get('description', ''),
-                'styles': avatar.get('styles', []),
-                'locale': avatar.get('locale', 'en-US'),
-                'gender': properties.get('gender', 'Unknown'),
-                'preview_url': properties.get('previewImageUrl', properties.get('thumbnailUrl', '')),
-                'video_url': properties.get('previewVideoUrl', properties.get('videoUrl', '')),
-                'supported_resolutions': properties.get('supportedResolutions', ['1920x1080', '1280x720', '960x540'])
-            }
-            avatars.append(avatar_info)
-        
-        logger.info(f"✅ {len(avatars)} avatars Azure trouvés")
-        
-        return jsonify({
-            'success': True,
-            'avatars': avatars,
-            'total_count': len(avatars)
-        })
-        
-    except requests.exceptions.RequestException as e:
-        logger.exception(f"Erreur appel API Azure Avatar: {str(e)}")
-        # Fallback sur des avatars standards avec vraies images de la documentation Microsoft
-        # URLs basées sur https://learn.microsoft.com/en-us/azure/ai-services/speech-service/text-to-speech-avatar/standard-avatars
+        if response.status_code == 200:
+            avatars_data = response.json()
+            
+            # Transformer les données Azure en format attendu par le frontend
+            avatars = []
+            for avatar in avatars_data:
+                avatar_info = {
+                    'avatar_id': avatar.get('id', ''),
+                    'avatar_name': avatar.get('name', ''),
+                    'character': avatar.get('id', ''),
+                    'description': avatar.get('description', f"Avatar {avatar.get('name', '')}"),
+                    'styles': avatar.get('styles', []),
+                    'locale': avatar.get('locale', 'en-US'),
+                    'gender': avatar.get('gender', 'Unknown'),
+                    'preview_url': avatar.get('thumbnailUrl', ''),
+                    'video_url': avatar.get('videoUrl', ''),
+                    'supported_resolutions': avatar.get('supportedResolutions', ['1920x1080', '1280x720', '960x540'])
+                }
+                avatars.append(avatar_info)
+            
+            logger.info(f"✅ {len(avatars)} avatars Azure récupérés depuis l'API")
+            
+            return jsonify({
+                'success': True,
+                'avatars': avatars,
+                'total_count': len(avatars)
+            })
+        else:
+            logger.error(f"❌ Erreur API Azure Avatar: {response.status_code} - {response.text}")
+            # Fallback sur liste hardcodée si API échoue
+            
+        # Fallback: Liste hardcodée des avatars standards si API échoue
         fallback_avatars = [
             {
                 'avatar_id': 'lisa',
@@ -878,68 +729,22 @@ def list_avatars():
                 'supported_resolutions': ['1920x1080', '1280x720', '960x540']
             }
         ]
-        # Ajouter les avatars conversationnels (photo avatars)
-        # Base URL pour les images de la documentation Microsoft
-        base_url = 'https://learn.microsoft.com/en-us/azure/ai-services/speech-service/text-to-speech-avatar/media'
-        
-        conversational_avatars = [
-            {'avatar_id': 'adrian', 'avatar_name': 'Adrian', 'character': 'adrian', 'description': 'Avatar conversationnel professionnel', 'locale': 'en-US', 'gender': 'Male', 'preview_url': f'{base_url}/adrian.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'amara', 'avatar_name': 'Amara', 'character': 'amara', 'description': 'Avatar conversationnel féminin', 'locale': 'en-US', 'gender': 'Female', 'preview_url': f'{base_url}/amara.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'amira', 'avatar_name': 'Amira', 'character': 'amira', 'description': 'Avatar conversationnel élégant', 'locale': 'en-US', 'gender': 'Female', 'preview_url': f'{base_url}/amira-avatar.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'anika', 'avatar_name': 'Anika', 'character': 'anika', 'description': 'Avatar conversationnel moderne', 'locale': 'en-US', 'gender': 'Female', 'preview_url': f'{base_url}/anika-avatar.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'bianca', 'avatar_name': 'Bianca', 'character': 'bianca', 'description': 'Avatar conversationnel dynamique', 'locale': 'en-US', 'gender': 'Female', 'preview_url': f'{base_url}/bianca.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'camila', 'avatar_name': 'Camila', 'character': 'camila', 'description': 'Avatar conversationnel amical', 'locale': 'en-US', 'gender': 'Female', 'preview_url': f'{base_url}/camila.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'carlos', 'avatar_name': 'Carlos', 'character': 'carlos', 'description': 'Avatar conversationnel confiant', 'locale': 'en-US', 'gender': 'Male', 'preview_url': f'{base_url}/carlos.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'clara', 'avatar_name': 'Clara', 'character': 'clara', 'description': 'Avatar conversationnel professionnel', 'locale': 'en-US', 'gender': 'Female', 'preview_url': f'{base_url}/clara.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'darius', 'avatar_name': 'Darius', 'character': 'darius', 'description': 'Avatar conversationnel charismatique', 'locale': 'en-US', 'gender': 'Male', 'preview_url': f'{base_url}/darius.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'diego', 'avatar_name': 'Diego', 'character': 'diego', 'description': 'Avatar conversationnel engageant', 'locale': 'en-US', 'gender': 'Male', 'preview_url': f'{base_url}/diego.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'elise', 'avatar_name': 'Elise', 'character': 'elise', 'description': 'Avatar conversationnel sophistiqué', 'locale': 'en-US', 'gender': 'Female', 'preview_url': f'{base_url}/elise.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'farhan', 'avatar_name': 'Farhan', 'character': 'farhan', 'description': 'Avatar conversationnel chaleureux', 'locale': 'en-US', 'gender': 'Male', 'preview_url': f'{base_url}/farhan-avatar.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'faris', 'avatar_name': 'Faris', 'character': 'faris', 'description': 'Avatar conversationnel cordial', 'locale': 'en-US', 'gender': 'Male', 'preview_url': f'{base_url}/faris-avatar.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'gabrielle', 'avatar_name': 'Gabrielle', 'character': 'gabrielle', 'description': 'Avatar conversationnel expressif', 'locale': 'en-US', 'gender': 'Female', 'preview_url': f'{base_url}/gabrielle.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'hyejin', 'avatar_name': 'Hyejin', 'character': 'hyejin', 'description': 'Avatar conversationnel souriant', 'locale': 'en-US', 'gender': 'Female', 'preview_url': f'{base_url}/hyejin-avatar.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'imran', 'avatar_name': 'Imran', 'character': 'imran', 'description': 'Avatar conversationnel sympathique', 'locale': 'en-US', 'gender': 'Male', 'preview_url': f'{base_url}/imran-avatar.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'isabella', 'avatar_name': 'Isabella', 'character': 'isabella', 'description': 'Avatar conversationnel élégant', 'locale': 'en-US', 'gender': 'Female', 'preview_url': f'{base_url}/isabella.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'layla', 'avatar_name': 'Layla', 'character': 'layla', 'description': 'Avatar conversationnel accueillant', 'locale': 'en-US', 'gender': 'Female', 'preview_url': f'{base_url}/layla.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'liwei', 'avatar_name': 'Liwei', 'character': 'liwei', 'description': 'Avatar conversationnel professionnel', 'locale': 'en-US', 'gender': 'Male', 'preview_url': f'{base_url}/liwei-avatar.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'ling', 'avatar_name': 'Ling', 'character': 'ling', 'description': 'Avatar conversationnel moderne', 'locale': 'en-US', 'gender': 'Female', 'preview_url': f'{base_url}/ling.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'marcus', 'avatar_name': 'Marcus', 'character': 'marcus', 'description': 'Avatar conversationnel confiant', 'locale': 'en-US', 'gender': 'Male', 'preview_url': f'{base_url}/marcus.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'matteo', 'avatar_name': 'Matteo', 'character': 'matteo', 'description': 'Avatar conversationnel dynamique', 'locale': 'en-US', 'gender': 'Male', 'preview_url': f'{base_url}/matteo.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'rahul', 'avatar_name': 'Rahul', 'character': 'rahul', 'description': 'Avatar conversationnel amical', 'locale': 'en-US', 'gender': 'Male', 'preview_url': f'{base_url}/rahul-avatar.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'rana', 'avatar_name': 'Rana', 'character': 'rana', 'description': 'Avatar conversationnel chaleureux', 'locale': 'en-US', 'gender': 'Female', 'preview_url': f'{base_url}/rana.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'ren', 'avatar_name': 'Ren', 'character': 'ren', 'description': 'Avatar conversationnel engageant', 'locale': 'en-US', 'gender': 'Male', 'preview_url': f'{base_url}/ren-avatar.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'riya', 'avatar_name': 'Riya', 'character': 'riya', 'description': 'Avatar conversationnel souriant', 'locale': 'en-US', 'gender': 'Female', 'preview_url': f'{base_url}/riya-avatar.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'sakura', 'avatar_name': 'Sakura', 'character': 'sakura', 'description': 'Avatar conversationnel élégant', 'locale': 'en-US', 'gender': 'Female', 'preview_url': f'{base_url}/sakura-avatar.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'simone', 'avatar_name': 'Simone', 'character': 'simone', 'description': 'Avatar conversationnel professionnel', 'locale': 'en-US', 'gender': 'Female', 'preview_url': f'{base_url}/simone.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'zayd', 'avatar_name': 'Zayd', 'character': 'zayd', 'description': 'Avatar conversationnel confiant', 'locale': 'en-US', 'gender': 'Male', 'preview_url': f'{base_url}/zayd-avatar.png', 'avatar_type': 'conversational'},
-            {'avatar_id': 'zoe', 'avatar_name': 'Zoe', 'character': 'zoe', 'description': 'Avatar conversationnel dynamique', 'locale': 'en-US', 'gender': 'Female', 'preview_url': f'{base_url}/zoe.png', 'avatar_type': 'conversational'}
-        ]
-        
-        # Marquer les avatars expressifs
+        # Marquer les avatars expressifs et supprimer tous les conversationnels
         for avatar in fallback_avatars:
             avatar['avatar_type'] = 'expressive'
             avatar['styles'] = avatar.get('styles', [])
             avatar['supported_resolutions'] = avatar.get('supported_resolutions', ['1920x1080', '1280x720', '960x540'])
             avatar['video_url'] = ''
         
-        # Ajouter les champs nécessaires aux avatars conversationnels
-        for avatar in conversational_avatars:
-            avatar['styles'] = []  # Pas de styles pour les avatars conversationnels
-            avatar['supported_resolutions'] = ['1920x1080', '1280x720', '960x540']
-            avatar['video_url'] = ''
-        
-        all_avatars = fallback_avatars + conversational_avatars
-        
-        logger.warning(f"⚠️ Utilisation des avatars fallback (erreur API: {str(e)})")
-        logger.info(f"📊 Total avatars: {len(all_avatars)} (6 expressifs + 30 conversationnels)")
+        logger.warning("⚠️ API Azure Avatar indisponible, fallback expressif uniquement")
+        logger.info(f"📊 Total avatars expressifs fallback: {len(fallback_avatars)}")
         
         return jsonify({
             'success': True,
-            'avatars': all_avatars,
-            'total_count': len(all_avatars),
+            'avatars': fallback_avatars,
+            'total_count': len(fallback_avatars),
             'expressive_count': len(fallback_avatars),
-            'conversational_count': len(conversational_avatars),
-            'source': 'fallback'
+            'conversational_count': 0
         })
     except Exception as e:
         logger.exception("Erreur récupération avatars")
@@ -1101,6 +906,7 @@ def get_avatar_details(agent_id):
         }), 500
 
 
+@avatar_bp.route('/api/<agent_id>/update_avatar_character', methods=['POST'])
 @avatar_bp.route('/api/<agent_id>/update', methods=['PATCH'])
 def update_avatar_partial(agent_id):
     """
@@ -1163,7 +969,7 @@ def call_avatar(agent_id):
     Charge la configuration de l'avatar depuis Cosmos DB et initialise la session
     """
     try:
-        from flask import session, redirect, url_for
+        from flask import session
         from configuration.cosmos_config import get_avatar_config
         from configuration.voice_live_config import VoiceLiveClient
         from tools import get_tools_definition

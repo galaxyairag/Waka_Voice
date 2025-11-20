@@ -520,7 +520,7 @@
         container.innerHTML = '';
 
         try {
-            const response = await fetch('/personal-voice/api/personal-voices');
+            const response = await fetch('/creer-une-voix/api/personal-voices');
             const data = await response.json();
 
             loadingContainer.style.display = 'none';

@@ -670,6 +670,7 @@
     let sessionTokens = null; // Tokens globaux de la conversation (mis à jour par response.done)
     let isSpeaking = false; // Flag pour indiquer si l'assistant parle
     let audioProcessor = null; // Référence au ScriptProcessor pour pouvoir le mettre en pause
+    let isResponseActive = false; // Flag pour suivre si une réponse est active côté serveur
 
     // Fonction pour générer un UUID
     function generateUUID() {
@@ -700,6 +701,7 @@
         websocketUrl: '{{ agent.websocket_url | safe }}',
         voice: {
             name: '{{ agent.voice.name }}',
+            type: '{{ agent.voice.type }}',
             rate: parseFloat('{{ agent.voice.rate }}'),
             temperature: parseFloat('{{ agent.voice.temperature }}')
         },
@@ -869,16 +871,27 @@
             websocket.onopen = () => {
                 console.log('✅ WebSocket connected');
 
+                // Générer la date du jour en français
+                const today = new Date();
+                const days = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+                const months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+                
+                const dayName = days[today.getDay()];
+                const day = today.getDate().toString().padStart(2, '0');
+                const month = months[today.getMonth()];
+                const year = today.getFullYear();
+                
+                const dateContext = `\n\nContexte temporel : Nous sommes le ${dayName} ${day} ${month} ${year}.`;
+                
                 // Send session configuration
                 const sessionConfig = {
                     type: 'session.update',
                     session: {
                         modalities: ['text', 'audio'],
-                        instructions: agentConfig.instructions,
+                        instructions: agentConfig.instructions + dateContext,
                         voice: {
                             name: agentConfig.voice.name,
-                            type: agentConfig.voice.type,
-                            temperature: agentConfig.voice.temperature
+                            type: agentConfig.voice.type
                         },
                         temperature: agentConfig.temperature,
                         max_response_output_tokens: agentConfig.maxTokens,
@@ -893,6 +906,11 @@
                         }
                     }
                 };
+
+                // Add voice.temperature only if defined (GPT-5 models don't support it)
+                if (agentConfig.voice.temperature !== null && agentConfig.voice.temperature !== undefined) {
+                    sessionConfig.session.voice.temperature = agentConfig.voice.temperature;
+                }
 
                 // Add custom_lexicon_url to voice if it exists and is not empty
                 if (agentConfig.voice.custom_lexicon_url && agentConfig.voice.custom_lexicon_url.trim() !== '') {
@@ -1036,18 +1054,37 @@
                 // Nouvelle réponse commence - arrêter l'ancien audio
                 console.log('🆕 New response created');
                 stopAllAudio();
+                isResponseActive = true; // Marquer la réponse comme active
                 break;
 
             case 'input_audio_buffer.speech_started':
-                // L'utilisateur commence à parler - arrêter l'audio de l'IA
-                console.log('🎤 User started speaking - stopping AI audio');
+                // L'utilisateur commence à parler - arrêter immédiatement l'audio de l'IA
+                console.log('🎤 User started speaking - INTERRUPTING AI audio');
                 stopAllAudio();
+                currentResponseId = null; // Invalider la réponse en cours
+                isSpeaking = false; // Réactiver le micro immédiatement
+                
+                // Envoyer response.cancel SEULEMENT si une réponse est active côté serveur
+                if (isResponseActive && websocket && websocket.readyState === WebSocket.OPEN) {
+                    websocket.send(JSON.stringify({
+                        type: 'response.cancel'
+                    }));
+                    console.log('📤 Sent response.cancel to server');
+                    isResponseActive = false; // Marquer comme terminée
+                } else if (!isResponseActive) {
+                    console.log('ℹ️ No active response to cancel (already completed)');
+                }
+                
+                addMessage('system', '🎤 Interruption détectée');
                 break;
 
             case 'response.cancelled':
                 // La réponse a été annulée (interruption) - arrêter l'audio
                 console.log('🚫 Response cancelled - stopping audio');
                 stopAllAudio();
+                currentResponseId = null; // Invalider la réponse annulée
+                isSpeaking = false; // Réactiver le micro
+                isResponseActive = false; // Marquer la réponse comme terminée
                 break;
 
             case 'response.function_call_arguments.delta':
@@ -1103,6 +1140,10 @@
                     };
                     console.log('📊 Tokens updated from response.done:', sessionTokens);
                 }
+                
+                // Marquer la réponse comme terminée côté serveur
+                isResponseActive = false;
+                console.log('✅ Response completed on server side');
                 break;
 
             case 'error':
@@ -1136,14 +1177,38 @@
             audioProcessor.connect(audioContext.destination);
 
             audioProcessor.onaudioprocess = (e) => {
+                const inputData = e.inputBuffer.getChannelData(0);
+                
+                // Détecter si l'utilisateur parle (niveau audio > seuil)
+                let sum = 0;
+                for (let i = 0; i < inputData.length; i++) {
+                    sum += inputData[i] * inputData[i];
+                }
+                const rms = Math.sqrt(sum / inputData.length);
+                const isSpeakingNow = rms > 0.01; // Seuil de détection de parole
+                
+                // Si on détecte de la parole et que l'IA parle, l'interrompre immédiatement
+                if (isSpeakingNow && isSpeaking) {
+                    console.log('🎤 LOCAL INTERRUPT: User speaking detected while AI is talking');
+                    stopAllAudio();
+                    currentResponseId = null;
+                    isSpeaking = false;
+                    
+                    // Annuler la réponse côté serveur SEULEMENT si elle est active
+                    if (isResponseActive && websocket && websocket.readyState === WebSocket.OPEN) {
+                        websocket.send(JSON.stringify({
+                            type: 'response.cancel'
+                        }));
+                        isResponseActive = false;
+                    }
+                }
+                
                 // Ne pas envoyer d'audio si l'assistant parle (évite l'écho)
                 if (isSpeaking) {
                     return;
                 }
                 
                 if (websocket && websocket.readyState === WebSocket.OPEN) {
-                    const inputData = e.inputBuffer.getChannelData(0);
-                    
                     // Convert Float32 to Int16 PCM
                     const pcmData = new Int16Array(inputData.length);
                     for (let i = 0; i < inputData.length; i++) {
@@ -1245,24 +1310,32 @@
     let isProcessingQueue = false;
 
     function stopAllAudio() {
+        console.log('🔇 Stopping ALL audio - sources:', activeSources.length, 'queued:', audioQueue.length);
+        
         // Arrêter toutes les sources audio en cours de lecture
         activeSources.forEach(source => {
             try {
-                source.stop();
+                source.stop(0); // Arrêt immédiat
+                source.disconnect(); // Déconnecter immédiatement
             } catch (e) {
                 // Ignore si déjà arrêté
             }
         });
         activeSources = [];
         
-        // 🔥 Vider la file d'attente
+        // 🔥 Vider complètement la file d'attente
         audioQueue = [];
         isProcessingQueue = false;
         
         // FERMER et recréer le contexte audio pour vraiment tout réinitialiser
         if (playbackContext) {
             try {
-                playbackContext.close();
+                // Suspendre immédiatement puis fermer
+                playbackContext.suspend().then(() => {
+                    playbackContext.close();
+                }).catch(e => {
+                    // Ignore errors
+                });
             } catch (e) {
                 // Ignore si déjà fermé
             }
@@ -1271,7 +1344,7 @@
         
         nextPlaybackTime = 0;
         
-        console.log('🔇 All audio stopped and context reset');
+        console.log('🔇 ✅ All audio stopped and context reset');
     }
 
     async function processAudioQueue() {
@@ -1310,9 +1383,9 @@
 
     function playAudioChunkNow(base64Audio, responseId) {
         return new Promise((resolve) => {
-            // Vérifier que c'est toujours la réponse actuelle
-            if (responseId !== currentResponseId) {
-                console.log(`🚫 Skipping audio chunk from old response: ${responseId}`);
+            // Vérification renforcée: ignorer si la réponse a été annulée
+            if (!currentResponseId || responseId !== currentResponseId) {
+                console.log(`🚫 Skipping audio chunk from ${responseId === currentResponseId ? 'cancelled' : 'old'} response: ${responseId}`);
                 resolve();
                 return;
             }
@@ -1372,12 +1445,6 @@
                     console.log('🎤 Assistant terminé - Micro réactivé');
                 }
                 
-                resolve();
-            };
-                const index = activeSources.indexOf(source);
-                if (index > -1) {
-                    activeSources.splice(index, 1);
-                }
                 resolve();
             };
             

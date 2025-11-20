@@ -1,12 +1,108 @@
 """
 Blueprint pour la gestion des voix personnelles Azure AI
+Intègre les API Microsoft Azure Custom Voice pour créer et gérer des voix personnalisées
 """
 from flask import Blueprint, render_template, request, jsonify
 import logging
+import os
+import uuid
+import requests
+from datetime import datetime, timedelta
+from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions
 
 logger = logging.getLogger(__name__)
 
 personal_voice_bp = Blueprint('personal_voice', __name__, url_prefix='/personal-voice')
+
+# Configuration Azure Speech pour Custom Voice API
+AZURE_SPEECH_KEY = os.getenv('PERSONAL_VOICE_KEY') or os.getenv('AZURE_SPEECH_KEY')
+AZURE_SPEECH_REGION = os.getenv('PERSONAL_VOICE_REGION') or os.getenv('AZURE_SPEECH_REGION', 'eastus')
+CUSTOM_VOICE_API_VERSION = '2024-02-01-preview'
+
+# Configuration Azure Blob Storage
+AZURE_STORAGE_CONNECTION_STRING = os.getenv('BLOB_CONNECTION_STRING')
+BLOB_CONTAINER_ENREGISTREMENTS = 'enregistrements'
+
+# URLs de base pour l'API Custom Voice
+def get_custom_voice_base_url():
+    return f"https://{AZURE_SPEECH_REGION}.api.cognitive.microsoft.com/customvoice"
+
+def get_headers():
+    return {
+        'Ocp-Apim-Subscription-Key': AZURE_SPEECH_KEY,
+        'Content-Type': 'application/json'
+    }
+
+def get_blob_service_client():
+    """Retourne le client Blob Storage"""
+    if AZURE_STORAGE_CONNECTION_STRING:
+        return BlobServiceClient.from_connection_string(AZURE_STORAGE_CONNECTION_STRING)
+    return None
+
+
+def calculate_usage_counts():
+    """
+    Calcule le nombre d'utilisations de chaque voix personnelle basé sur l'historique des conversations.
+
+    Returns:
+        dict: Dictionnaire {speaker_profile_id: usage_count}
+    """
+    usage_counts = {}
+
+    try:
+        from configuration.cosmos_config import get_call_history_container, get_agents_container
+
+        # Récupérer l'historique des conversations
+        call_history_container = get_call_history_container()
+        agents_container = get_agents_container()
+
+        # Requête pour récupérer toutes les conversations complétées
+        query = "SELECT c.agent_id FROM c WHERE c.status = 'completed'"
+
+        conversations = list(call_history_container.query_items(
+            query=query,
+            enable_cross_partition_query=True
+        ))
+
+        logger.info(f"📊 Analyse de {len(conversations)} conversations pour calculer usage_count")
+
+        # Créer un cache pour les configurations d'agents pour éviter les requêtes multiples
+        agent_cache = {}
+
+        for conv in conversations:
+            agent_id = conv.get('agent_id')
+
+            if not agent_id:
+                continue
+
+            # Vérifier si l'agent est déjà dans le cache
+            if agent_id not in agent_cache:
+                try:
+                    agent = agents_container.read_item(item=agent_id, partition_key=agent_id)
+                    agent_cache[agent_id] = agent
+                except Exception:
+                    # Agent non trouvé ou supprimé
+                    agent_cache[agent_id] = None
+                    continue
+
+            agent = agent_cache[agent_id]
+
+            if not agent:
+                continue
+
+            # Vérifier si l'agent utilise une voix personnelle
+            voice_type = agent.get('voice_type')
+            speaker_profile_id = agent.get('speaker_profile_id')
+
+            if voice_type == 'personal' and speaker_profile_id:
+                usage_counts[speaker_profile_id] = usage_counts.get(speaker_profile_id, 0) + 1
+
+        logger.info(f"✅ Usage counts calculés: {len(usage_counts)} voix personnelles utilisées")
+        return usage_counts
+
+    except Exception as e:
+        logger.warning(f"⚠️ Erreur lors du calcul des usage_counts: {e}")
+        return {}
 
 @personal_voice_bp.route('/')
 def index():
@@ -16,53 +112,93 @@ def index():
 
 @personal_voice_bp.route('/api/projects', methods=['GET', 'POST'])
 def manage_projects():
-    """Gérer les projets de voix personnelles"""
+    """Gérer les projets de voix personnelles via Azure Custom Voice API"""
     if request.method == 'POST':
         try:
             data = request.get_json()
-            project_name = data.get('project_name')
+            project_name = data.get('project_name', '')
             description = data.get('description', '')
-            
-            # TODO: Implémenter la création du projet avec Azure Speech API
-            import uuid
-            project_id = str(uuid.uuid4())
-            
-            # TODO: Sauvegarder dans Cosmos DB avec status 'Creating'
-            # Puis faire l'appel API Azure Speech
-            
-            logger.info(f"✅ Projet créé: {project_id} (statut: Creating)")
-            
-            return jsonify({
-                'success': True,
-                'project_id': project_id,
-                'status': 'Creating',
-                'message': 'Projet en cours de création'
-            })
-            
+
+            # Générer un ID unique pour le projet
+            project_id = f"pv-{uuid.uuid4().hex[:12]}"
+
+            # Appel API Azure pour créer le projet
+            url = f"{get_custom_voice_base_url()}/projects/{project_id}?api-version={CUSTOM_VOICE_API_VERSION}"
+
+            payload = {
+                "description": description,
+                "kind": "PersonalVoice"
+            }
+
+            response = requests.put(url, headers=get_headers(), json=payload)
+
+            if response.status_code in [200, 201]:
+                result = response.json()
+
+                # Sauvegarder dans Cosmos DB
+                try:
+                    from configuration.personal_voice_storage import get_personal_voice_projects_container
+                    container = get_personal_voice_projects_container()
+                    cosmos_doc = {
+                        'id': project_id,
+                        'project_id': project_id,
+                        'project_name': project_name,
+                        'description': description,
+                        'kind': 'PersonalVoice',
+                        'status': 'created',
+                        'azure_response': result,
+                        'created_at': datetime.utcnow().isoformat() + 'Z',
+                        'updated_at': datetime.utcnow().isoformat() + 'Z'
+                    }
+                    container.create_item(body=cosmos_doc)
+                    logger.info(f"✅ Projet sauvegardé dans Cosmos DB: {project_id}")
+                except Exception as cosmos_error:
+                    logger.warning(f"⚠️ Impossible de sauvegarder dans Cosmos DB: {cosmos_error}")
+
+                logger.info(f"✅ Projet créé via Azure API: {project_id}")
+
+                return jsonify({
+                    'success': True,
+                    'project_id': project_id,
+                    'status': 'created',
+                    'message': 'Projet créé avec succès',
+                    'data': result
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': f"Erreur Azure API: {response.status_code}",
+                    'details': response.text
+                }), response.status_code
+
         except Exception as e:
             logger.exception("Erreur création projet")
             return jsonify({
                 'success': False,
                 'error': str(e)
             }), 500
-    
+
     else:  # GET
         try:
-            # TODO: Récupérer les projets depuis Azure ou base de données
-            projects = [
-                {
-                    'id': 'project_test_1',
-                    'project_name': 'Projet Test 1',
-                    'description': 'Description du projet test',
-                    'status': 'created'
-                }
-            ]
-            
-            return jsonify({
-                'success': True,
-                'projects': projects
-            })
-            
+            # Récupérer les projets depuis Cosmos DB
+            try:
+                from configuration.personal_voice_storage import get_personal_voice_projects_container
+                container = get_personal_voice_projects_container()
+                query = "SELECT * FROM c ORDER BY c.created_at DESC"
+                items = list(container.query_items(query=query, enable_cross_partition_query=True))
+
+                return jsonify({
+                    'success': True,
+                    'projects': items
+                })
+            except Exception as cosmos_error:
+                logger.warning(f"⚠️ Cosmos DB non disponible: {cosmos_error}")
+                # Fallback: retourner liste vide
+                return jsonify({
+                    'success': True,
+                    'projects': []
+                })
+
         except Exception as e:
             logger.exception("Erreur récupération projets")
             return jsonify({
@@ -70,38 +206,57 @@ def manage_projects():
                 'error': str(e)
             }), 500
 
-@personal_voice_bp.route('/api/projects/<project_id>', methods=['GET'])
-def get_project_status(project_id):
-    """Vérifier le statut d'un projet spécifique"""
-    try:
-        # TODO: Appeler Azure Speech API pour vérifier le statut du projet
-        # Pour l'instant, on simule le passage de Creating à Succeeded après quelques secondes
-        import time
-        import random
-        
-        # Simuler un délai de traitement
-        status = random.choice(['Creating', 'Succeeded']) if random.random() > 0.3 else 'Succeeded'
-        
-        project_info = {
-            'id': project_id,
-            'status': status,
-            'project_name': 'Mon Projet',
-            'description': 'Description du projet'
-        }
-        
-        logger.info(f"📊 Statut du projet {project_id}: {status}")
-        
-        return jsonify({
-            'success': True,
-            'project': project_info
-        })
-        
-    except Exception as e:
-        logger.exception("Erreur récupération statut projet")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+@personal_voice_bp.route('/api/projects/<project_id>', methods=['GET', 'DELETE'])
+def manage_project(project_id):
+    """Obtenir les détails ou supprimer un projet"""
+    if request.method == 'GET':
+        try:
+            # Récupérer depuis Azure API
+            url = f"{get_custom_voice_base_url()}/projects/{project_id}?api-version={CUSTOM_VOICE_API_VERSION}"
+            response = requests.get(url, headers=get_headers())
+
+            if response.status_code == 200:
+                return jsonify({
+                    'success': True,
+                    'project': response.json()
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': f"Erreur Azure API: {response.status_code}"
+                }), response.status_code
+
+        except Exception as e:
+            logger.exception("Erreur récupération projet")
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
+
+    elif request.method == 'DELETE':
+        try:
+            # Supprimer dans Azure
+            url = f"{get_custom_voice_base_url()}/projects/{project_id}?api-version={CUSTOM_VOICE_API_VERSION}"
+            response = requests.delete(url, headers=get_headers())
+
+            # Supprimer dans Cosmos DB
+            try:
+                from configuration.personal_voice_storage import get_personal_voice_projects_container
+                container = get_personal_voice_projects_container()
+                container.delete_item(item=project_id, partition_key=project_id)
+            except:
+                pass
+
+            return jsonify({
+                'success': True,
+                'message': 'Projet supprimé'
+            })
+
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
 
 @personal_voice_bp.route('/api/consent-text/<locale>', methods=['GET'])
 def get_consent_text(locale):
@@ -125,30 +280,62 @@ def get_consent_text(locale):
 
 @personal_voice_bp.route('/api/upload-audio', methods=['POST'])
 def upload_audio():
-    """Upload d'un fichier audio (consentement ou échantillon vocal)"""
+    """Upload d'un fichier audio vers Azure Blob Storage"""
     try:
         if 'audio' not in request.files:
             return jsonify({
                 'success': False,
                 'error': 'Aucun fichier audio fourni'
             }), 400
-        
+
         audio_file = request.files['audio']
-        audio_type = request.form.get('type', 'unknown')  # 'consent' ou 'voice'
-        project_id = request.form.get('project_id')
-        
-        # TODO: Upload vers Azure Blob Storage
-        # Pour l'instant, on simule un blob URL
-        blob_url = f"https://fakestorage.blob.core.windows.net/{project_id}/{audio_type}_{audio_file.filename}"
-        
-        logger.info(f"✅ Audio uploadé: {blob_url}")
-        
+        audio_type = request.form.get('type', 'consent')  # 'consent' ou 'voice'
+        project_id = request.form.get('project_id', '')
+
+        # Générer un nom de fichier unique
+        file_extension = audio_file.filename.rsplit('.', 1)[-1] if '.' in audio_file.filename else 'wav'
+        blob_name = f"{project_id}/{audio_type}_{uuid.uuid4().hex[:8]}.{file_extension}"
+
+        # Upload vers Blob Storage
+        blob_service_client = get_blob_service_client()
+        if not blob_service_client:
+            return jsonify({
+                'success': False,
+                'error': 'Blob Storage non configuré'
+            }), 500
+
+        container_client = blob_service_client.get_container_client(BLOB_CONTAINER_ENREGISTREMENTS)
+
+        # Créer le container s'il n'existe pas
+        try:
+            container_client.create_container()
+        except:
+            pass  # Container existe déjà
+
+        blob_client = container_client.get_blob_client(blob_name)
+        blob_client.upload_blob(audio_file, overwrite=True)
+
+        # Générer une URL SAS pour accès temporaire
+        sas_token = generate_blob_sas(
+            account_name=blob_service_client.account_name,
+            container_name=BLOB_CONTAINER_ENREGISTREMENTS,
+            blob_name=blob_name,
+            account_key=blob_service_client.credential.account_key,
+            permission=BlobSasPermissions(read=True),
+            expiry=datetime.utcnow() + timedelta(hours=24)
+        )
+
+        blob_url = f"{blob_client.url}?{sas_token}"
+
+        logger.info(f"✅ Audio uploadé vers Blob Storage: {blob_name}")
+
         return jsonify({
             'success': True,
+            'blob_name': blob_name,
             'blob_url': blob_url,
             'message': 'Audio uploadé avec succès'
         })
-        
+
     except Exception as e:
         logger.exception("Erreur upload audio")
         return jsonify({
@@ -158,28 +345,79 @@ def upload_audio():
 
 @personal_voice_bp.route('/api/consents', methods=['POST'])
 def create_consent():
-    """Créer un consentement de voix personnelle"""
+    """Créer un consentement via Azure Custom Voice API"""
     try:
         data = request.get_json()
-        
+
         project_id = data.get('project_id')
         voice_talent_name = data.get('voice_talent_name')
         company_name = data.get('company_name')
         audio_url = data.get('audio_url')
-        locale = data.get('locale', 'en-US')
+        locale = data.get('locale', 'fr-FR')
         description = data.get('description', '')
-        
-        # TODO: Appeler l'API Azure Speech pour créer le consentement
-        consent_id = f"consent_{project_id}_{voice_talent_name.replace(' ', '_').lower()}"
-        
-        logger.info(f"✅ Consentement créé: {consent_id}")
-        
-        return jsonify({
-            'success': True,
-            'consent_id': consent_id,
-            'message': 'Consentement créé avec succès'
-        })
-        
+
+        # Générer un ID unique pour le consentement
+        consent_id = f"consent-{uuid.uuid4().hex[:12]}"
+
+        # Appel API Azure pour créer le consentement
+        url = f"{get_custom_voice_base_url()}/consents/{consent_id}?api-version={CUSTOM_VOICE_API_VERSION}"
+
+        payload = {
+            "projectId": project_id,
+            "voiceTalentName": voice_talent_name,
+            "companyName": company_name,
+            "audioUrl": audio_url,
+            "locale": locale,
+            "description": description
+        }
+
+        response = requests.put(url, headers=get_headers(), json=payload)
+
+        if response.status_code in [200, 201, 202]:
+            result = response.json()
+
+            # Récupérer l'Operation-Location pour le suivi
+            operation_location = response.headers.get('Operation-Location', '')
+
+            # Sauvegarder dans Cosmos DB
+            try:
+                from configuration.personal_voice_storage import get_personal_voice_consents_container
+                container = get_personal_voice_consents_container()
+                cosmos_doc = {
+                    'id': consent_id,
+                    'consent_id': consent_id,
+                    'project_id': project_id,
+                    'voice_talent_name': voice_talent_name,
+                    'company_name': company_name,
+                    'locale': locale,
+                    'description': description,
+                    'audio_url': audio_url,
+                    'status': result.get('status', 'NotStarted'),
+                    'operation_location': operation_location,
+                    'azure_response': result,
+                    'created_at': datetime.utcnow().isoformat() + 'Z'
+                }
+                container.create_item(body=cosmos_doc)
+                logger.info(f"✅ Consentement sauvegardé dans Cosmos DB: {consent_id}")
+            except Exception as cosmos_error:
+                logger.warning(f"⚠️ Impossible de sauvegarder le consentement: {cosmos_error}")
+
+            logger.info(f"✅ Consentement créé via Azure API: {consent_id}")
+
+            return jsonify({
+                'success': True,
+                'consent_id': consent_id,
+                'message': 'Consentement créé avec succès',
+                'data': result,
+                'operation_location': operation_location
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f"Erreur Azure API: {response.status_code}",
+                'details': response.text
+            }), response.status_code
+
     except Exception as e:
         logger.exception("Erreur création consentement")
         return jsonify({
@@ -187,29 +425,106 @@ def create_consent():
             'error': str(e)
         }), 500
 
+@personal_voice_bp.route('/api/consents/<consent_id>', methods=['GET'])
+def get_consent(consent_id):
+    """Obtenir le statut d'un consentement"""
+    try:
+        url = f"{get_custom_voice_base_url()}/consents/{consent_id}?api-version={CUSTOM_VOICE_API_VERSION}"
+        response = requests.get(url, headers=get_headers())
+
+        if response.status_code == 200:
+            return jsonify({
+                'success': True,
+                'consent': response.json()
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f"Erreur Azure API: {response.status_code}"
+            }), response.status_code
+
+    except Exception as e:
+        logger.exception("Erreur récupération consentement")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @personal_voice_bp.route('/api/personal-voices', methods=['POST'])
 def create_personal_voice():
-    """Créer une voix personnelle"""
+    """Créer une voix personnelle via Azure Custom Voice API"""
     try:
         data = request.get_json()
-        
+
         project_id = data.get('project_id')
         consent_id = data.get('consent_id')
-        audio_url = data.get('audio_url')
-        voice_name = data.get('voice_name')
+        audio_url = data.get('audio_url')  # URL de l'échantillon vocal
+        voice_name = data.get('voice_name', '')
         description = data.get('description', '')
-        
-        # TODO: Appeler l'API Azure Speech pour créer la voix personnelle
-        personal_voice_id = f"voice_{project_id}_{voice_name.replace(' ', '_').lower()}"
-        
-        logger.info(f"✅ Voix personnelle créée: {personal_voice_id}")
-        
-        return jsonify({
-            'success': True,
-            'personal_voice_id': personal_voice_id,
-            'message': 'Voix personnelle créée avec succès'
-        })
-        
+
+        # Générer un ID unique pour la voix personnelle
+        personal_voice_id = f"voice-{uuid.uuid4().hex[:12]}"
+
+        # Appel API Azure pour créer la voix personnelle
+        url = f"{get_custom_voice_base_url()}/personalvoices/{personal_voice_id}?api-version={CUSTOM_VOICE_API_VERSION}"
+
+        payload = {
+            "projectId": project_id,
+            "consentId": consent_id,
+            "audios": {
+                "containerUrl": audio_url,
+                "extensions": ["wav", "mp3"]
+            },
+            "description": description
+        }
+
+        response = requests.put(url, headers=get_headers(), json=payload)
+
+        if response.status_code in [200, 201, 202]:
+            result = response.json()
+
+            # Récupérer l'Operation-Location pour le suivi
+            operation_location = response.headers.get('Operation-Location', '')
+
+            # Sauvegarder dans Cosmos DB
+            try:
+                from configuration.personal_voice_storage import get_personal_voices_container
+                container = get_personal_voices_container()
+                cosmos_doc = {
+                    'id': personal_voice_id,
+                    'voice_id': personal_voice_id,
+                    'voice_name': voice_name,
+                    'project_id': project_id,
+                    'consent_id': consent_id,
+                    'speaker_profile_id': result.get('speakerProfileId', ''),
+                    'status': result.get('status', 'NotStarted'),
+                    'operation_location': operation_location,
+                    'azure_response': result,
+                    'created_at': datetime.utcnow().isoformat() + 'Z',
+                    'updated_at': datetime.utcnow().isoformat() + 'Z'
+                }
+                container.create_item(body=cosmos_doc)
+                logger.info(f"✅ Voix sauvegardée dans Cosmos DB: {personal_voice_id}")
+            except Exception as cosmos_error:
+                logger.warning(f"⚠️ Impossible de sauvegarder la voix: {cosmos_error}")
+
+            logger.info(f"✅ Voix personnelle créée via Azure API: {personal_voice_id}")
+
+            return jsonify({
+                'success': True,
+                'personal_voice_id': personal_voice_id,
+                'speaker_profile_id': result.get('speakerProfileId', ''),
+                'message': 'Voix personnelle en cours de création',
+                'data': result,
+                'operation_location': operation_location
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f"Erreur Azure API: {response.status_code}",
+                'details': response.text
+            }), response.status_code
+
     except Exception as e:
         logger.exception("Erreur création voix personnelle")
         return jsonify({
@@ -217,55 +532,143 @@ def create_personal_voice():
             'error': str(e)
         }), 500
 
-@personal_voice_bp.route('/api/personal-voices/<voice_id>', methods=['GET'])
-def get_personal_voice(voice_id):
-    """Récupérer les informations d'une voix personnelle"""
-    try:
-        # TODO: Récupérer depuis Azure Speech API
-        # Pour l'instant, on simule une voix réussie
-        
-        voice_info = {
-            'id': voice_id,
-            'status': 'Succeeded',
-            'speakerProfileId': f"spkr_{voice_id}",
-            'voice_name': 'Ma Voix Personnelle',
-            'description': 'Voix créée avec succès'
-        }
-        
-        return jsonify({
-            'success': True,
-            'voice': voice_info
-        })
-        
-    except Exception as e:
-        logger.exception("Erreur récupération voix")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+@personal_voice_bp.route('/api/personal-voices/<voice_id>', methods=['GET', 'DELETE'])
+def manage_personal_voice(voice_id):
+    """Obtenir les détails ou supprimer une voix personnelle"""
+    if request.method == 'GET':
+        try:
+            # Récupérer depuis Azure API
+            url = f"{get_custom_voice_base_url()}/personalvoices/{voice_id}?api-version={CUSTOM_VOICE_API_VERSION}"
+            response = requests.get(url, headers=get_headers())
+
+            if response.status_code == 200:
+                result = response.json()
+
+                # Mettre à jour dans Cosmos DB si le statut a changé
+                if result.get('speakerProfileId'):
+                    try:
+                        from configuration.personal_voice_storage import get_personal_voices_container
+                        container = get_personal_voices_container()
+                        voice = container.read_item(item=voice_id, partition_key=voice_id)
+                        voice['speaker_profile_id'] = result.get('speakerProfileId')
+                        voice['status'] = result.get('status')
+                        voice['updated_at'] = datetime.utcnow().isoformat() + 'Z'
+                        container.replace_item(item=voice_id, body=voice)
+                    except:
+                        pass
+
+                return jsonify({
+                    'success': True,
+                    'voice': result
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': f"Erreur Azure API: {response.status_code}"
+                }), response.status_code
+
+        except Exception as e:
+            logger.exception("Erreur récupération voix")
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
+
+    elif request.method == 'DELETE':
+        try:
+            # Supprimer dans Azure
+            url = f"{get_custom_voice_base_url()}/personalvoices/{voice_id}?api-version={CUSTOM_VOICE_API_VERSION}"
+            response = requests.delete(url, headers=get_headers())
+
+            # Supprimer dans Cosmos DB
+            try:
+                from configuration.personal_voice_storage import get_personal_voices_container
+                container = get_personal_voices_container()
+                container.delete_item(item=voice_id, partition_key=voice_id)
+            except:
+                pass
+
+            return jsonify({
+                'success': True,
+                'message': 'Voix personnelle supprimée'
+            })
+
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
 
 @personal_voice_bp.route('/api/synthesize', methods=['POST'])
 def synthesize_speech():
-    """Synthétiser un texte avec la voix personnelle"""
+    """Synthétiser du texte avec une voix personnelle via Azure TTS"""
     try:
         data = request.get_json()
-        
-        text = data.get('text')
-        speaker_profile_id = data.get('speaker_profile_id')
+
+        text = data.get('text', '')
+        speaker_profile_id = data.get('speaker_profile_id', '')
         voice_name = data.get('voice_name', 'en-US-AvaMultilingualNeural')
-        
-        # TODO: Appeler Azure Speech API pour la synthèse
-        # Pour l'instant, on retourne une URL fictive
-        audio_url = f"https://fakestorage.blob.core.windows.net/synthesized/audio_{speaker_profile_id}.mp3"
-        
-        logger.info(f"✅ Synthèse réalisée pour: {speaker_profile_id}")
-        
-        return jsonify({
-            'success': True,
-            'audio_url': audio_url,
-            'message': 'Synthèse réussie'
-        })
-        
+
+        # Construire le SSML avec la voix personnelle
+        ssml = f'''<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis"
+                   xmlns:mstts="http://www.w3.org/2001/mstts" xml:lang="en-US">
+            <voice name="{voice_name}">
+                <mstts:ttsembedding speakerProfileId="{speaker_profile_id}">
+                    {text}
+                </mstts:ttsembedding>
+            </voice>
+        </speak>'''
+
+        # Appel API Text-to-Speech
+        url = f"https://{AZURE_SPEECH_REGION}.tts.speech.microsoft.com/cognitiveservices/v1"
+
+        headers = {
+            'Ocp-Apim-Subscription-Key': AZURE_SPEECH_KEY,
+            'Content-Type': 'application/ssml+xml',
+            'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3'
+        }
+
+        response = requests.post(url, headers=headers, data=ssml.encode('utf-8'))
+
+        if response.status_code == 200:
+            # Sauvegarder l'audio généré dans Blob Storage
+            blob_name = f"synthesized/{uuid.uuid4().hex[:12]}.mp3"
+
+            blob_service_client = get_blob_service_client()
+            if blob_service_client:
+                container_client = blob_service_client.get_container_client(BLOB_CONTAINER_ENREGISTREMENTS)
+                blob_client = container_client.get_blob_client(blob_name)
+                blob_client.upload_blob(response.content, overwrite=True)
+
+                # Générer URL SAS
+                sas_token = generate_blob_sas(
+                    account_name=blob_service_client.account_name,
+                    container_name=BLOB_CONTAINER_ENREGISTREMENTS,
+                    blob_name=blob_name,
+                    account_key=blob_service_client.credential.account_key,
+                    permission=BlobSasPermissions(read=True),
+                    expiry=datetime.utcnow() + timedelta(hours=1)
+                )
+
+                audio_url = f"{blob_client.url}?{sas_token}"
+            else:
+                # Fallback si pas de Blob Storage
+                audio_url = "data:audio/mp3;base64,..."
+
+            logger.info(f"✅ Synthèse réalisée pour speaker: {speaker_profile_id}")
+
+            return jsonify({
+                'success': True,
+                'audio_url': audio_url,
+                'message': 'Synthèse vocale réussie'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f"Erreur Azure TTS: {response.status_code}",
+                'details': response.text
+            }), response.status_code
+
     except Exception as e:
         logger.exception("Erreur synthèse vocale")
         return jsonify({

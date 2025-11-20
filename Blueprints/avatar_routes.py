@@ -80,21 +80,27 @@ def avatar_config_step2_create():
         import uuid
         from flask import redirect, url_for
         
-        # Récupérer les données du formulaire
+        # Validation des paramètres requis
         config_type = request.form.get('config_type', 'voice_live')
-        model_id = request.form.get('model_id', 'gpt-4o-realtime-preview')
-        model_name = request.form.get('model_name', 'GPT-4 Omni Realtime')
+        model_id = request.form.get('model_id')
+        model_name = request.form.get('model_name')
+        
+        if not model_id or not config_type:
+            return jsonify({"success": False, "error": "Paramètres manquants (model_id, config_type)"}), 400
+        
+        # Récupérer les autres paramètres
         model_description = request.form.get('model_description', '')
         model_family = request.form.get('model_family', 'F1_Realtime')
+        agent_name = request.form.get('agent_name') or f"Agent Avatar {model_name}"
         
         # Générer un agent_id unique
         agent_id = str(uuid.uuid4())
         
-        # Configuration avec flag voice_type='avatar'
+        # Configuration initiale avec flag voice_type='avatar'
         initial_config = {
             'id': agent_id,
             'agent_id': agent_id,
-            'agent_name': f"Agent Avatar {model_name}",
+            'agent_name': agent_name,
             'status': 'step1_completed',
             'created_at': datetime.utcnow().isoformat() + 'Z',
             'updated_at': datetime.utcnow().isoformat() + 'Z',
@@ -114,32 +120,26 @@ def avatar_config_step2_create():
         # Sauvegarder dans Cosmos DB
         from configuration.cosmos_config import save_avatar_config
         save_avatar_config(initial_config)
-        logger.info(f"✅ Configuration avatar créée et sauvegardée (agent_id: {agent_id})")
+        logger.info(f"✅ Avatar {agent_id} créé: {agent_name}")
         
-        # Rediriger vers step2 avec les paramètres du modèle
-        return redirect(url_for('avatar.avatar_config_step2', 
-                                agent_id=agent_id,
-                                model_id=model_id,
-                                model_name=model_name,
-                                model_description=model_description,
-                                model_family=model_family))
+        # Rediriger vers step2
+        return redirect(url_for('avatar.avatar_config_step2', agent_id=agent_id))
         
     except Exception as e:
-        logger.exception("Erreur dans avatar_config_step2_create")
+        logger.exception("Erreur création avatar")
         return jsonify({"success": False, "error": str(e)}), 500
 
 @avatar_bp.route('/step2/<agent_id>', methods=['GET', 'POST'])
 def avatar_config_step2(agent_id):
     """
-    Page de configuration Voice Live pour avatars
+    Step 2: Configuration de la voix pour avatars
     """
+    from configuration.cosmos_config import get_avatar_config, update_avatar_config
+    from flask import redirect, url_for
+    
     if request.method == 'POST':
-        # Traiter le formulaire de voix et rediriger vers step3
         try:
-            from configuration.cosmos_config import update_avatar_config, get_avatar_config
-            from flask import redirect, url_for
-            
-            # Récupérer toutes les données du formulaire de voix
+            # Données de configuration voix uniquement
             voice_data = {
                 'voice_type': request.form.get('voice_type', 'personal'),
                 'voice_name': request.form.get('voice_name'),
@@ -147,73 +147,37 @@ def avatar_config_step2(agent_id):
                 'speaker_profile_id': request.form.get('speaker_profile_id'),
                 'voice_locale': request.form.get('voice_locale'),
                 'voice_gender': request.form.get('voice_gender'),
-                'avatar_character': request.form.get('avatar_character'),
-                'avatar_style': request.form.get('avatar_style'),
-                'avatar_customized': request.form.get('avatar_customized') == 'true',
-                'avatar_background_color': request.form.get('avatar_background_color'),
-                'avatar_background_image': request.form.get('avatar_background_image'),
                 'current_step': 3,
                 'status': 'step2_completed'
             }
             
-            logger.info(f"🎭 Sauvegarde avatar character: {voice_data.get('avatar_character')}")
-            logger.info(f"🎭 Sauvegarde avatar style: {voice_data.get('avatar_style')}")
-
-            # Récupérer la config existante pour préserver avatar_character et avatar_style
+            # Nettoyer les valeurs vides
+            voice_data = {k: v for k, v in voice_data.items() if v not in [None, '']}
+            
+            # Préserver les champs avatar déjà configurés (via API AJAX)
             existing_config = get_avatar_config(agent_id)
-
-            # Nettoyer les valeurs None et vides, SAUF pour avatar_character et avatar_style
-            # qui peuvent avoir été mis à jour via l'API JavaScript
-            cleaned_voice_data = {}
-            for k, v in voice_data.items():
-                # Garder les champs même s'ils sont vides pour avatar_character et avatar_style
-                # car ils ont pu être mis à jour par l'API JavaScript avant la soumission du formulaire
-                if k in ['avatar_character', 'avatar_style']:
-                    # Si la valeur du formulaire est vide, essayer de récupérer depuis la config existante
-                    if not v and existing_config:
-                        existing_value = existing_config.get(k)
-                        if existing_value:
-                            cleaned_voice_data[k] = existing_value
-                            logger.info(f"🔄 Préservation de {k} depuis config existante: {existing_value}")
-                        elif v is not None:
-                            cleaned_voice_data[k] = v
-                    elif v:
-                        cleaned_voice_data[k] = v
-                # Pour les autres champs, nettoyer normalement
-                elif v is not None and v != '':
-                    cleaned_voice_data[k] = v
-
-            voice_data = cleaned_voice_data
+            if existing_config:
+                for field in ['avatar_character', 'avatar_style', 'avatar_background_image', 'avatar_background_color', 'avatar_customized']:
+                    if field in existing_config and existing_config[field]:
+                        voice_data[field] = existing_config[field]
             
             # Sauvegarder
             update_avatar_config(agent_id, voice_data)
-            logger.info(f"✅ Voix sauvegardée pour avatar {agent_id}, redirection vers step3")
+            logger.info(f"✅ Step 2 complété pour avatar {agent_id}")
             
-            # Rediriger vers step3 (Tools)
             return redirect(url_for('avatar.avatar_config_step3', agent_id=agent_id))
             
         except Exception as e:
-            logger.exception("Erreur dans avatar_config_step2 POST")
+            logger.exception("Erreur step2 POST")
             return jsonify({"success": False, "error": str(e)}), 500
     
+    # GET: afficher le formulaire
     try:
-        # Récupérer la config depuis Cosmos DB
-        from configuration.cosmos_config import get_avatar_config
         config = get_avatar_config(agent_id)
         
-        # Si pas trouvé, utiliser les paramètres de l'URL
         if not config:
-            config = {
-                'agent_id': agent_id,
-                'config_type': 'voice_live',
-                'model_id': request.args.get('model_id', 'gpt-4o-realtime-preview'),
-                'model_name': request.args.get('model_name', 'GPT-4 Omni Realtime'),
-                'model_description': request.args.get('model_description', ''),
-                'model_family': request.args.get('model_family', 'F1_Realtime'),
-                'voice_type': 'avatar'
-            }
-        
-        logger.info(f"📄 Rendu Step 2 pour avatar (agent: {agent_id})")
+            logger.error(f"Avatar {agent_id} non trouvé")
+            return jsonify({"success": False, "error": "Avatar non trouvé"}), 404
         
         return render_template(
             'avatar/avatar_step2.html',
@@ -227,7 +191,7 @@ def avatar_config_step2(agent_id):
         )
         
     except Exception as e:
-        logger.exception("Erreur dans avatar_config_step2")
+        logger.exception("Erreur step2 GET")
         return jsonify({"success": False, "error": str(e)}), 500
 
 @avatar_bp.route('/step3/<agent_id>', methods=['GET', 'POST'])
@@ -235,68 +199,47 @@ def avatar_config_step3(agent_id):
     """
     Step 3: Sélection des Tools
     """
-    if request.method == 'GET':
-        try:
-            # Récupérer la config depuis Cosmos DB
-            from configuration.cosmos_config import get_avatar_config
-            config = get_avatar_config(agent_id)
-            
-            if not config:
-                config = {
-                    'agent_id': agent_id,
-                    'voice_type': 'avatar'
-                }
-            
-            logger.info(f"📄 Rendu Step 3 (Tools) pour avatar (agent: {agent_id})")
-            
-            return render_template(
-                'avatar/avatar_step3.html',
-                agent_id=agent_id,
-                voice_type='avatar'
-            )
-            
-        except Exception as e:
-            logger.exception("Erreur dans avatar_config_step3 GET")
-            return jsonify({"success": False, "error": str(e)}), 500
+    from configuration.cosmos_config import get_avatar_config, update_avatar_config
+    from flask import redirect, url_for
     
-    else:  # POST venant de step3 (formulaire tools)
+    if request.method == 'POST':
         try:
-            from configuration.cosmos_config import update_avatar_config, get_avatar_config
-            
-            # Récupérer les tools sélectionnés
+            # Récupérer uniquement les tools sélectionnés
             selected_tools = request.form.getlist('tools')
-            logger.info(f"🔧 Tools sélectionnés dans le formulaire step3: {selected_tools}")
             
-            # Sauvegarder les données d'avatar ET les tools venant de step3
-            avatar_data = {
-                'avatar_character': request.form.get('avatar_character'),
-                'avatar_style': request.form.get('avatar_style'),
-                'avatar_type': request.form.get('avatar_type', 'expressive'),
-                'video_resolution': request.form.get('video_resolution', '1920x1080'),
-                'video_position': request.form.get('video_position', 'full'),
-                'background_color': request.form.get('background_color'),
-                'background_image': request.form.get('background_image'),
-                'selected_tools': selected_tools,  # Sauvegarder les tools!
+            tools_data = {
+                'selected_tools': selected_tools,
                 'current_step': 4,
                 'status': 'step3_completed'
             }
             
-            update_avatar_config(agent_id, avatar_data)
-            logger.info(f"✅ Avatar + {len(selected_tools)} tools sauvegardés pour agent {agent_id}")
+            update_avatar_config(agent_id, tools_data)
+            logger.info(f"✅ Step 3 complété pour avatar {agent_id}: {len(selected_tools)} tools")
             
-            # Afficher directement step4 (prompt)
-            config = get_avatar_config(agent_id)
-            
-            return render_template(
-                'avatar/avatar_step4.html',
-                agent_id=agent_id,
-                config=config,
-                voice_type='avatar'
-            )
+            # Rediriger vers step4 (prompt)
+            return redirect(url_for('avatar.avatar_config_step4', agent_id=agent_id))
             
         except Exception as e:
-            logger.exception("Erreur dans avatar_config_step3 POST")
+            logger.exception("Erreur step3 POST")
             return jsonify({"success": False, "error": str(e)}), 500
+    
+    # GET: afficher le formulaire
+    try:
+        config = get_avatar_config(agent_id)
+        
+        if not config:
+            logger.error(f"Avatar {agent_id} non trouvé")
+            return jsonify({"success": False, "error": "Avatar non trouvé"}), 404
+        
+        return render_template(
+            'avatar/avatar_step3.html',
+            agent_id=agent_id,
+            voice_type='avatar'
+        )
+        
+    except Exception as e:
+        logger.exception("Erreur step3 GET")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @avatar_bp.route('/step4/<agent_id>', methods=['GET', 'POST'])

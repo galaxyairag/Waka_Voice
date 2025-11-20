@@ -192,25 +192,6 @@
             font-size: 1.2rem;
         }
 
-        /* Bouton CTA */
-        .btn-create-agent {
-            background: var(--gradient-accent) !important;
-            color: var(--waka-white) !important;
-            font-weight: 700 !important;
-            border-radius: 25px !important;
-            padding: 12px 24px !important;
-            box-shadow: 0 4px 16px rgba(255, 111, 0, 0.3) !important;
-        }
-
-        .btn-create-agent::before {
-            display: none !important;
-        }
-
-        .btn-create-agent:hover {
-            transform: translateY(-3px) !important;
-            box-shadow: 0 8px 24px rgba(255, 111, 0, 0.5) !important;
-        }
-
         /* Navigation Dropdown */
         .nav-dropdown {
             position: relative;
@@ -576,7 +557,7 @@
                 </div>
                 
                 <div class="nav-dropdown">
-                    <a href="#" class="nav-link btn-create-agent" onclick="toggleDropdown(event)">
+                    <a href="#" class="nav-link" onclick="toggleDropdown(event)">
                         <i class="bi bi-plus-circle-fill"></i>
                         <span>Créer un Agent</span>
                         <i class="bi bi-chevron-down dropdown-icon"></i>

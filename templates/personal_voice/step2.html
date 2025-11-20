@@ -1539,7 +1539,7 @@ async function loadPersonalVoices() {
     voicesGrid.style.display = 'none';
     
     try {
-        const response = await fetch('/personal-voice/api/personal-voices');
+        const response = await fetch('/creer-une-voix/api/personal-voices');
         
         if (!response.ok) {
             const errorData = await response.json();

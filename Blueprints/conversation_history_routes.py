@@ -34,11 +34,16 @@ def list_conversations():
         cost_max = request.args.get('cost_max', type=float)
         model_filter = request.args.get('model')
         agent_name_filter = request.args.get('agent_name')
+        status_filter = request.args.get('status')  # Nouveau filtre de status
         
         container = get_call_history_container()
         
         # Construire la requête SQL avec filtres (schéma: started_at, duration_minutes)
-        query = "SELECT * FROM c WHERE c.status = 'completed'"
+        # Modifier pour permettre tous les status si un filtre est appliqué
+        if status_filter:
+            query = "SELECT * FROM c WHERE c.status = @status"
+        else:
+            query = "SELECT * FROM c WHERE 1=1"  # Afficher tous les status par défaut
         parameters = []
         
         # Filtre par date (utiliser started_at au lieu de start_time)
@@ -74,6 +79,10 @@ def list_conversations():
         if model_filter:
             query += " AND c.model = @model"
             parameters.append({"name": "@model", "value": model_filter})
+        
+        # Filtre par status
+        if status_filter:
+            parameters.append({"name": "@status", "value": status_filter})
         
         # Filtre par nom d'agent (supprimer car agent_name n'existe pas dans le schéma)
         # if agent_name_filter:
@@ -312,6 +321,70 @@ def get_available_models():
         
     except Exception as e:
         logger.exception("Erreur lors de la récupération des modèles")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@conversation_history_bp.route('/api/end/<call_id>', methods=['POST'])
+def end_conversation(call_id):
+    """API pour clôturer manuellement une conversation"""
+    try:
+        container = get_call_history_container()
+        
+        # Récupérer la conversation
+        query = "SELECT * FROM c WHERE c.id = @call_id OR c.call_id = @call_id"
+        parameters = [{"name": "@call_id", "value": call_id}]
+        
+        items = list(container.query_items(
+            query=query,
+            parameters=parameters,
+            enable_cross_partition_query=True
+        ))
+        
+        if not items:
+            return jsonify({
+                'success': False,
+                'error': 'Conversation non trouvée'
+            }), 404
+        
+        conversation = items[0]
+        
+        # Vérifier si déjà terminée
+        if conversation.get('status') == 'completed':
+            return jsonify({
+                'success': False,
+                'error': 'Cette conversation est déjà terminée'
+            }), 400
+        
+        # Mettre à jour le status à 'completed' et ajouter ended_at
+        from datetime import datetime, timezone
+        
+        conversation['status'] = 'completed'
+        conversation['ended_at'] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        
+        # Calculer la durée si pas déjà fait
+        if not conversation.get('duration_minutes'):
+            started_at = conversation.get('started_at')
+            if started_at:
+                start_time = datetime.fromisoformat(started_at.replace('Z', '+00:00'))
+                end_time = datetime.now(timezone.utc)
+                duration_seconds = (end_time - start_time).total_seconds()
+                conversation['duration_minutes'] = duration_seconds / 60.0
+        
+        # Sauvegarder
+        container.upsert_item(conversation)
+        
+        logger.info(f"✅ Conversation {call_id} clôturée manuellement")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Conversation clôturée avec succès',
+            'ended_at': conversation['ended_at']
+        })
+        
+    except Exception as e:
+        logger.exception(f"Erreur lors de la clôture de {call_id}")
         return jsonify({
             'success': False,
             'error': str(e)

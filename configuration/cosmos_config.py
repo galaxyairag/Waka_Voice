@@ -8,7 +8,7 @@ import logging
 from azure.cosmos import CosmosClient, PartitionKey, exceptions
 from dotenv import load_dotenv
 import requests
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 # Charger les variables d'environnement
 load_dotenv()
@@ -1060,10 +1060,10 @@ def end_conversation(call_id, tools_used=None, tokens=None):
         raise
 
 
-def get_daily_dashboard_metrics(current_time=None):
-    """Retourne les KPI agrégés pour la journée courante.
+def get_daily_dashboard_metrics(current_time=None, days=30):
+    """Retourne les KPI agrégés pour les derniers jours.
 
-    KPI calculés (uniquement sur les conversations complétées aujourd'hui, en UTC):
+    KPI calculés (sur les conversations complétées dans les derniers 'days' jours, en UTC):
       - total_conversations
       - active_conversations (status == 'in_progress')
       - avg_user_satisfaction (0-1)
@@ -1074,21 +1074,23 @@ def get_daily_dashboard_metrics(current_time=None):
       - cost_per_minute
       - avg_duration_minutes (durée moyenne d'une conversation)
       - avg_interactions_per_conversation (interaction_count moyen)
-      - sparkline_conversations (par tranche de 15 min)
-      - sparkline_costs (par tranche de 15 min)
-      - sparkline_minutes (par tranche de 15 min)
+      - sparkline_conversations (par tranche de 15 min pour aujourd'hui)
+      - sparkline_costs (par tranche de 15 min pour aujourd'hui)
+      - sparkline_minutes (par tranche de 15 min pour aujourd'hui)
     """
     container = get_call_history_container()
 
-    # Déterminer le début/fin de journée en UTC
+    # Déterminer la période en UTC
     now = current_time or datetime.now(timezone.utc)
-    day_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
-    day_end = day_start.replace(hour=23, minute=59, second=59, microsecond=999999)
+    day_end = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
+    day_end = day_end.replace(hour=23, minute=59, second=59, microsecond=999999)
+    day_start = day_end - timedelta(days=days-1)
+    day_start = day_start.replace(hour=0, minute=0, second=0, microsecond=0)
 
     day_start_iso = day_start.isoformat().replace("+00:00", "Z")
     day_end_iso = day_end.isoformat().replace("+00:00", "Z")
 
-    # Conversations complétées aujourd'hui
+    # Conversations complétées dans les derniers jours
     completed_query = (
         "SELECT c.id, c.started_at, c.ended_at, c.status, "
         "c.duration_minutes, c.interaction_count, c.cost, c.tokens, "

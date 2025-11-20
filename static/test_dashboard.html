@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dashboard - Diagnostic</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { color: #22c55e; font-weight: bold; }
+        .error { color: #ef4444; font-weight: bold; }
+        .warning { color: #f97316; font-weight: bold; }
+        pre { 
+            background: #1f2937; 
+            color: #f3f4f6; 
+            padding: 15px; 
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        h2 { color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
+        .kpi {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 8px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .kpi-label {
+            font-size: 12px;
+            opacity: 0.8;
+            display: block;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Dashboard Production - Diagnostic Complet</h1>
+    
+    <div class="section">
+        <h2>📊 Tests des Endpoints API</h2>
+        <div id="api-tests"></div>
+    </div>
+    
+    <div class="section">
+        <h2>📈 KPIs Calculés</h2>
+        <div id="kpis"></div>
+    </div>
+    
+    <div class="section">
+        <h2>🔢 Données Brutes</h2>
+        <div id="raw-data"></div>
+    </div>
+
+    <script>
+        const period = 30;
+        const price = 0.1;
+        
+        const endpoints = [
+            `/api/production/conversations-by-day?period=${period}`,
+            `/api/production/duration-stats-by-day?period=${period}`,
+            `/api/production/cost-distribution?period=${period}`,
+            `/api/production/financial-evolution?period=${period}&price=${price}`
+        ];
+        
+        async function testEndpoints() {
+            const resultsDiv = document.getElementById('api-tests');
+            const kpisDiv = document.getElementById('kpis');
+            const rawDataDiv = document.getElementById('raw-data');
+            
+            let html = '';
+            let allData = {};
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(endpoint);
+                    const data = await response.json();
+                    
+                    const status = response.ok ? 'success' : 'error';
+                    const statusText = response.ok ? '✅ OK' : '❌ ERREUR';
+                    
+                    html += `<div>
+                        <strong class="${status}">${statusText}</strong> 
+                        <code>${endpoint}</code><br>
+                        Status: ${response.status}<br>
+                        Données reçues: ${JSON.stringify(data).substring(0, 100)}...
+                    </div><hr>`;
+                    
+                    // Stocker les données
+                    const key = endpoint.split('?')[0].split('/').pop();
+                    allData[key] = data;
+                    
+                } catch (error) {
+                    html += `<div>
+                        <strong class="error">❌ ERREUR</strong> 
+                        <code>${endpoint}</code><br>
+                        Erreur: ${error.message}
+                    </div><hr>`;
+                }
+            }
+            
+            resultsDiv.innerHTML = html;
+            
+            // Calculer les KPIs
+            calculateKPIs(allData, kpisDiv);
+            
+            // Afficher les données brutes
+            rawDataDiv.innerHTML = `<pre>${JSON.stringify(allData, null, 2)}</pre>`;
+        }
+        
+        function calculateKPIs(data, div) {
+            let html = '';
+            
+            // Total conversations
+            if (data['conversations-by-day'] && data['conversations-by-day'].data) {
+                const arr = data['conversations-by-day'].data;
+                const total = arr.reduce((a, b) => a + b, 0);
+                html += `<div class="kpi">
+                    <span class="kpi-label">Total Conversations</span>
+                    ${total}
+                </div>`;
+            }
+            
+            // Total durée
+            if (data['duration-stats-by-day'] && data['duration-stats-by-day'].avg) {
+                const arr = data['duration-stats-by-day'].avg;
+                const total = arr.reduce((a, b) => a + b, 0);
+                html += `<div class="kpi">
+                    <span class="kpi-label">Durée Totale (min)</span>
+                    ${total.toFixed(1)}
+                </div>`;
+            }
+            
+            // Total coût
+            if (data['cost-distribution'] && data['cost-distribution'].data) {
+                const arr = data['cost-distribution'].data;
+                const total = arr.reduce((a, b) => a + b, 0);
+                html += `<div class="kpi">
+                    <span class="kpi-label">Coût Total</span>
+                    $${total.toFixed(4)}
+                </div>`;
+            }
+            
+            // Revenue et marge
+            if (data['financial-evolution'] && data['financial-evolution'].revenues) {
+                const revArr = data['financial-evolution'].revenues;
+                const costArr = data['financial-evolution'].costs;
+                const totalRevenue = revArr.reduce((a, b) => a + b, 0);
+                const totalCost = costArr.reduce((a, b) => a + b, 0);
+                const margin = totalRevenue - totalCost;
+                const marginPct = totalRevenue > 0 ? (margin / totalRevenue * 100) : 0;
+                
+                html += `<div class="kpi">
+                    <span class="kpi-label">CA Total</span>
+                    $${totalRevenue.toFixed(2)}
+                </div>`;
+                
+                html += `<div class="kpi">
+                    <span class="kpi-label">Marge</span>
+                    $${margin.toFixed(2)}
+                </div>`;
+                
+                html += `<div class="kpi">
+                    <span class="kpi-label">Marge %</span>
+                    ${marginPct.toFixed(1)}%
+                </div>`;
+            }
+            
+            div.innerHTML = html || '<p class="warning">⚠️ Aucun KPI calculé</p>';
+        }
+        
+        // Lancer les tests au chargement
+        testEndpoints();
+    </script>
+</body>
+</html>

@@ -1217,7 +1217,8 @@
                             Sélectionnez le type de voix pour votre avatar.<br><br>
                             <strong>Personal Voice :</strong> Voix personnalisée créée dans Speech Studio<br>
                             <strong>Azure Standard :</strong> 600+ voix pré-configurées<br>
-                            <strong>OpenAI :</strong> 6 voix optimisées pour la conversation<br><br>
+                            <strong>OpenAI :</strong> 6 voix optimisées pour la conversation<br>
+                            (⚠️ Uniquement disponible avec le modèle F1 Realtime)<br><br>
                         </div>
                     </div>
                 </label>
@@ -1239,6 +1240,15 @@
                             <span class="gender-button-text">OpenAI Voices</span>
                             <span class="gender-button-count">6 voix</span>
                         </div>
+                    </div>
+                </div>
+                
+                <!-- Avertissement pour modèles non-F1 -->
+                <div id="openaiRestrictionWarning" class="restriction-warning" style="display: none; margin-top: 12px;">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <div>
+                        <strong>Restriction OpenAI:</strong> Les voix OpenAI nécessitent le modèle <strong>F1 Realtime</strong>. 
+                        Votre modèle actuel: <strong>{{ model_family }}</strong>.
                     </div>
                 </div>
                 
@@ -1763,12 +1773,48 @@
 
 let azureVoicesData = null;
 let selectedVoiceType = 'personal';
+let modelFamily = '{{ model_family }}'; // Récupérer la famille du modèle depuis le template
 
 document.addEventListener('DOMContentLoaded', function() {
     // Initialiser avec Personal Voice par défaut
     initVoiceTypeSelection();
     loadPersonalVoices();
+    
+    // Restreindre les voix OpenAI si le modèle n'est pas F1_Realtime
+    restrictOpenAIVoicesIfNeeded();
 });
+
+/**
+ * Restreindre les voix OpenAI pour les modèles non-F1
+ */
+function restrictOpenAIVoicesIfNeeded() {
+    const openaiButton = document.querySelector('[data-voice-type="openai"]');
+    
+    if (!openaiButton) return;
+    
+    // Vérifier si le modèle est F1_Realtime
+    const isF1Realtime = modelFamily === 'F1_Realtime' || modelFamily === 'F1';
+    
+    if (!isF1Realtime) {
+        // Désactiver le bouton OpenAI
+        openaiButton.style.opacity = '0.5';
+        openaiButton.style.cursor = 'not-allowed';
+        openaiButton.style.pointerEvents = 'none';
+        
+        // Ajouter un badge de restriction
+        const countSpan = openaiButton.querySelector('.gender-button-count');
+        if (countSpan) {
+            countSpan.innerHTML = '<span style="color: #dc3545; font-weight: bold;">⚠️ F1 Realtime uniquement</span>';
+        }
+        
+        // Ajouter un tooltip d'information
+        openaiButton.title = 'Les voix OpenAI ne sont disponibles que pour le modèle F1 Realtime';
+        
+        console.log(`⚠️ Voix OpenAI désactivées pour le modèle ${modelFamily} (F1_Realtime requis)`);
+    } else {
+        console.log('✅ Voix OpenAI disponibles pour le modèle F1_Realtime');
+    }
+}
 
 /**
  * Initialisation de la sélection du type de voix
@@ -1779,6 +1825,16 @@ function initVoiceTypeSelection() {
     voiceTypeButtons.forEach(button => {
         button.addEventListener('click', function() {
             const voiceType = this.dataset.voiceType;
+            
+            // Vérifier si OpenAI est autorisé
+            if (voiceType === 'openai') {
+                const isF1Realtime = modelFamily === 'F1_Realtime' || modelFamily === 'F1';
+                if (!isF1Realtime) {
+                    alert('❌ Les voix OpenAI ne sont disponibles que pour le modèle F1 Realtime.\n\nModèle actuel: ' + modelFamily + '\n\nVeuillez choisir Personal Voice ou Azure Voices.');
+                    return;
+                }
+            }
+            
             selectVoiceType(voiceType);
         });
     });

@@ -204,6 +204,15 @@
     transform: scale(1.1);
 }
 
+.btn-end {
+    background: #9C27B0;
+}
+
+.btn-end:hover {
+    background: #7B1FA2;
+    transform: scale(1.1);
+}
+
 .conv-messages-preview {
     margin-top: 20px;
     padding-top: 20px;
@@ -498,6 +507,33 @@
     opacity: 0.3;
 }
 
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.status-completed {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status-in_progress {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.status-failed {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.status-cancelled {
+    background: #f5f5f5;
+    color: #616161;
+}
+
 .error-message {
     background: #ffebee;
     color: var(--waka-danger);
@@ -570,6 +606,18 @@
                     <option value="gpt-realtime">GPT Realtime</option>
                     <option value="gpt-4o">GPT-4o</option>
                     <option value="gpt-4o-mini">GPT-4o Mini</option>
+                </select>
+            </div>
+            
+            <!-- Filtre status -->
+            <div class="col-md-4 filter-section">
+                <label class="filter-label">Status</label>
+                <select id="statusFilter" class="filter-input">
+                    <option value="">Tous les status</option>
+                    <option value="completed">Terminé</option>
+                    <option value="in_progress">En cours</option>
+                    <option value="failed">Échoué</option>
+                    <option value="cancelled">Annulé</option>
                 </select>
             </div>
         </div>
@@ -755,6 +803,7 @@ async function loadConversations(page = 1) {
     const costMin = document.getElementById('costMin').value;
     const costMax = document.getElementById('costMax').value;
     const modelFilter = document.getElementById('modelFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
     
     if (dateFrom) params.append('date_from', dateFrom);
     if (dateTo) params.append('date_to', dateTo);
@@ -763,6 +812,7 @@ async function loadConversations(page = 1) {
     if (costMin) params.append('cost_min', costMin);
     if (costMax) params.append('cost_max', costMax);
     if (modelFilter) params.append('model', modelFilter);
+    if (statusFilter) params.append('status', statusFilter);
     
     try {
         const response = await fetch(`/conversations/api/list?${params}`);
@@ -866,6 +916,11 @@ function renderConversationCard(conv) {
                     <button class="action-btn btn-delete" onclick="openDeleteModal('${conv.call_id}')" title="Supprimer">
                         <i class="bi bi-trash"></i>
                     </button>
+                    ${conv.status !== 'completed' ? `
+                    <button class="action-btn btn-end" onclick="endConversation('${conv.call_id}')" title="Clôturer">
+                        <i class="bi bi-stop-circle"></i>
+                    </button>
+                    ` : ''}
                     <button class="action-btn btn-cost" onclick="openCostModal('${conv.call_id}')" title="Voir les coûts">
                         <i class="bi bi-currency-dollar"></i>
                     </button>
@@ -927,6 +982,7 @@ function resetFilters() {
     document.getElementById('costMin').value = '';
     document.getElementById('costMax').value = '';
     document.getElementById('modelFilter').value = '';
+    document.getElementById('statusFilter').value = '';
     loadConversations(1);
 }
 
@@ -983,6 +1039,30 @@ async function confirmDelete() {
     } catch (error) {
         console.error('Erreur:', error);
         alert('Erreur lors de la suppression');
+    }
+}
+
+async function endConversation(callId) {
+    if (!confirm('Voulez-vous clôturer cette conversation manuellement ?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/conversations/api/end/${callId}`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Conversation clôturée avec succès !');
+            loadConversations(currentPage);
+        } else {
+            alert('Erreur: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la clôture');
     }
 }
 

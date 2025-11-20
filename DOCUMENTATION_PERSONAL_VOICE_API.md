@@ -138,11 +138,20 @@ Content-Type: application/json
 {
   "project_id": "pv-abc123def456",
   "consent_id": "consent-abc123def456",
-  "audio_url": "https://storage.blob.core.windows.net/...",
+  "container_url": "https://storage.blob.core.windows.net/voice-samples?sp=rl&sig=...",
+  "audio_prefix": "jessica/",
+  "audio_extensions": [".wav", ".mp3"],
   "voice_name": "Ma Voix Personnelle",
   "description": "Voix personnalisée pour l'agent"
 }
 ```
+
+**Paramètres:**
+- `container_url` **(requis)** : URL du conteneur Azure Blob Storage avec token SAS (permissions read + list)
+- `audio_prefix` *(optionnel)* : Préfixe pour filtrer les fichiers dans le conteneur (ex: "jessica/")
+- `audio_extensions` *(optionnel)* : Extensions des fichiers audio (défaut: [".wav"])
+- `voice_name` **(requis)** : Nom de la voix
+- `description` *(optionnel)* : Description de la voix
 
 **Réponse:**
 ```json

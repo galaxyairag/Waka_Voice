@@ -780,7 +780,7 @@
                         <button class="btn-secondary-custom" onclick="resetWizard()">
                             <i class="bi bi-arrow-repeat"></i> Créer une nouvelle voix
                         </button>
-                        <button class="btn-primary-custom" onclick="window.location.href='/personal-voice/create-agent'">
+                        <button class="btn-primary-custom" onclick="window.location.href='/creer-une-voix/create-agent'">
                             <i class="bi bi-robot"></i> Créer un agent avec cette voix
                         </button>
                     </div>
@@ -883,7 +883,7 @@
         }
 
         try {
-            const response = await fetch('/personal-voice/api/projects', {
+            const response = await fetch('/creer-une-voix/api/projects', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -920,7 +920,7 @@
 
         const checkStatus = async () => {
             try {
-                const response = await fetch(`/personal-voice/api/projects/${projectId}`);
+                const response = await fetch(`/creer-une-voix/api/projects/${projectId}`);
                 const data = await response.json();
 
                 if (data.success && data.project) {
@@ -960,7 +960,7 @@
 
     async function loadProjects() {
         try {
-            const response = await fetch('/personal-voice/api/projects');
+            const response = await fetch('/creer-une-voix/api/projects');
             const data = await response.json();
 
             const container = document.getElementById('projectsList');
@@ -1028,7 +1028,7 @@
         const locale = document.getElementById('consentLocale').value;
         
         try {
-            const response = await fetch(`/personal-voice/api/consent-text/${locale}`);
+            const response = await fetch(`/creer-une-voix/api/consent-text/${locale}`);
             const data = await response.json();
             
             if (data.success) {
@@ -1129,7 +1129,7 @@
             formData.append('type', 'consent');
             formData.append('project_id', selectedProjectId);
 
-            const uploadResponse = await fetch('/personal-voice/api/upload-audio', {
+            const uploadResponse = await fetch('/creer-une-voix/api/upload-audio', {
                 method: 'POST',
                 body: formData
             });
@@ -1142,7 +1142,7 @@
             }
 
             // 2. Créer le consentement
-            const consentResponse = await fetch('/personal-voice/api/consents', {
+            const consentResponse = await fetch('/creer-une-voix/api/consents', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1249,7 +1249,7 @@
             formData.append('type', 'voice');
             formData.append('project_id', selectedProjectId);
 
-            const uploadResponse = await fetch('/personal-voice/api/upload-audio', {
+            const uploadResponse = await fetch('/creer-une-voix/api/upload-audio', {
                 method: 'POST',
                 body: formData
             });
@@ -1264,7 +1264,7 @@
             }
 
             // 2. Créer la voix personnelle
-            const voiceResponse = await fetch('/personal-voice/api/personal-voices', {
+            const voiceResponse = await fetch('/creer-une-voix/api/personal-voices', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1303,7 +1303,7 @@
 
         const checkStatus = async () => {
             try {
-                const response = await fetch(`/personal-voice/api/personal-voices/${voiceId}`);
+                const response = await fetch(`/creer-une-voix/api/personal-voices/${voiceId}`);
                 const data = await response.json();
 
                 if (data.success) {
@@ -1360,7 +1360,7 @@
         }
 
         try {
-            const response = await fetch('/personal-voice/api/synthesize', {
+            const response = await fetch('/creer-une-voix/api/synthesize', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

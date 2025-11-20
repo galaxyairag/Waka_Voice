@@ -27,7 +27,7 @@ app = Flask(__name__)
 # Configuration de base
 app.config['DEBUG'] = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
 app.config['HOST'] = os.getenv('FLASK_HOST', '0.0.0.0')
-app.config['PORT'] = int(os.getenv('FLASK_PORT', 5000))
+app.config['PORT'] = int(os.getenv('FLASK_PORT', 8080))
 
 # Configuration de la session (CRITIQUE pour le flux multi-étapes)
 # On utilise la session intégrée de Flask (cookie signé), sans Flask-Session

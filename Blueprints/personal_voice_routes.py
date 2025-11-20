@@ -28,6 +28,11 @@ def get_custom_voice_base_url():
     return f"https://{AZURE_SPEECH_REGION}.api.cognitive.microsoft.com/customvoice"
 
 def get_headers():
+    """Retourne les headers pour les appels API Azure Custom Voice"""
+    if not AZURE_SPEECH_KEY:
+        logger.error("❌ AZURE_SPEECH_KEY non configurée !")
+        raise ValueError("AZURE_SPEECH_KEY non configurée")
+    
     return {
         'Ocp-Apim-Subscription-Key': AZURE_SPEECH_KEY,
         'Content-Type': 'application/json'
@@ -343,6 +348,13 @@ def create_consent():
     """Créer un consentement via Azure Custom Voice API"""
     try:
         data = request.get_json()
+        
+        if not data:
+            logger.error("❌ Aucune donnée JSON reçue")
+            return jsonify({
+                'success': False,
+                'error': 'Aucune donnée JSON reçue'
+            }), 400
 
         project_id = data.get('project_id')
         voice_talent_name = data.get('voice_talent_name')
@@ -350,9 +362,25 @@ def create_consent():
         audio_url = data.get('audio_url')
         locale = data.get('locale', 'fr-FR')
         description = data.get('description', '')
+        
+        # Validation des champs requis
+        if not all([project_id, voice_talent_name, company_name, audio_url]):
+            logger.error(f"❌ Champs manquants - project_id: {project_id}, voice_talent_name: {voice_talent_name}, company_name: {company_name}, audio_url: {audio_url}")
+            return jsonify({
+                'success': False,
+                'error': 'Tous les champs sont requis: project_id, voice_talent_name, company_name, audio_url',
+                'received': {
+                    'project_id': project_id,
+                    'voice_talent_name': voice_talent_name,
+                    'company_name': company_name,
+                    'audio_url': audio_url
+                }
+            }), 400
 
         # Générer un ID unique pour le consentement
         consent_id = f"consent-{uuid.uuid4().hex[:12]}"
+        
+        logger.info(f"📝 Création consentement - ID: {consent_id}, Talent: {voice_talent_name}, Projet: {project_id}")
 
         # Appel API Azure pour créer le consentement
         url = f"{get_custom_voice_base_url()}/consents/{consent_id}?api-version={CUSTOM_VOICE_API_VERSION}"
@@ -369,6 +397,8 @@ def create_consent():
         }
 
         response = requests.put(url, headers=get_headers(), json=payload)
+        
+        logger.info(f"📡 Appel Azure API - Status: {response.status_code}, URL: {url}")
 
         if response.status_code in [200, 201, 202]:
             result = response.json()
@@ -409,10 +439,18 @@ def create_consent():
                 'operation_location': operation_location
             })
         else:
+            # Log détaillé de l'erreur Azure
+            error_text = response.text
+            try:
+                error_json = response.json()
+                logger.error(f"❌ Erreur Azure API {response.status_code}: {error_json}")
+            except:
+                logger.error(f"❌ Erreur Azure API {response.status_code}: {error_text}")
+            
             return jsonify({
                 'success': False,
                 'error': f"Erreur Azure API: {response.status_code}",
-                'details': response.text
+                'details': error_text
             }), response.status_code
 
     except Exception as e:

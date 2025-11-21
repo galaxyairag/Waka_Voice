@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Waka Afrique{% endblock %} - Chaque interaction compte</title>
+
+    {% block head %}{% endblock %}
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Palette Waka - Mauve/Violet professionnel */
+            --waka-primary: #4A148C;
+            --waka-primary-light: #7B1FA2;
+            --waka-primary-pale: #E1BEE7;
+            --waka-accent-yellow: #FFC107;
+            --waka-accent-orange: #FF6F00;
+            --waka-white: #FFFFFF;
+            --waka-off-white: #F8F9FA;
+            --waka-bg-light: #F3E5F5;
+            --waka-bg-dark: #1A0033;
+            --waka-text: #2C003E;
+            --waka-text-light: #4A148C;
+            --waka-text-muted: #6A1B9A;
+            --waka-border: #CE93D8;
+            --waka-shadow: rgba(74, 20, 140, 0.15);
+            
+            /* Gradients élégants */
+            --gradient-primary: linear-gradient(135deg, #4A148C 0%, #7B1FA2 100%);
+            --gradient-accent: linear-gradient(135deg, #FFC107 0%, #FF6F00 100%);
+            --gradient-bg: linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 50%, #F3E5F5 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gradient-bg);
+            color: var(--waka-text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Effet de fond animé */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255, 193, 7, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 111, 0, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(123, 31, 162, 0.05) 0%, transparent 50%);
+            animation: backgroundShift 30s ease-in-out infinite alternate;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        @keyframes backgroundShift {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(2%, 2%) rotate(1deg); }
+        }
+
+        /* ============================================
+           CHATBOT WIDGET FLOATING
+           ============================================ */
+        .chatbot-widget {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 9999;
+        }
+
+        .chatbot-toggle {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            box-shadow: 0 8px 24px var(--waka-shadow),
+                        0 0 0 0 rgba(123, 31, 162, 0.6);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            transition: all 0.3s ease;
+            animation: chatbotPulse 2s infinite;
+        }
+
+        .chatbot-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 32px var(--waka-shadow),
+                        0 0 0 8px rgba(123, 31, 162, 0.2);
+        }
+
+        @keyframes chatbotPulse {
+            0%, 100% {
+                box-shadow: 0 8px 24px var(--waka-shadow),
+                            0 0 0 0 rgba(123, 31, 162, 0.6);
+            }
+            50% {
+                box-shadow: 0 8px 24px var(--waka-shadow),
+                            0 0 0 12px rgba(123, 31, 162, 0);
+            }
+        }
+
+        .chatbot-modal {
+            position: fixed;
+            bottom: 120px;
+            right: 30px;
+            width: 380px;
+            max-width: calc(100vw - 60px);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(74, 20, 140, 0.3),
+                        0 0 0 1px rgba(123, 31, 162, 0.1);
+            padding: 32px;
+            display: none;
+            animation: slideUp 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 9998;
+        }
+
+        .chatbot-modal.show {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .chatbot-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--waka-border);
+        }
+
+        .chatbot-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+            box-shadow: 0 4px 12px var(--waka-shadow);
+        }
+
+        .chatbot-title {
+            flex: 1;
+        }
+
+        .chatbot-title h3 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .chatbot-title p {
+            margin: 4px 0 0 0;
+            font-size: 0.85rem;
+            color: var(--waka-text-muted);
+            font-weight: 500;
+        }
+
+        .chatbot-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--waka-text-muted);
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .chatbot-close:hover {
+            background: var(--waka-bg-light);
+            color: var(--waka-primary);
+        }
+
+        .chatbot-body {
+            text-align: center;
+        }
+
+        .chatbot-dev-icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            animation: devIconFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes devIconFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .chatbot-message {
+            background: var(--gradient-bg);
+            padding: 20px;
+            border-radius: 16px;
+            border: 2px solid var(--waka-border);
+            margin-bottom: 16px;
+        }
+
+        .chatbot-message h4 {
+            margin: 0 0 8px 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--waka-primary);
+        }
+
+        .chatbot-message p {
+            margin: 0;
+            font-size: 0.95rem;
+            color: var(--waka-text);
+            line-height: 1.6;
+        }
+
+        .chatbot-team-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--gradient-primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px var(--waka-shadow);
+        }
+
+        .chatbot-team-badge i {
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .chatbot-toggle {
+                width: 60px;
+                height: 60px;
+                font-size: 1.6rem;
+                bottom: 20px;
+                right: 20px;
+            }
+
+            .chatbot-modal {
+                bottom: 100px;
+                right: 20px;
+                width: calc(100vw - 40px);
+                padding: 24px;
+            }
+        }
+
+        /* ============================================
+           HEADER
+           ============================================ */
+        .main-header {
+            background: var(--waka-white);
+            padding: 20px 0;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 2px solid var(--waka-primary-pale);
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-image {
+            width: 55px;
+            height: 55px;
+            border-radius: 12px;
+            object-fit: contain;
+            border: 2px solid var(--waka-primary-light);
+            box-shadow: 0 4px 12px rgba(74, 20, 140, 0.2);
+            transition: transform 0.3s ease;
+            background: white;
+            padding: 4px;
+        }
+
+        .logo-image:hover {
+            transform: scale(1.05) rotate(-2deg);
+        }
+
+        .logo-text h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.6rem;
+            color: var(--waka-primary);
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: 0.5px;
+        }
+
+        .logo-text p {
+            color: var(--waka-text-muted);
+            font-size: 0.8rem;
+            margin: 2px 0 0 0;
+            font-weight: 600;
+        }
+
+        /* Navigation */
+        .main-nav {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            color: var(--waka-primary);
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: transparent;
+            border: none;
+            position: relative;
+            white-space: nowrap;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+            border-radius: 3px 3px 0 0;
+        }
+
+        .nav-link:hover::before {
+            width: 100%;
+        }
+
+        .nav-link:hover {
+            color: var(--waka-primary-light);
+            transform: translateY(-2px);
+        }
+
+        .nav-link i {
+            font-size: 1.2rem;
+        }
+
+        /* Navigation Dropdown */
+        .nav-dropdown {
+            position: relative;
+        }
+
+        .dropdown-toggle {
+            cursor: pointer;
+        }
+
+        .dropdown-icon {
+            font-size: 0.7rem;
+            margin-left: 4px;
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+
+        .nav-dropdown.show .dropdown-icon {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 10px);
+            left: 0;
+            background: var(--waka-white);
+            border: 2px solid var(--waka-primary-pale);
+            border-radius: 16px;
+            box-shadow: 0 12px 40px rgba(74, 20, 140, 0.2);
+            padding: 8px;
+            min-width: 280px;
+            z-index: 9999;
+            display: none;
+        }
+
+        .nav-dropdown.show .dropdown-menu {
+            display: block;
+            animation: dropdownFade 0.3s ease;
+        }
+
+        @keyframes dropdownFade {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            color: var(--waka-text);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-radius: 12px;
+            margin: 4px 0;
+        }
+
+        .dropdown-item:hover {
+            background: var(--waka-bg-light);
+            transform: translateX(4px);
+        }
+
+        .dropdown-item i {
+            font-size: 1.5rem;
+            color: var(--waka-primary);
+            flex-shrink: 0;
+        }
+
+        .dropdown-item div {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dropdown-item strong {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--waka-text);
+        }
+
+        .dropdown-item small {
+            font-size: 0.75rem;
+            color: var(--waka-text-muted);
+            margin-top: 2px;
+        }
+
+        /* Menu mobile */
+        .menu-toggle {
+            display: none;
+            background: var(--waka-off-white);
+            border: 1px solid var(--waka-border);
+            color: var(--waka-primary);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.4rem;
+        }
+
+        /* ============================================
+           MAIN CONTENT
+           ============================================ */
+        .main-content {
+            flex: 1;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 40px 32px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ============================================
+           FOOTER - COMPACT
+           ============================================ */
+        .main-footer {
+            background: var(--gradient-primary);
+            color: var(--waka-white);
+            padding: 24px 32px 16px;
+            margin-top: auto;
+            box-shadow: 0 -4px 24px var(--waka-shadow);
+        }
+
+        .footer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            align-items: center;
+            text-align: center;
+        }
+
+        .footer-logo-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-logo-img {
+            width: 35px;
+            height: 35px;
+            border-radius: 6px;
+            background: white;
+            padding: 3px;
+        }
+
+        .footer-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .footer-tagline {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--waka-accent-yellow);
+            margin: 0;
+        }
+
+        .footer-description {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.9);
+            max-width: 650px;
+            line-height: 1.5;
+            font-weight: 400;
+            margin: 0;
+        }
+
+        .footer-highlight {
+            color: var(--waka-accent-yellow);
+            font-weight: 700;
+        }
+
+        /* Badges technologiques */
+        .footer-tech {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tech-badge {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .tech-badge:hover {
+            background: var(--gradient-accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+        }
+
+        .tech-badge i {
+            font-size: 0.9rem;
+        }
+
+        .footer-divider {
+            width: 100%;
+            max-width: 650px;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 8px 0;
+        }
+
+        /* Microsoft Partner Badge */
+        .microsoft-partner {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        .partner-badge {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .partner-badge i {
+            font-size: 1rem;
+            color: var(--waka-accent-yellow);
+        }
+
+        .partner-id {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
+        }
+
+        .footer-copyright {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0;
+        }
+
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+
+            .main-nav {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--waka-primary);
+                flex-direction: column;
+                padding: 20px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            }
+
+            .main-nav.active {
+                display: flex;
+            }
+
+            .nav-link {
+                width: 100%;
+                justify-content: center;
+                color: white;
+            }
+
+            .logo-text h1 {
+                font-size: 1.3rem;
+            }
+
+            .logo-text p {
+                font-size: 0.7rem;
+            }
+
+            .logo-image {
+                width: 45px;
+                height: 45px;
+            }
+
+            .footer-tech {
+                gap: 8px;
+            }
+
+            .tech-badge {
+                font-size: 0.75rem;
+                padding: 6px 12px;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="main-header">
+        <div class="header-container">
+            <div class="logo-section">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" 
+                     alt="Waka Logo" 
+                     class="logo-image"
+                     onerror="this.style.display='none'">
+                <div class="logo-text">
+                    <h1>Waka Afrique</h1>
+                    <p>Chaque interaction compte</p>
+                </div>
+            </div>
+
+            <button class="menu-toggle" onclick="toggleMenu()">
+                <i class="bi bi-list"></i>
+            </button>
+
+            <nav class="main-nav" id="mainNav">
+                <a href="/home" class="nav-link">
+                    <i class="bi bi-house-fill"></i>
+                    <span>Accueil</span>
+                </a>
+                
+                <div class="nav-dropdown">
+                    <a href="#" class="nav-link" onclick="toggleDropdown(event)">
+                        <i class="bi bi-bar-chart-fill"></i>
+                        <span>Dashboards</span>
+                        <i class="bi bi-chevron-down dropdown-icon"></i>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a href="/quality" class="dropdown-item">
+                            <i class="bi bi-award-fill"></i>
+                            <div>
+                                <strong>Dashboard Qualité</strong>
+                                <small>Analyse de la qualité des conversations</small>
+                            </div>
+                        </a>
+                        <a href="/production" class="dropdown-item">
+                            <i class="bi bi-graph-up-arrow"></i>
+                            <div>
+                                <strong>Dashboard Production</strong>
+                                <small>Statistiques et métriques de production</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="nav-dropdown">
+                    <a href="#" class="nav-link" onclick="toggleDropdown(event)">
+                        <i class="bi bi-plus-circle-fill"></i>
+                        <span>Créer un Agent</span>
+                        <i class="bi bi-chevron-down dropdown-icon"></i>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a href="/agents/config/step1" class="dropdown-item">
+                            <i class="bi bi-cloud-fill"></i>
+                            <div>
+                                <strong>Voix Azure</strong>
+                                <small>Voix standard Azure AI</small>
+                            </div>
+                        </a>
+                        <a href="/creer-une-voix/create-agent" class="dropdown-item">
+                            <i class="bi bi-mic-fill"></i>
+                            <div>
+                                <strong>Voix Waka</strong>
+                                <small>Votre voix personnalisée</small>
+                            </div>
+                        </a>
+                        <a href="/avatar/step1" class="dropdown-item">
+                            <i class="bi bi-person-video3"></i>
+                            <div>
+                                <strong>Avatar Azure</strong>
+                                <small>Agent avec avatar vidéo</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <a href="/creer-une-voix" class="nav-link">
+                    <i class="bi bi-person-plus-fill"></i>
+                    <span>Créer une Voix personnalisée</span>
+                </a>
+                
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bi bi-robot"></i>
+                        <span>Mes Agents</span>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a href="/agents" class="dropdown-item">
+                            <i class="bi bi-headset"></i>
+                            <div>
+                                <strong>Voice</strong>
+                                <small>Agents vocaux standard</small>
+                            </div>
+                        </a>
+                        <a href="/avatar/gallery" class="dropdown-item">
+                            <i class="bi bi-person-video3"></i>
+                            <div>
+                                <strong>Mes agents Avatar</strong>
+                                <small>Agents avec avatar vidéo</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                
+                <a href="/conversations/history" class="nav-link">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Historiques</span>
+                </a>
+                
+                <a href="#" class="nav-link" id="avatarStudioBtn">
+                    <i class="bi bi-camera-video-fill"></i>
+                    <span>Avatar Studio</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- CHATBOT WIDGET -->
+    <div class="chatbot-widget">
+        <button class="chatbot-toggle" id="chatbotToggle" aria-label="Ouvrir l'assistant">
+            <i class="bi bi-robot"></i>
+        </button>
+
+        <div class="chatbot-modal" id="chatbotModal" style="height: 500px; display: none;">
+            <div class="chatbot-header">
+                <div class="chatbot-avatar">
+                    <i class="bi bi-robot"></i>
+                </div>
+                <div class="chatbot-title">
+                    <h3>Assistant Waka</h3>
+                    <p>Configuration d'agents IA</p>
+                </div>
+                <button class="chatbot-close" id="chatbotClose" aria-label="Fermer">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <!-- Zone de messages -->
+            <div id="chatMessages" style="flex: 1; overflow-y: auto; padding: 16px; max-height: 280px;">
+                <div class="chat-message bot-message" style="background: var(--waka-bg-light); padding: 12px; border-radius: 12px; margin-bottom: 12px;">
+                    <p style="margin: 0; font-size: 0.9rem;">Bonjour ! Je suis l'assistant Waka. Je peux vous aider a :</p>
+                    <ul style="margin: 8px 0 0 16px; font-size: 0.85rem;">
+                        <li>Repondre a vos questions sur la configuration</li>
+                        <li>Creer un agent en 3 questions</li>
+                        <li>Expliquer les parametres disponibles</li>
+                    </ul>
+                    <p style="margin: 8px 0 0 0; font-size: 0.85rem; color: var(--waka-text-muted);">Essayez: "creer un agent" ou "qu'est-ce que le VAD ?"</p>
+                </div>
+            </div>
+
+            <!-- Zone de saisie -->
+            <div style="padding: 12px; border-top: 1px solid var(--waka-border);">
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="chatInput" placeholder="Posez votre question..."
+                           style="flex: 1; padding: 10px 14px; border: 2px solid var(--waka-border); border-radius: 20px; font-size: 0.9rem; outline: none;"
+                           onkeypress="if(event.key==='Enter')sendChatMessage()">
+                    <button onclick="sendChatMessage()"
+                            style="background: var(--gradient-primary); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bouton création agent (caché par défaut) -->
+            <div id="createAgentBtn" style="display: none; padding: 0 12px 12px;">
+                <button onclick="confirmCreateAgent()"
+                        style="width: 100%; padding: 12px; background: var(--gradient-accent); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer;">
+                    <i class="bi bi-plus-circle"></i> Creer l'agent maintenant
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Variable pour stocker la config generee -->
+    <script>
+        let pendingAgentConfig = null;
+    </script>
+
+    <!-- AVATAR STUDIO MODAL -->
+    <div class="chatbot-modal" id="avatarStudioModal">
+        <div class="chatbot-header">
+            <div class="chatbot-avatar" style="background: linear-gradient(135deg, #FF6F00 0%, #FFC107 100%);">
+                <i class="bi bi-camera-video-fill"></i>
+            </div>
+            <div class="chatbot-title">
+                <h3 style="background: linear-gradient(135deg, #FF6F00 0%, #FFC107 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Avatar Studio</h3>
+                <p>Création d'avatars personnalisés</p>
+            </div>
+            <button class="chatbot-close" id="avatarStudioClose" aria-label="Fermer">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        
+        <div class="chatbot-body">
+            <div class="chatbot-dev-icon">
+                🎬
+            </div>
+            <div class="chatbot-message">
+                <h4>Fonctionnalité en développement</h4>
+                <p>
+                    L'Avatar Studio vous permettra de créer et personnaliser vos propres avatars vidéo pour vos agents conversationnels.
+                </p>
+            </div>
+            <div class="chatbot-team-badge" style="background: linear-gradient(135deg, #FF6F00 0%, #FFC107 100%);">
+                <i class="bi bi-code-slash"></i>
+                <span>Équipe GalaxyAI</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="main-footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <!-- Logo et Slogan -->
+                <div class="footer-logo-section">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" 
+                         alt="Waka" 
+                         class="footer-logo-img"
+                         onerror="this.style.display='none'">
+                    <div class="footer-logo">Waka Afrique 🇧🇫</div>
+                </div>
+                
+                <p class="footer-tagline">
+                    Chaque interaction compte
+                </p>
+                
+                <p class="footer-description">
+                    Des <span class="footer-highlight">agents intelligents</span> qui agissent, comprennent et aident vos utilisateurs.<br>
+                    Au service de chaque interaction pour en faire une richesse.
+                </p>
+
+                <!-- Technologies -->
+                <div class="footer-tech">
+                    <span class="tech-badge">
+                        <i class="bi bi-microsoft"></i> Azure AI
+                    </span>
+                    <span class="tech-badge">
+                        <i class="bi bi-robot"></i> Agentic AI
+                    </span>
+                    <span class="tech-badge">
+                        <i class="bi bi-chat-dots-fill"></i> GPT-4o
+                    </span>
+                    <span class="tech-badge">
+                        <i class="bi bi-globe-africa"></i> Moov BF
+                    </span>
+                </div>
+
+                <div class="footer-divider"></div>
+
+                <!-- Microsoft Partner Badge -->
+                <div class="microsoft-partner">
+                    <div class="partner-badge">
+                        <i class="bi bi-shield-check"></i>
+                        Développé conformément aux exigences Azure AI
+                    </div>
+                    <div class="partner-id">
+                        Microsoft AI Cloud Partner • Partner ID: 6960001
+                    </div>
+                </div>
+
+                <p class="footer-copyright">
+                    &copy; 2025 Waka Afrique • Ouagadougou, Burkina Faso
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function toggleMenu() {
+            const nav = document.getElementById('mainNav');
+            nav.classList.toggle('active');
+        }
+
+        function toggleDropdown(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const dropdown = event.currentTarget.closest('.nav-dropdown');
+            const isOpen = dropdown.classList.contains('show');
+            
+            // Fermer tous les dropdowns
+            document.querySelectorAll('.nav-dropdown').forEach(d => {
+                d.classList.remove('show');
+            });
+            
+            // Ouvrir celui-ci s'il était fermé
+            if (!isOpen) {
+                dropdown.classList.add('show');
+            }
+        }
+
+        // Fermer les dropdowns quand on clique ailleurs
+        document.addEventListener('click', (e) => {
+            const nav = document.getElementById('mainNav');
+            const toggle = document.querySelector('.menu-toggle');
+            
+            // Fermer le menu mobile si on clique dehors
+            if (nav && nav.classList.contains('active') && 
+                !nav.contains(e.target) && 
+                toggle && !toggle.contains(e.target)) {
+                nav.classList.remove('active');
+            }
+
+            // Fermer les dropdowns si on clique dehors
+            if (!e.target.closest('.nav-dropdown')) {
+                document.querySelectorAll('.nav-dropdown').forEach(d => {
+                    d.classList.remove('show');
+                });
+            }
+        });
+
+        // ========================================
+        // Chatbot Widget Toggle
+        // ========================================
+        const chatbotToggle = document.getElementById('chatbotToggle');
+        const chatbotModal = document.getElementById('chatbotModal');
+        const chatbotClose = document.getElementById('chatbotClose');
+
+        if (chatbotToggle && chatbotModal && chatbotClose) {
+            chatbotToggle.addEventListener('click', () => {
+                if (chatbotModal.style.display === 'none' || chatbotModal.style.display === '') {
+                    chatbotModal.style.display = 'flex';
+                    chatbotModal.style.flexDirection = 'column';
+                } else {
+                    chatbotModal.style.display = 'none';
+                }
+            });
+
+            chatbotClose.addEventListener('click', () => {
+                chatbotModal.style.display = 'none';
+            });
+        }
+
+        // ========================================
+        // Chatbot Functions
+        // ========================================
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const messagesDiv = document.getElementById('chatMessages');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            // Afficher le message utilisateur
+            messagesDiv.innerHTML += `
+                <div style="background: var(--gradient-primary); color: white; padding: 10px 14px; border-radius: 12px; margin-bottom: 10px; margin-left: 40px;">
+                    ${message}
+                </div>
+            `;
+            input.value = '';
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            // Afficher indicateur de chargement
+            const loadingId = 'loading-' + Date.now();
+            messagesDiv.innerHTML += `
+                <div id="${loadingId}" style="background: var(--waka-bg-light); padding: 10px 14px; border-radius: 12px; margin-bottom: 10px; margin-right: 40px;">
+                    <i class="bi bi-three-dots" style="animation: pulse 1s infinite;"></i> Reflexion...
+                </div>
+            `;
+
+            try {
+                const response = await fetch('/api/chatbot/message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+
+                // Supprimer le loading
+                document.getElementById(loadingId)?.remove();
+
+                if (data.success) {
+                    // Formater la reponse (convertir markdown simple)
+                    let formattedResponse = data.response
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\n/g, '<br>')
+                        .replace(/- /g, '&bull; ');
+
+                    messagesDiv.innerHTML += `
+                        <div style="background: var(--waka-bg-light); padding: 12px 14px; border-radius: 12px; margin-bottom: 10px; margin-right: 40px; font-size: 0.9rem;">
+                            ${formattedResponse}
+                        </div>
+                    `;
+
+                    // Si creation complete, afficher le bouton
+                    if (data.type === 'creation_complete' && data.agent_config) {
+                        pendingAgentConfig = data.agent_config;
+                        document.getElementById('createAgentBtn').style.display = 'block';
+                    } else {
+                        document.getElementById('createAgentBtn').style.display = 'none';
+                    }
+                } else {
+                    messagesDiv.innerHTML += `
+                        <div style="background: #FFEBEE; color: #C62828; padding: 10px 14px; border-radius: 12px; margin-bottom: 10px;">
+                            Erreur: ${data.error}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById(loadingId)?.remove();
+                messagesDiv.innerHTML += `
+                    <div style="background: #FFEBEE; color: #C62828; padding: 10px 14px; border-radius: 12px; margin-bottom: 10px;">
+                        Erreur de connexion
+                    </div>
+                `;
+            }
+
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        async function confirmCreateAgent() {
+            if (!pendingAgentConfig) return;
+
+            const messagesDiv = document.getElementById('chatMessages');
+
+            try {
+                const response = await fetch('/api/chatbot/create-agent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ agent_config: pendingAgentConfig })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    messagesDiv.innerHTML += `
+                        <div style="background: #E8F5E9; color: #2E7D32; padding: 12px 14px; border-radius: 12px; margin-bottom: 10px;">
+                            <i class="bi bi-check-circle-fill"></i> Agent cree avec succes !<br>
+                            <small>ID: ${data.agent_id}</small><br>
+                            <a href="/agents" style="color: #1B5E20;">Voir mes agents</a>
+                        </div>
+                    `;
+                    pendingAgentConfig = null;
+                    document.getElementById('createAgentBtn').style.display = 'none';
+                } else {
+                    messagesDiv.innerHTML += `
+                        <div style="background: #FFEBEE; color: #C62828; padding: 10px 14px; border-radius: 12px; margin-bottom: 10px;">
+                            Erreur: ${data.error}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                messagesDiv.innerHTML += `
+                    <div style="background: #FFEBEE; color: #C62828; padding: 10px 14px; border-radius: 12px; margin-bottom: 10px;">
+                        Erreur de connexion
+                    </div>
+                `;
+            }
+
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // ========================================
+        // Avatar Studio Modal Toggle
+        // ========================================
+        const avatarStudioBtn = document.getElementById('avatarStudioBtn');
+        const avatarStudioModal = document.getElementById('avatarStudioModal');
+        const avatarStudioClose = document.getElementById('avatarStudioClose');
+
+        if (avatarStudioBtn && avatarStudioModal && avatarStudioClose) {
+            avatarStudioBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                avatarStudioModal.classList.toggle('show');
+                // Fermer le chatbot si ouvert
+                if (chatbotModal) chatbotModal.classList.remove('show');
+            });
+
+            avatarStudioClose.addEventListener('click', () => {
+                avatarStudioModal.classList.remove('show');
+            });
+
+            // Fermer le modal si on clique à l'extérieur
+            document.addEventListener('click', (e) => {
+                if (!avatarStudioModal.contains(e.target) && !avatarStudioBtn.contains(e.target)) {
+                    avatarStudioModal.classList.remove('show');
+                }
+            });
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

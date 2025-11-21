@@ -245,7 +245,7 @@ async function connectWebSocket() {
             const sessionConfig = {
                 type: 'session.update',
                 session: {
-                    modalities: ["text", "audio"],
+                    modalities: agentConfig.modalities || ["text", "audio"],
                     instructions: agentConfig.instructions,
                     voice: {
                         name: agentConfig.voice.name

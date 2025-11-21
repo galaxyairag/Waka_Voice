@@ -6,31 +6,8 @@ Importe tous les modules d'outils et fournit les fonctions centrales:
 - execute_tool(tool_name, arguments): Exécute un outil spécifique
 """
 
-from . import tool_search_web
-from . import tool_email
-from . import tool_cv
-from . import tool_weather
-from . import tool_currency
-from . import tool_flight_search
-from . import tool_hotel_search
-from . import tool_flight_booking
-from . import tool_hotel_booking
-from . import tool_exercises
-from . import tool_dogs
-from . import tool_knowledge_base
-from . import tool_health_advice
-from . import tool_news
-from . import tool_places
-from . import tool_translator
-from . import tool_calculator
-from . import tool_end_conversation
-from . import tool_prayer_times
-from . import tool_pharmacy_locator
-from . import tool_taxi_estimate
-from . import tool_bus_schedule
-from . import tool_school_info
-from . import tool_government_services
-from . import tool_tax_calculator
+# ⚡ OPTIMISATION: Imports lazy pour éviter le timeout 502
+# Les imports sont déplacés dans les fonctions pour accélérer le chargement
 
 
 def get_tools_definition():
@@ -41,6 +18,33 @@ def get_tools_definition():
     Returns:
         list: Liste des définitions d'outils au format OpenAI function calling
     """
+    # ⚡ Import lazy: charger les modules seulement quand nécessaire
+    from . import tool_search_web
+    from . import tool_email
+    from . import tool_weather
+    from . import tool_cv
+    from . import tool_currency
+    from . import tool_flight_search
+    from . import tool_hotel_search
+    from . import tool_flight_booking
+    from . import tool_hotel_booking
+    from . import tool_exercises
+    from . import tool_dogs
+    from . import tool_knowledge_base
+    from . import tool_health_advice
+    from . import tool_news
+    from . import tool_places
+    from . import tool_translator
+    from . import tool_calculator
+    from . import tool_end_conversation
+    from . import tool_prayer_times
+    from . import tool_pharmacy_locator
+    from . import tool_taxi_estimate
+    from . import tool_bus_schedule
+    from . import tool_school_info
+    from . import tool_government_services
+    from . import tool_tax_calculator
+    
     tools = [
         tool_search_web.get_tool_definition(),
         tool_email.get_tool_definition(),
@@ -83,6 +87,33 @@ def execute_tool(tool_name, arguments):
     Returns:
         dict: Résultat de l'exécution de l'outil
     """
+    # ⚡ Import lazy: charger seulement le module nécessaire
+    from . import tool_search_web
+    from . import tool_email
+    from . import tool_weather
+    from . import tool_cv
+    from . import tool_currency
+    from . import tool_flight_search
+    from . import tool_hotel_search
+    from . import tool_flight_booking
+    from . import tool_hotel_booking
+    from . import tool_exercises
+    from . import tool_dogs
+    from . import tool_knowledge_base
+    from . import tool_health_advice
+    from . import tool_news
+    from . import tool_places
+    from . import tool_translator
+    from . import tool_calculator
+    from . import tool_end_conversation
+    from . import tool_prayer_times
+    from . import tool_pharmacy_locator
+    from . import tool_taxi_estimate
+    from . import tool_bus_schedule
+    from . import tool_school_info
+    from . import tool_government_services
+    from . import tool_tax_calculator
+    
     # Mapping des noms d'outils vers leurs modules
     tool_map = {
         "search_web": tool_search_web,

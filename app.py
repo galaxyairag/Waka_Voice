@@ -97,6 +97,10 @@ except ImportError as e:
     logger.error("  - Blueprints/agents_config_routes.py")
     logger.error("  - Blueprints/azure_voices_api.py")
     logger.error("  - Blueprints/__init__.py")
+except Exception as e:
+    logger.error(f"❌ ERREUR INATTENDUE lors du chargement des blueprints: {type(e).__name__}: {str(e)}")
+    import traceback
+    logger.error(traceback.format_exc())
 
 # ===================================================================
 # ROUTES DE BASE

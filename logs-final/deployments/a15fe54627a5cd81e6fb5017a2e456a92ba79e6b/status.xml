@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>a15fe54627a5cd81e6fb5017a2e456a92ba79e6b</id>
+  <author>nabil</author>
+  <deployer>$waka</deployer>
+  <authorEmail>nabil@galaxyai.digital</authorEmail>
+  <message>Rollback SSML + Ajout expressions burkinabes dans gnrateur de prompt + Service Personal Voice indisponible</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-11-21T03:46:24.1443662Z</lastSuccessEndTime>
+  <receivedTime>2025-11-21T03:45:43.3220473Z</receivedTime>
+  <startTime>2025-11-21T03:45:46.5256702Z</startTime>
+  <endTime>2025-11-21T03:46:24.1443662Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>False</is_readonly>
+  <buildSummary />
+</deployment>

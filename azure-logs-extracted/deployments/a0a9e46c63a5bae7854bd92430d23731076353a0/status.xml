@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>a0a9e46c63a5bae7854bd92430d23731076353a0</id>
+  <author>nabil</author>
+  <deployer>$waka</deployer>
+  <authorEmail>nabil@galaxyai.digital</authorEmail>
+  <message>feat: amlioration systme interruption vocale + date contextuelle
+    
+    - Ajout dtection locale interruption utilisateur (niveau audio RMS)
+    - Arrt immdiat audio IA quand utilisateur parle
+    - Envoi response.cancel seulement si rponse active (vite erreurs)
+    - Flag isResponseActive pour suivre tat rponse serveur
+    - Ajout date du jour en franais dans contexte modle (jour + date + mois + anne)
+    - Amlioration logs et gestion file d'attente audio
+    - Corrections mineures routes et templates</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-11-20T20:08:26.8762773Z</lastSuccessEndTime>
+  <receivedTime>2025-11-20T20:07:53.8755013Z</receivedTime>
+  <startTime>2025-11-20T20:07:56.3207227Z</startTime>
+  <endTime>2025-11-20T20:08:26.8762773Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>False</is_readonly>
+  <buildSummary />
+</deployment>

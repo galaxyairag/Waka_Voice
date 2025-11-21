@@ -1,0 +1,18 @@
+<step title="Incoming Request" date="2025-11-11T14:49:08.430" instance="f1c955" url="/api/publish?type=zip&amp;async=True" method="POST" type="request" pid="850,1,7" Accept="*/*" Host="waka.scm.azurewebsites.net" User-Agent="AZURECLI/2.77.0 (MSI)" Accept-Encoding="gzip, deflate" Authorization="Bea..." Cache-Control="no-cache" Content-Type="application/octet-stream" Cookie="ARRAffinity=f1c95587fdc6f942a20e5a5078e78322a753dff56e2f30cc9c09a2b930fa89ac; ARRAffinitySameSite=f1c95587fdc6f942a20e5a5078e78322a753dff56e2f30cc9c09a2b930fa89ac" Content-Length="2693375" x-ms-client-request-id="864e95e9-bf0d-11f0-a716-94bb43509061" x-ms-artifact-checksum="fdd1ef9028133cd5da9f6b6c05e0b6b5e7e8bb3d1d1cf5f7eac02755d05eb5e8" X-ARR-LOG-ID="864e95e9-bf0d-11f0-a716-94bb43509061" CLIENT-IP="129.222.109.50:63636" X-SITE-DEPLOYMENT-ID="waka" WAS-DEFAULT-HOSTNAME="waka.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/publish?type=zip&amp;async=True" X-Client-IP="129.222.109.50" X-Client-Port="63636" >
+  <step title="Cleanup Xml Logs" date="2025-11-11T14:49:08.440" /><!-- duration: 22ms -->
+  <step title="OneDeploy" date="2025-11-11T14:49:08.573" >
+    <step title="None repository commit" date="2025-11-11T14:49:08.596" >
+      <step title="Commit id: f0c4c69d-7e8e-4a41-96dd-7b8603d32612" date="2025-11-11T14:49:08.607" Message="N/A" AuthorName="N/A" AuthorEmail="N/A" /><!-- duration: 10ms -->
+    </step><!-- duration: 29ms -->
+    <step title="Starting PushDeployAsync" date="2025-11-11T14:49:08.636" /><!-- duration: 10ms -->
+    <step title="Writing artifact to /tmp/zipdeploy/d2ff7dfc-f1dc-45ca-abd7-b183c1228dd4.zip" date="2025-11-11T14:49:08.683" >
+      <step title="Writing multipart request body to /tmp/zipdeploy/d2ff7dfc-f1dc-45ca-abd7-b183c1228dd4.zip" date="2025-11-11T14:49:08.695" /><!-- duration: 8ms -->
+    </step><!-- duration: 5711ms -->
+    <step title="Removing previous build artifact&apos;s manifest file" date="2025-11-11T14:49:14.422" >
+      <step title="Start deployment in the background" date="2025-11-11T14:49:14.464" >
+        <step title="Acquiring Deployment Lock" date="2025-11-11T14:49:14.511" /><!-- duration: 11ms -->
+        <step title="Acquired Deployment Lock" date="2025-11-11T14:49:14.583" /><!-- duration: 7ms -->
+      </step><!-- duration: 247ms -->
+    </step><!-- duration: 299ms -->
+    <step title="Outgoing response" date="2025-11-11T14:49:14.744" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 8ms -->
+  </step><!-- duration: 6186ms -->

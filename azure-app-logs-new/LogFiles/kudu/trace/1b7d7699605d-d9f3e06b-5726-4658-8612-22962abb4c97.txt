@@ -1,0 +1,1 @@
+2025-11-21T03:45:39  Startup Request, url: /waka.git/info/refs?service=git-receive-pack, method: GET, type: request, pid: 851,1,31, SCM_DO_BUILD_DURING_DEPLOYMENT: true, ScmType: LocalGit

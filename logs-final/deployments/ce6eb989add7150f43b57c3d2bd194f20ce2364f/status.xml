@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>ce6eb989add7150f43b57c3d2bd194f20ce2364f</id>
+  <author>nabil</author>
+  <deployer>$waka</deployer>
+  <authorEmail>nabil@galaxyai.digital</authorEmail>
+  <message>Add detailed logging and debug scripts for avatar character update
+    
+    - Enhanced cosmos_config.py with detailed logs for update_avatar_config
+    - Created debug_cosmos_avatar.py to inspect Cosmos DB documents
+    - Verified: update_avatar_config works correctly (backend OK)
+    - Next: Check if browser calls API endpoint (need Azure logs)
+    
+    🤖 Generated with [Claude Code](https://claude.com/claude-code)
+    
+    Co-Authored-By: Claude &lt;noreply@anthropic.com&gt;</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-11-19T18:15:39.5594287Z</lastSuccessEndTime>
+  <receivedTime>2025-11-19T18:15:08.7435403Z</receivedTime>
+  <startTime>2025-11-19T18:15:10.8628748Z</startTime>
+  <endTime>2025-11-19T18:15:39.5594287Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>False</is_readonly>
+  <buildSummary />
+</deployment>

@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>6c7c5d0ca332931389805dd3efc008e8643ba531</id>
+  <author>nabil</author>
+  <deployer>$waka</deployer>
+  <authorEmail>nabil@galaxyai.digital</authorEmail>
+  <message>Fix: Corriger le lien de cration d'agent avec voix personnalise</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-11-21T03:51:23.4449532Z</lastSuccessEndTime>
+  <receivedTime>2025-11-21T03:50:52.1592822Z</receivedTime>
+  <startTime>2025-11-21T03:50:54.0614991Z</startTime>
+  <endTime>2025-11-21T03:51:23.4449532Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>False</is_readonly>
+  <buildSummary />
+</deployment>

@@ -2,7 +2,8 @@
 # Route Flask : Agent Config Step 2 - Configuration Voice Live
 # ===================================================================
 # Blueprint pour la configuration des agents Voice Live
-# Version: 2025-01-21 - FORCE UPDATE FOR AZURE
+# Version: 2025-01-21 v2 - REBUILD CACHE
+# Force rebuild .pyc cache on Azure
 # ===================================================================
 
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for

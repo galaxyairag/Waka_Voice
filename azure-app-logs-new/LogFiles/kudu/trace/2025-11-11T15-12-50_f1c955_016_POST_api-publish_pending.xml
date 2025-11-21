@@ -1,0 +1,14 @@
+<step title="Incoming Request" date="2025-11-11T15:12:50.305" instance="f1c955" url="/api/publish?type=zip&amp;async=True" method="POST" type="request" pid="850,1,24" Accept="*/*" Host="waka.scm.azurewebsites.net" User-Agent="AZURECLI/2.77.0 (MSI)" Accept-Encoding="gzip, deflate" Authorization="Bea..." Cache-Control="no-cache" Content-Type="application/octet-stream" Cookie="ARRAffinity=f1c95587fdc6f942a20e5a5078e78322a753dff56e2f30cc9c09a2b930fa89ac; ARRAffinitySameSite=f1c95587fdc6f942a20e5a5078e78322a753dff56e2f30cc9c09a2b930fa89ac" Content-Length="2797747" x-ms-client-request-id="d96242aa-bf10-11f0-bea5-94bb43509061" x-ms-artifact-checksum="7e4099014fdd7a138db48079a15b5ef1d4ca60952bb9a5f9786d1feae8cc94e6" X-ARR-LOG-ID="d96242aa-bf10-11f0-bea5-94bb43509061" CLIENT-IP="129.222.109.50:57365" X-SITE-DEPLOYMENT-ID="waka" WAS-DEFAULT-HOSTNAME="waka.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/publish?type=zip&amp;async=True" X-Client-IP="129.222.109.50" X-Client-Port="57365" >
+  <step title="OneDeploy" date="2025-11-11T15:12:50.323" >
+    <step title="Starting PushDeployAsync" date="2025-11-11T15:12:50.345" /><!-- duration: 9ms -->
+    <step title="Writing artifact to /tmp/zipdeploy/5f4bc442-15fe-4ccb-8d85-1e88d13fc941.zip" date="2025-11-11T15:12:50.372" >
+      <step title="Writing multipart request body to /tmp/zipdeploy/5f4bc442-15fe-4ccb-8d85-1e88d13fc941.zip" date="2025-11-11T15:12:50.390" /><!-- duration: 7ms -->
+    </step><!-- duration: 26879ms -->
+    <step title="Removing previous build artifact&apos;s manifest file" date="2025-11-11T15:13:17.275" >
+      <step title="Start deployment in the background" date="2025-11-11T15:13:17.296" >
+        <step title="Acquiring Deployment Lock" date="2025-11-11T15:13:17.337" /><!-- duration: 10ms -->
+        <step title="Acquired Deployment Lock" date="2025-11-11T15:13:17.402" /><!-- duration: 7ms -->
+      </step><!-- duration: 287ms -->
+    </step><!-- duration: 316ms -->
+    <step title="Outgoing response" date="2025-11-11T15:13:17.598" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 7ms -->
+  </step><!-- duration: 27289ms -->

@@ -1,0 +1,16 @@
+<step title="Incoming Request" date="2025-11-19T18:29:15.828" instance="0ab51f" url="/waka.git/info/refs?service=git-upload-pack" method="GET" type="request" pid="851,1,36" Accept="*/*" Host="waka.scm.azurewebsites.net" User-Agent="git/2.51.0.windows.2 (Windows 11 Home 10.0.26200; win32 x64) vscode/1.106.1 (Visual Studio Code)" Accept-Encoding="deflate, gzip, br, zstd" Authorization="Bas..." Pragma="no-cache" Git-Protocol="version=2" X-ARR-LOG-ID="8abc5ee4-0ed2-4811-b10c-a9c42c921b7b" CLIENT-IP="129.222.109.244:53435" X-SITE-DEPLOYMENT-ID="waka" WAS-DEFAULT-HOSTNAME="waka.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/waka.git/info/refs?service=git-upload-pack" X-Client-IP="129.222.109.244" X-Client-Port="53435" >
+  <step title="Cleanup Xml Logs" date="2025-11-19T18:29:15.894" /><!-- duration: 7ms -->
+  <step title="InfoRefsService.Execute" date="2025-11-19T18:29:15.908" >
+    <step title="Executing external process" date="2025-11-19T18:29:15.923" type="process" path="git" arguments="rev-parse --git-dir" /><!-- duration: 18ms -->
+    <step title="Assuming git repository at /home/site/repository" date="2025-11-19T18:29:15.944" /><!-- duration: 3ms -->
+    <step title="InfoRefsService.SmartInfoRefs" date="2025-11-19T18:29:15.953" >
+      <step title="Executing external process" date="2025-11-19T18:29:15.960" type="process" path="git" arguments="rev-parse --git-dir" /><!-- duration: 8ms -->
+      <step title="Assuming git repository at /home/site/repository" date="2025-11-19T18:29:15.970" /><!-- duration: 2ms -->
+      <step title="GitExeServer.AdvertiseUploadPack" date="2025-11-19T18:29:15.977" >
+        <step title="Executing external process" date="2025-11-19T18:29:15.979" type="process" path="git" arguments="upload-pack --stateless-rpc --advertise-refs &quot;/home/site/repository&quot;" /><!-- duration: 41ms -->
+      </step><!-- duration: 46ms -->
+      <step title="Writing 370 bytes" date="2025-11-19T18:29:16.028" /><!-- duration: 3ms -->
+    </step><!-- duration: 81ms -->
+  </step><!-- duration: 129ms -->
+  <step title="Outgoing response" date="2025-11-19T18:29:16.039" type="response" statusCode="200" statusText="OK" /><!-- duration: 3ms -->
+</step><!-- duration: 220ms -->

@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>1b81362d0594c0ee047238cb05ff103fe37866a0</id>
+  <author>nabil</author>
+  <deployer>$waka</deployer>
+  <authorEmail>nabil@galaxyai.digital</authorEmail>
+  <message>Ajout fichier .env pour dploiement</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-11-19T16:40:20.9312752Z</lastSuccessEndTime>
+  <receivedTime>2025-11-19T16:39:38.7338384Z</receivedTime>
+  <startTime>2025-11-19T16:39:41.5216943Z</startTime>
+  <endTime>2025-11-19T16:40:20.9312752Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>False</is_readonly>
+  <buildSummary />
+</deployment>

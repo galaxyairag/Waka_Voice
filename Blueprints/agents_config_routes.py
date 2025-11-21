@@ -1485,3 +1485,6 @@ Tu as accès à ces outils: {tools_list}
         }), 500
 
 # Fin du Blueprint agents_config_bp
+
+# Log au chargement du module
+logger.info("✅ Module agents_config_routes.py chargé - Blueprint agents_config_bp disponible")

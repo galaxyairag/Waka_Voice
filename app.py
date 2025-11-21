@@ -166,6 +166,42 @@ def warmup():
         }), 500
 
 
+@app.route('/debug/env-check')
+def debug_env_check():
+    """
+    Diagnostic des variables d'environnement pour avatar.
+    À SUPPRIMER en production !
+    """
+    import os
+
+    def check_var(name):
+        val = os.getenv(name)
+        if val:
+            return f"✅ SET ({len(val)} chars)"
+        return "❌ NOT SET"
+
+    return jsonify({
+        'avatar_vars': {
+            'AVATAR_SPEECH_KEY': check_var('AVATAR_SPEECH_KEY'),
+            'AVATAR_SPEECH_REGION': check_var('AVATAR_SPEECH_REGION'),
+        },
+        'azure_vars': {
+            'AZURE_SPEECH_KEY': check_var('AZURE_SPEECH_KEY'),
+            'AZURE_SPEECH_REGION': check_var('AZURE_SPEECH_REGION'),
+            'AZURE_SPEECH_ENDPOINT': check_var('AZURE_SPEECH_ENDPOINT'),
+        },
+        'voice_live_vars': {
+            'VOICE_LIVE_KEY': check_var('VOICE_LIVE_KEY'),
+            'VOICE_LIVE_NAME': check_var('VOICE_LIVE_NAME'),
+            'VOICE_LIVE_ENDPOINT': check_var('VOICE_LIVE_ENDPOINT'),
+        },
+        'cosmos_vars': {
+            'COSMOS_ENDPOINT': check_var('COSMOS_ENDPOINT'),
+            'COSMOS_KEY': check_var('COSMOS_KEY'),
+        }
+    })
+
+
 @app.route('/debug/routes')
 def debug_routes():
     """

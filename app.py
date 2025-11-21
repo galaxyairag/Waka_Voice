@@ -65,7 +65,7 @@ except Exception as e:
 
 # Importer les blueprints
 try:
-    from Blueprints.agents_config_routes import init_app as init_agents_config
+    from Blueprints.agents_config_routes import agents_config_bp
     from Blueprints.azure_voices_api import init_app as init_azure_voices
     from Blueprints.conversation_history_routes import conversation_history_bp
     from Blueprints.quality_dashboard_routes import quality_bp, quality_pages_bp
@@ -75,7 +75,7 @@ try:
     from Blueprints.background_upload_routes import background_bp
     
     # Enregistrer les blueprints
-    init_agents_config(app)
+    app.register_blueprint(agents_config_bp)
     init_azure_voices(app)
     app.register_blueprint(conversation_history_bp)
     app.register_blueprint(quality_bp)

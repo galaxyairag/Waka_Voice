@@ -54,6 +54,9 @@ azure-communication-email==1.0.0
 # Azure Blob Storage
 azure-storage-blob==12.19.0
 
+# Azure Cognitive Services Speech SDK
+azure-cognitiveservices-speech==1.40.0
+
 # Document generation (Word)
 python-docx==1.1.0
 

@@ -127,7 +127,9 @@ def agent_config_step2(agent_id):
             logger.warning(f"Agent {agent_id} non trouvé")
             return redirect(url_for('agents_manager.agent_config_step1'))
         
-        # Afficher le template avec les données de Cosmos
+        logger.info(f"📋 Chargement config pour agent {agent_id}: {len(agent_config)} champs")
+        
+        # Afficher le template avec TOUTE la configuration (valeurs individuelles)
         return render_template(
             'agents/agent_config_step2.html',
             agent_id=agent_id,
@@ -135,7 +137,9 @@ def agent_config_step2(agent_id):
             model_id=agent_config.get('model_id', ''),
             model_name=agent_config.get('model_name', ''),
             model_description=agent_config.get('model_description', ''),
-            model_family=agent_config.get('model_family', 'F1_Realtime')
+            model_family=agent_config.get('model_family', 'F1_Realtime'),
+            # Passer TOUTES les valeurs individuellement pour remplir le formulaire
+            config=agent_config
         )
             
     except Exception as e:
@@ -209,7 +213,7 @@ def agent_config_step3(agent_id):
         
         # Déterminer les modalités selon la famille du modèle
         model_family = agent_config.get('model_family', 'F1_Realtime')
-        modalities = ['audio', 'text'] if 'Realtime' in model_family else ['text']
+        modalities = ['text', 'audio'] if 'Realtime' in model_family else ['text']
         
         # Construire phrase_list depuis le textarea
         phrase_list_raw = form_data.get('phrase_list', '')
@@ -354,6 +358,54 @@ def agent_config_step3_save_tools(agent_id):
         
         logger.info(f"✅ Tools sélectionnés: {selected_tools}")
         
+        # Charger les définitions complètes des tools pour les ajouter à session_config
+        tools_definitions = []
+        if selected_tools:
+            # Mapping des anciens noms vers les nouveaux noms d'outils
+            TOOL_NAME_MAPPING = {
+                'weather': 'get_weather_forecast',
+                'news': 'get_news',
+                'email': 'send_email',
+                'cv': 'create_cv',
+                'knowledge_base': 'search_knowledge_base',
+                'translator': 'translate_text',
+                'health_advice': 'get_health_advice',
+                'exercises': 'search_exercises',
+                'dogs': 'search_dog_breeds',
+                'search_web': 'search_web',
+                'places': 'search_places',
+                'flight_search': 'search_flights',
+                'flight_booking': 'book_flight',
+                'hotel_search': 'search_hotels',
+                'hotel_booking': 'book_hotel',
+                'currency': 'convert_currency',
+                'calculator': 'calculate',
+                'prayers': 'get_prayer_times',
+                'pharmacy': 'find_pharmacy',
+                'taxi': 'estimate_taxi_fare',
+                'bus': 'get_bus_schedule',
+                'schools': 'get_school_info',
+                'government': 'get_government_service_info',
+                'tax': 'calculate_tax',
+                'end_conversation': 'end_conversation'
+            }
+            
+            # Convertir les noms sélectionnés vers les vrais noms
+            mapped_tool_names = [TOOL_NAME_MAPPING.get(tool, tool) for tool in selected_tools]
+            
+            # Importer et filtrer les outils
+            from tools import get_tools_definition
+            all_tools = get_tools_definition()
+            tools_definitions = [tool for tool in all_tools if tool.get('name') in mapped_tool_names]
+            
+            logger.info(f"📦 {len(tools_definitions)} outils chargés: {[t.get('name') for t in tools_definitions]}")
+        
+        # Ajouter les tools dans session_config pour qu'ils soient persistés
+        if 'session_config' not in agent_config:
+            agent_config['session_config'] = {}
+        
+        agent_config['session_config']['tools'] = tools_definitions
+        
         # Mettre à jour dans Cosmos DB avec status step3_completed
         agent_config['selected_tools'] = selected_tools
         agent_config['status'] = 'step3_completed'
@@ -361,7 +413,7 @@ def agent_config_step3_save_tools(agent_id):
         agent_config['current_step'] = 4
         
         save_agent_config(agent_config)
-        logger.info("✅ Tools sauvegardés dans Cosmos DB (status: step3_completed)")
+        logger.info(f"✅ Tools sauvegardés dans Cosmos DB: {len(tools_definitions)} outils dans session_config (status: step3_completed)")
         
         # Rediriger vers Step 4 (Instructions & Persona)
         return redirect(url_for('agents_manager.agent_config_step4', agent_id=agent_id))
@@ -695,8 +747,32 @@ def call_agent(agent_id):
         
         # Extraire la voix configurée
         voice_config = session_config.get('voice', {})
-        voice_name = voice_config.get('name', 'en-US-AndrewMultilingualNeural')
-        voice_type = voice_config.get('type', 'azure-standard')
+        
+        # IMPORTANT: voice_config peut être un dict ou None
+        # S'assurer que c'est bien un dict
+        if not isinstance(voice_config, dict):
+            logger.warning(f"⚠️ voice_config n'est pas un dict: {type(voice_config)} = {voice_config}")
+            voice_config = {}
+        
+        # Extraire les valeurs avec validation
+        voice_name_raw = voice_config.get('name', 'en-US-AndrewMultilingualNeural')
+        voice_type_raw = voice_config.get('type', 'azure-standard')
+        
+        # CORRECTION: Si voice_name est un dict/objet, extraire le champ 'name'
+        if isinstance(voice_name_raw, dict):
+            logger.warning(f"⚠️ voice_name est un dict: {voice_name_raw}")
+            voice_name = voice_name_raw.get('name', 'en-US-AndrewMultilingualNeural')
+        else:
+            voice_name = voice_name_raw if voice_name_raw else 'en-US-AndrewMultilingualNeural'
+        
+        # CORRECTION: Si voice_type est un dict/objet, extraire le champ 'type'
+        if isinstance(voice_type_raw, dict):
+            logger.warning(f"⚠️ voice_type est un dict: {voice_type_raw}")
+            voice_type = voice_type_raw.get('type', 'azure-standard')
+        else:
+            voice_type = voice_type_raw if voice_type_raw else 'azure-standard'
+        
+        logger.info(f"🎤 Voix extraite: name='{voice_name}' (type={type(voice_name)}), type='{voice_type}' (type={type(voice_type)})")
         
         # Mapping des noms de voix OpenAI vers Azure (pour compatibilité)
         OPENAI_TO_AZURE_VOICES = {
@@ -723,8 +799,21 @@ def call_agent(agent_id):
             logger.warning(f"⚠️ Type de voix invalide '{voice_type}', utilisation de 'azure-standard'")
             voice_type = 'azure-standard'
         
-        voice_rate = voice_config.get('rate', '1.0')
+        voice_rate = voice_config.get('rate', '1.0') or '1.0'
         voice_temperature = voice_config.get('temperature', 0.7)
+        
+        # S'assurer que voice_rate est une chaîne valide
+        if not voice_rate or voice_rate == '':
+            voice_rate = '1.0'
+        
+        # S'assurer que voice_name et voice_type ne sont pas vides
+        if not voice_name or voice_name.strip() == '':
+            logger.error(f"❌ voice_name est vide! voice_config = {voice_config}")
+            voice_name = 'en-US-AndrewMultilingualNeural'
+        
+        if not voice_type or voice_type.strip() == '':
+            logger.error(f"❌ voice_type est vide! voice_config = {voice_config}")
+            voice_type = 'azure-standard'
         
         # GPT-5 et dérivés ne supportent pas le paramètre temperature pour la voix
         # Détecter si le modèle est GPT-5 ou un dérivé
@@ -737,6 +826,15 @@ def call_agent(agent_id):
         
         # Utiliser le prompt système sauvegardé directement (déjà formaté avec toutes les variables)
         system_instructions = agent_config.get('system_prompt') or agent_config.get('instructions', '')
+        
+        # IMPORTANT: Voice Live a une limite de tokens pour le prompt système
+        # Si le prompt est trop long (>10,000 caractères), le tronquer intelligemment
+        MAX_INSTRUCTION_LENGTH = 8000  # Limite sécuritaire pour Voice Live
+        
+        if len(system_instructions) > MAX_INSTRUCTION_LENGTH:
+            logger.warning(f"⚠️ Prompt système trop long ({len(system_instructions)} car) - Troncature à {MAX_INSTRUCTION_LENGTH}")
+            # Garder le début (rôle et contexte) et tronquer le reste
+            system_instructions = system_instructions[:MAX_INSTRUCTION_LENGTH] + "\n\n[Prompt tronqué pour Voice Live - Limite technique]"
         
         # Si pas d'instructions, utiliser un défaut
         if not system_instructions:
@@ -777,6 +875,30 @@ Aidez l'utilisateur de manière professionnelle et efficace."""
             all_tools = get_tools_definition()
             tools_definitions = [tool for tool in all_tools if tool.get('name') in mapped_tool_names]
             
+            # OPTIMISATION: Voice Live a des limites strictes sur la taille du contexte
+            # Simplifier les descriptions des outils pour réduire les tokens
+            for tool in tools_definitions:
+                # Garder seulement la première ligne de la description (avant \n\n)
+                if 'description' in tool and len(tool['description']) > 200:
+                    original_desc = tool['description']
+                    # Extraire seulement la première phrase/ligne
+                    short_desc = original_desc.split('\n\n')[0].split('\n')[0]
+                    if len(short_desc) > 150:
+                        short_desc = short_desc[:150] + "..."
+                    tool['description'] = short_desc
+                    logger.debug(f"🔧 Tool {tool['name']}: description réduite de {len(original_desc)} à {len(short_desc)} car")
+                
+                # Simplifier aussi les descriptions des paramètres
+                if 'parameters' in tool and 'properties' in tool['parameters']:
+                    for param_name, param_info in tool['parameters']['properties'].items():
+                        if 'description' in param_info and len(param_info['description']) > 150:
+                            original_param_desc = param_info['description']
+                            # Garder seulement la première ligne
+                            short_param_desc = original_param_desc.split('\n')[0]
+                            if len(short_param_desc) > 100:
+                                short_param_desc = short_param_desc[:100] + "..."
+                            param_info['description'] = short_param_desc
+            
             logger.debug(f"📋 Outils sélectionnés (brut): {selected_tools}")
             logger.debug(f"🔄 Outils mappés: {mapped_tool_names}")
             logger.debug(f"🔧 Outils chargés: {[t.get('name') for t in tools_definitions]}")
@@ -790,6 +912,7 @@ Aidez l'utilisateur de manière professionnelle et efficace."""
             'model_id': model_id,
             'model_name': agent_config.get('model_name', model_id),
             'websocket_url': websocket_url,
+            'modalities': session_config.get('modalities', ['text', 'audio']),
             'voice': {
                 'name': voice_name,
                 'type': voice_type,
@@ -1220,141 +1343,142 @@ def get_lexicons():
 
 @agents_config_bp.route('/api/<agent_id>/generate_prompt', methods=['POST'])
 def generate_agent_prompt(agent_id):
-    """Génère un prompt système structuré pour un agent via gpt-5-mini.
-
-    Body JSON:
-    {
-        "user_instruction": "Contexte et objectifs de l'agent"
-    }
-
-    On utilise les champs déjà configurés (role, tone, terminology,
-    conduct_instructions, selected_tools) comme contexte, et gpt-5-mini
-    renvoie un prompt système prêt à être utilisé dans Step 4.
+    """
+    API endpoint pour générer un prompt système via GPT-5-mini (VERSION OPTIMISÉE AVATAR)
     """
     try:
-        data = request.get_json() or {}
-        user_instruction = data.get('user_instruction', '').strip()
-
+        from openai import OpenAI
+        import os
+        
+        data = request.get_json()
+        user_instruction = data.get('user_instruction', '') or data.get('instruction', '')
+        
         if not user_instruction:
             return jsonify({
                 'success': False,
-                'error': "user_instruction manquant"
+                'error': 'Instruction utilisateur manquante'
             }), 400
-
-        # Récupérer la configuration agent actuelle
-        agent_config = cosmos_get_agent_config(agent_id)
-        if not agent_config:
-            return jsonify({
-                'success': False,
-                'error': f'Agent {agent_id} non trouvé'
-            }), 404
-
-        role = agent_config.get('role', '')
-        tone = agent_config.get('tone', '')
-        terminology = agent_config.get('terminology', '')
-        conduct_instructions = agent_config.get('conduct_instructions', '')
-        selected_tools = agent_config.get('selected_tools', []) or []
-
-        # Préparer le prompt système pour gpt-5-mini
-        system_prompt = (
-            "Tu es un assistant qui génère des prompts système pour des "
-            "assistants vocaux utilisés dans des centres d'appel en Afrique de l'Ouest,"
-            " en particulier au Burkina Faso. "
-            "Ton objectif est de produire un prompt système clair, structuré et prêt à être "
-            "utilisé par un modèle d'assistant conversationnel.\n\n"
-            "Contraintes importantes :\n"
-            "- Le prompt final doit être entièrement en français.\n"
-            "- Il doit être auto-suffisant (on peut le copier/coller comme system_prompt).\n"
-            "- Il doit être organisé en sections numérotées :\n"
-            "  1. Rôle et contexte de l'agent\n"
-            "  2. Ton et style de communication\n"
-            "  3. Règles de conduite détaillées\n"
-            "  4. Utilisation générale des tools disponibles (sans entrer dans les détails techniques)\n"
-            "  5. Limites et sécurité (ce que l'agent ne doit pas faire)\n"
-            "- Taille cible : environ 20 à 40 lignes, pas plus.\n"
-            "- Le texte doit être lisible et adapté à un centre d'appel en Afrique de l'Ouest.\n"
-            "- N'invente pas de nouveaux tools; parle des tools de façon générique.\n"
-            "- Le prompt doit préciser que l'agent ne doit JAMAIS communiquer directement de liens (URL) dans ses réponses.\n"
-            "  À la place, l'agent doit proposer à l'utilisateur d'envoyer le lien par email,\n"
-            "  par exemple en disant qu'il peut envoyer les informations par courriel.\n"
-            "- Le prompt doit préciser que l'agent doit TOUJOURS se présenter au début de la conversation,\n"
-            "  puis proposer à l'utilisateur de donner son prénom pour personnaliser les échanges,\n"
-            "  tout en respectant le fait que l'utilisateur n'est pas obligé de le communiquer.\n"
-            "  Si le prénom est fourni, l'agent doit le réutiliser régulièrement de manière naturelle.\n"
-            "- Le prompt doit également préciser qu'aucune escalade vers un humain n'est possible :\n"
-            "  l'agent est entièrement autonome et doit gérer la conversation du début à la fin,\n"
-            "  tout en restant transparent sur ce point lorsque l'utilisateur demande à parler à un humain.\n"
-        )
-
-        # Construire le message utilisateur avec le contexte
-        tools_text = ", ".join(selected_tools) if selected_tools else "aucun tool spécifique pour l'instant"
-        user_payload = (
-            "Consigne utilisateur pour le type d'agent :\n" + user_instruction + "\n\n"
-            "Rôle configuré :\n" + (role or "(non défini)") + "\n\n"
-            "Ton / style souhaité :\n" + (tone or "(non défini)") + "\n\n"
-            "Terminologie / accent :\n" + (terminology or "(non défini)") + "\n\n"
-            "Règles de conduite :\n" + (conduct_instructions or "(non défini)") + "\n\n"
-            "Tools sélectionnés : " + tools_text + "\n\n"
-            "À partir de ces informations, génère un prompt système complet en respectant les contraintes."
-        )
-
-        # Paramètres Azure OpenAI pour gpt-5-mini
-        endpoint = os.getenv('AZURE_OPENAI_SUMMARY_ENDPOINT')
+        
+        # Initialiser le client OpenAI avec la syntaxe Azure compatible
+        azure_endpoint = os.getenv('AZURE_OPENAI_SUMMARY_ENDPOINT')
         api_key = os.getenv('AZURE_OPENAI_SUMMARY_KEY')
-        deployment = os.getenv('AZURE_OPENAI_GPT5_MINI_DEPLOYMENT', 'gpt-5-mini')
-        # Utilise par défaut la version 2025-01-01-preview si aucune variable n'est définie
-        api_version = os.getenv('AZURE_OPENAI_SUMMARY_API_VERSION', '2025-01-01-preview')
-
-        if not endpoint or not api_key:
+        deployment_name = os.getenv('AZURE_OPENAI_GPT5_MINI_DEPLOYMENT', 'gpt-5-mini')
+        
+        if not azure_endpoint or not api_key:
             return jsonify({
                 'success': False,
-                'error': "Configuration Azure OpenAI manquante (endpoint / key)"
+                'error': 'Configuration Azure OpenAI manquante'
             }), 500
-
-        url = f"{endpoint}openai/deployments/{deployment}/chat/completions?api-version={api_version}"
-        headers = {
-            'Content-Type': 'application/json',
-            'api-key': api_key
-        }
-        payload = {
-            'messages': [
-                {'role': 'system', 'content': system_prompt},
-                {'role': 'user', 'content': user_payload[:12000]}
-            ]
-        }
-
-        resp = requests.post(url, headers=headers, json=payload, timeout=90)
-        if resp.status_code != 200:
-            # Log détaillé côté serveur et renvoi d'un extrait pour le debug côté client
-            logger.warning(f"⚠️ Erreur Azure OpenAI gpt-5-mini ({resp.status_code}): {resp.text[:500]}")
-            return jsonify({
-                'success': False,
-                'error': f"Erreur Azure OpenAI ({resp.status_code})",
-                'details': resp.text[:500]
-            }), 502
-
-        data = resp.json()
-        prompt_text = (
-            data.get('choices', [{}])[0]
-                .get('message', {})
-                .get('content', '')
+        
+        # Construire l'endpoint avec le format Azure OpenAI v1
+        base_url = f"{azure_endpoint}openai/v1/"
+        
+        client = OpenAI(
+            base_url=base_url,
+            api_key=api_key
         )
+        
+        # Créer le prompt pour générer le system prompt (VERSION OPTIMISÉE - CONCISE)
+        generation_prompt = f"""Crée un prompt système CONCIS (150-200 mots max) pour un agent IA vocal avec :
+{user_instruction}
 
-        if not prompt_text:
-            return jsonify({
-                'success': False,
-                'error': "Réponse Azure OpenAI vide"
-            }), 502
+INCLURE obligatoirement :
+1. Rôle et ton (familier par défaut)
+2. Missions principales (3 max)
+3. Comportement : saluer au 1er message seulement, demander le prénom, utiliser les tools disponibles
+4. Si email/CV : collecter UNE info par message
+5. Si pays mentionné : connaître 5-10 expressions culturelles, les utiliser MODÉRÉMENT
 
-        logger.info(f"✅ Prompt IA généré pour l'agent {agent_id} (longueur: {len(prompt_text)} caractères)")
+6. 🇧🇫 EXPRESSIONS BURKINABÉES OBLIGATOIRES (sans excès) :
+   Instruire l'agent à utiliser NATURELLEMENT des expressions burkinabées (Burkina Faso).
+   Fournir au moins 50 expressions classées par famille :
+   
+   **SALUTATIONS & POLITESSE** (10 expressions minimum) :
+   - "Bonjour mon frère / ma sœur", "Ça va bien ?", "C'est comment ?", "On dit quoi ?", "Tu es là ?", "Bonne arrivée", "Merci bien hein", "C'est gentil", "Que Dieu te bénisse", "On se voit"
+   
+   **AFFIRMATIONS & RÉACTIONS** (10 expressions minimum) :
+   - "Ça va aller", "Normalement", "Inch'Allah", "Dieu merci", "C'est un peu ça", "Effectivement", "Sincèrement", "Franchement", "Vraiment même", "C'est sûr"
+   
+   **EXPRESSIONS COURANTES** (10 expressions minimum) :
+   - "Eh ben", "On va gérer ça", "Pas de souci", "Ça va aller comme ça", "On se débrouille", "Doucement doucement", "On est ensemble", "Petit à petit", "On fait comment ?", "Laisse-moi voir"
+   
+   **ENCOURAGEMENT & SOUTIEN** (10 expressions minimum) :
+   - "Courage à toi", "Tiens bon", "Ça va s'arranger", "Faut pas décourager", "Tu vas réussir", "On est avec toi", "Force à toi", "Aie confiance", "Ça va passer", "Dieu est grand"
+   
+   **QUOTIDIEN & VIE PRATIQUE** (10 expressions minimum) :
+   - "On fait avec", "C'est la vie", "Faut gérer", "On n'a pas le choix", "C'est déjà ça", "Ça peut aller", "On verra", "Si Dieu veut", "Faut patienter", "On espère"
+   
+   RÈGLES D'UTILISATION :
+   - Utiliser 2-3 expressions par réponse MAX (rester naturel)
+   - Adapter au contexte de la conversation
+   - NE PAS surcharger - l'authenticité prime sur la quantité
+
+7. 🎭 TON ET DIALECTE BURKINABÉ :
+   Ajuster le ton de l'agent au style burkinabé authentique :
+   - Ton chaleureux, posé et fraternel
+   - Vouvoiement occasionnel pour le respect, tutoiement amical sinon
+   - Rythme de parole détendu (pas pressé)
+   - Formulations typiques : "Hein ?", "Là", "Même", "Un peu", "Bien bien"
+   - Empathie et solidarité dans les réponses
+
+Réponds uniquement avec le prompt, concis et efficace."""
+
+        response = client.chat.completions.create(
+            model=deployment_name,
+            messages=[
+                {"role": "system", "content": "Tu es un expert en création de prompts système pour agents IA."},
+                {"role": "user", "content": generation_prompt}
+            ],
+            temperature=1
+        )
+        
+        generated_prompt = response.choices[0].message.content
+        if not generated_prompt:
+            generated_prompt = ""
+        generated_prompt = generated_prompt.strip()
+
+        # Ajouter automatiquement la section TOOLS au prompt généré
+        # Importer les tools pour obtenir leurs définitions
+        from tools import get_tools_definition
+
+        all_tools = get_tools_definition()
+
+        # Section outils optimisée - Liste compacte
+        tools_list = ", ".join([tool.get("name", "") for tool in all_tools])
+        
+        tools_section = f"""
+
+## 🛠️ OUTILS DISPONIBLES
+
+Tu as accès à ces outils: {tools_list}
+
+### 📋 RÈGLES
+
+1. ✅ Annonce avant d'appeler: "Je vérifie...", "Je cherche..."
+2. ✅ Appelle IMMÉDIATEMENT dès que tu as les infos
+3. ❌ NE propose JAMAIS - AGIS directement!
+
+### 💡 EXEMPLES
+
+**Météo**: "Quel temps à Paris?" → Appelle get_weather_forecast{{"city":"Paris"}}
+**Traduction**: "Traduis bonjour" → Appelle translate_text{{"text":"bonjour","target_lang":"en"}}
+**Calcul**: "15 fois 7?" → Appelle calculate{{"expression":"15*7"}}
+**Email**: Demande to/subject/body puis appelle send_email
+**Fin**: "Au revoir" → Appelle end_conversation{{"reason":"salutations"}}
+"""
+
+        # Concaténer le prompt généré avec la section tools
+        final_prompt = generated_prompt + tools_section
+
+        logger.info(f"✅ Prompt généré pour agent {agent_id} (avec section tools)")
 
         return jsonify({
             'success': True,
-            'prompt': prompt_text
+            'prompt': final_prompt
         })
-
+        
     except Exception as e:
-        logger.exception(f"Erreur lors de la génération du prompt pour l'agent {agent_id}")
+        logger.exception("Erreur lors de la génération du prompt")
         return jsonify({
             'success': False,
             'error': str(e)

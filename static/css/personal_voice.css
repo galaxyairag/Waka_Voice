@@ -1,0 +1,769 @@
+/* ============================================
+   PERSONAL VOICE - STYLES COMPLETS
+   Version: 2.0.0 - Avec 3 échantillons vocaux
+   ============================================ */
+
+:root {
+    --pv-primary: #6264A7;
+    --pv-primary-light: #8B8DC7;
+    --pv-primary-dark: #4A148C;
+    --pv-accent: #FF6F00;
+    --pv-success: #4CAF50;
+    --pv-danger: #f44336;
+    --pv-warning: #FFC107;
+    --pv-info: #2196F3;
+    --pv-gray-50: #FAFAFA;
+    --pv-gray-100: #F5F5F5;
+    --pv-gray-200: #EEEEEE;
+    --pv-gray-300: #E0E0E0;
+}
+
+/* ============================================
+   PAGE HEADER
+   ============================================ */
+.page-title {
+    color: var(--waka-primary);
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+    color: var(--waka-text-muted);
+    font-size: 1.1rem;
+}
+
+/* ============================================
+   STEPPER
+   ============================================ */
+.stepper-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 40px;
+    padding: 20px;
+    background: var(--waka-white);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px var(--waka-shadow);
+}
+
+.stepper {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.step-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--waka-off-white);
+    border: 3px solid var(--waka-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--waka-text-muted);
+    transition: all 0.3s ease;
+}
+
+.step.active .step-circle {
+    background: var(--gradient-primary);
+    border-color: var(--waka-primary);
+    color: white;
+    box-shadow: 0 4px 15px rgba(74, 20, 140, 0.4);
+}
+
+.step.completed .step-circle {
+    background: var(--pv-success);
+    border-color: var(--pv-success);
+    color: white;
+}
+
+.step.completed .step-circle::after {
+    content: '✓';
+    font-weight: 900;
+    font-size: 1.3rem;
+}
+
+.step-label {
+    margin-left: 12px;
+    font-weight: 600;
+    color: var(--waka-text-muted);
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.step.active .step-label {
+    color: var(--waka-primary);
+}
+
+.step.completed .step-label {
+    color: var(--pv-success);
+}
+
+.step-connector {
+    width: 60px;
+    height: 3px;
+    background: var(--waka-border);
+    margin: 0 10px;
+}
+
+.step.completed + .step-connector,
+.step.active + .step-connector {
+    background: var(--waka-primary-light);
+}
+
+/* ============================================
+   STEP CONTENT
+   ============================================ */
+.step-content {
+    display: none;
+}
+
+.step-content.active {
+    display: block;
+    animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================
+   CARDS
+   ============================================ */
+.card-custom {
+    background: var(--waka-white);
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 4px 20px var(--waka-shadow);
+    border: 1px solid var(--waka-border);
+}
+
+.card-header-custom {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--waka-primary-pale);
+}
+
+.card-header-custom i {
+    font-size: 2rem;
+    color: var(--waka-primary);
+}
+
+.card-header-custom h3 {
+    margin: 0;
+    color: var(--waka-primary);
+    font-weight: 700;
+}
+
+/* ============================================
+   FORMS
+   ============================================ */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--waka-text);
+    margin-bottom: 8px;
+    display: block;
+}
+
+.form-control, .form-select {
+    border: 2px solid var(--waka-border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--waka-primary);
+    box-shadow: 0 0 0 3px rgba(74, 20, 140, 0.1);
+    outline: none;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+.btn-primary-custom {
+    background: var(--gradient-primary);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary-custom:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(74, 20, 140, 0.4);
+    color: white;
+}
+
+.btn-primary-custom:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-secondary-custom {
+    background: var(--waka-off-white);
+    color: var(--waka-primary);
+    border: 2px solid var(--waka-border);
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-secondary-custom:hover {
+    background: var(--waka-primary-pale);
+    color: var(--waka-primary);
+}
+
+.btn-accent {
+    background: var(--gradient-accent);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-accent:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 111, 0, 0.4);
+}
+
+/* ============================================
+   CONSENT TEXT BOX
+   ============================================ */
+.consent-text-box {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    border-left: 4px solid var(--waka-primary);
+    padding: 20px;
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.consent-text-box h5 {
+    color: var(--waka-primary);
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.consent-text {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--waka-text);
+    margin: 0;
+}
+
+/* ============================================
+   VOICE SAMPLE CARDS (3 échantillons)
+   ============================================ */
+.voice-sample-card {
+    background: var(--waka-white);
+    border: 2px solid var(--waka-border);
+    border-radius: 16px;
+    padding: 25px;
+    margin-bottom: 25px;
+    transition: all 0.3s ease;
+}
+
+.voice-sample-card:hover {
+    border-color: var(--waka-primary-light);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.voice-sample-card.validated {
+    border-color: var(--pv-success);
+    background: linear-gradient(135deg, #f1f8f4 0%, #ffffff 100%);
+}
+
+.sample-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--pv-gray-200);
+}
+
+.sample-header > div {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.sample-number {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(74, 20, 140, 0.3);
+}
+
+.voice-sample-card.validated .sample-number {
+    background: var(--pv-success);
+}
+
+.sample-title {
+    margin: 0;
+    color: var(--waka-primary);
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.validation-badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.validation-badge i {
+    font-size: 1rem;
+}
+
+.validation-badge.not-validated {
+    background: rgba(244, 67, 54, 0.1);
+    color: var(--pv-danger);
+    border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.validation-badge.validated {
+    background: rgba(76, 175, 80, 0.15);
+    color: var(--pv-success);
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+/* ============================================
+   SAMPLE TEXT BOX
+   ============================================ */
+.sample-text-box {
+    background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-left: 4px solid var(--pv-info);
+}
+
+.sample-text-box h6 {
+    color: var(--pv-info);
+    font-weight: 700;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sample-text {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--waka-text);
+    margin: 0;
+    font-weight: 500;
+}
+
+/* ============================================
+   AUDIO RECORDER
+   ============================================ */
+.recorder-container {
+    background: var(--waka-bg-light);
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    border: 2px dashed var(--waka-border);
+    margin: 20px 0;
+    transition: all 0.3s ease;
+}
+
+.recorder-container.recording {
+    border-color: var(--pv-danger);
+    background: #ffebee;
+    animation: recordingPulse 2s infinite;
+}
+
+@keyframes recordingPulse {
+    0%, 100% { border-color: var(--pv-danger); }
+    50% { border-color: #ff8a80; }
+}
+
+.recorder-btn {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    font-size: 1.8rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.recorder-btn.record {
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: 0 4px 15px rgba(74, 20, 140, 0.3);
+}
+
+.recorder-btn.recording {
+    background: var(--pv-danger);
+    color: white;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 4px 15px rgba(244, 67, 54, 0.4); }
+    50% { transform: scale(1.05); box-shadow: 0 4px 32px rgba(244, 67, 54, 0.6), 0 0 0 8px rgba(244, 67, 54, 0.2); }
+}
+
+.recorder-btn:hover {
+    transform: scale(1.05);
+}
+
+.recording-time {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--waka-primary);
+    font-family: 'Courier New', monospace;
+    margin-bottom: 8px;
+}
+
+.recorder-container.recording .recording-time {
+    color: var(--pv-danger);
+}
+
+.recorder-hint {
+    color: var(--waka-text-muted);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* ============================================
+   VALIDATION RESULTS
+   ============================================ */
+.validation-score-container {
+    animation: scoreReveal 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes scoreReveal {
+    0% { transform: scale(0.8); opacity: 0; }
+    60% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.stat-card {
+    background: var(--waka-off-white);
+    padding: 16px;
+    border-radius: 12px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.missing-word-badge {
+    display: inline-block;
+    background: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    margin: 4px;
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    border: 1px solid var(--pv-danger);
+    color: var(--pv-danger);
+}
+
+/* ============================================
+   VALIDATION SUMMARY (Récapitulatif)
+   ============================================ */
+.validation-summary {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 30px;
+    border: 2px solid var(--pv-gray-300);
+}
+
+.validation-summary h6 {
+    color: var(--waka-primary);
+    font-weight: 700;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.validation-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.validation-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: white;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.validation-item i {
+    font-size: 1.2rem;
+    color: var(--pv-gray-300);
+}
+
+.validation-item.validated i {
+    color: var(--pv-success);
+}
+
+.validation-item span {
+    font-weight: 600;
+    color: var(--waka-text-muted);
+}
+
+.validation-item.validated span {
+    color: var(--pv-success);
+}
+
+.validation-item.validated {
+    background: linear-gradient(135deg, #e8f5e9 0%, #ffffff 100%);
+    border: 1px solid var(--pv-success);
+}
+
+/* ============================================
+   ALERTS
+   ============================================ */
+.alert {
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin: 15px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.alert i {
+    font-size: 1.2rem;
+    margin-top: 2px;
+}
+
+.alert-success {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border-left: 4px solid var(--pv-success);
+}
+
+.alert-info {
+    background: #e3f2fd;
+    color: #1565c0;
+    border-left: 4px solid var(--pv-info);
+}
+
+.alert-warning {
+    background: #fff3e0;
+    color: #e65100;
+    border-left: 4px solid var(--pv-warning);
+}
+
+.alert-danger {
+    background: #ffebee;
+    color: #c62828;
+    border-left: 4px solid var(--pv-danger);
+}
+
+/* ============================================
+   SPINNER
+   ============================================ */
+.spinner-border {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.15em;
+}
+
+/* ============================================
+   TOAST NOTIFICATIONS
+   ============================================ */
+.toast-container {
+    z-index: 9999;
+}
+
+.toast {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.toast-header {
+    background: var(--gradient-primary);
+    color: white;
+    border-radius: 10px 10px 0 0;
+    border-bottom: none;
+}
+
+.toast-body {
+    padding: 15px;
+    font-size: 0.95rem;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+@media (max-width: 768px) {
+    .stepper {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .step-connector {
+        width: 3px;
+        height: 30px;
+        margin: 0;
+    }
+
+    .step-label {
+        margin-left: 0;
+        margin-top: 8px;
+    }
+
+    .card-custom {
+        padding: 20px;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+    }
+
+    .voice-sample-card {
+        padding: 20px;
+    }
+
+    .sample-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .validation-badge {
+        align-self: flex-start;
+    }
+
+    .recorder-btn {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+
+    .sample-text {
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .stepper-container {
+        padding: 15px;
+    }
+
+    .step-circle {
+        width: 40px;
+        height: 40px;
+        font-size: 0.9rem;
+    }
+
+    .btn-primary-custom,
+    .btn-secondary-custom,
+    .btn-accent {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .voice-sample-card {
+        padding: 15px;
+    }
+
+    .sample-number {
+        width: 35px;
+        height: 35px;
+        font-size: 1.1rem;
+    }
+
+    .sample-title {
+        font-size: 1rem;
+    }
+}
+
+/* ============================================
+   ANIMATIONS ADDITIONNELLES
+   ============================================ */
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.voice-sample-card {
+    animation: slideInFromRight 0.5s ease;
+}
+
+.voice-sample-card:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.voice-sample-card:nth-child(3) {
+    animation-delay: 0.2s;
+}

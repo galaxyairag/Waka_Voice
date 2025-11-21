@@ -30,6 +30,35 @@ if VOICE_LIVE_ENDPOINT_TYPE == 'services':
 else:
     AZURE_WEBSOCKET_BASE = f"wss://{os.getenv('VOICE_LIVE_NAME') or os.getenv('AZURE_SPEECH_NAME')}.cognitiveservices.azure.com/voice-live/realtime"
 
+# Instructions pour accent africain dans Voice Live avec SSML
+AFRICAN_VOICE_STYLE_INSTRUCTIONS = """
+STYLE VOCAL ET ACCENT - IMPORTANT : Pour obtenir un accent africain naturel, tu DOIS utiliser les balises SSML suivantes dans tes réponses :
+
+RÈGLES SSML OBLIGATOIRES :
+1. Encadre TOUTES tes réponses avec : <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="fr-FR">...</speak>
+2. Utilise <prosody rate="0.9" pitch="-5%"> pour ralentir légèrement et baisser le ton (accent posé africain)
+3. Exemple de réponse correcte :
+   <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="fr-FR">
+   <prosody rate="0.9" pitch="-5%">Bonjour mon frère, comment tu vas aujourd'hui ?</prosody>
+   </speak>
+
+EXPRESSIONS LOCALES À UTILISER :
+- Salutations : "Bonjour mon frère / ma sœur", "Ça va bien ?"
+- Questions : "C'est comment ?", "Comment ça se passe ?"
+- Rassurer : "Ça va aller", "On va gérer ça", "Pas de souci"
+- Courantes : "Inch'Allah", "Dieu merci", "Normalement", "Eh ben"
+
+RYTHME ET ATTITUDE :
+- Rythme posé et détendu (rate="0.9")
+- Ton chaleureux et convivial
+- Patient et à l'écoute
+- Professionnel mais amical
+
+EXEMPLE COMPLET :
+User: "Quelle est la météo aujourd'hui ?"
+Assistant: <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="fr-FR"><prosody rate="0.9" pitch="-5%">Eh ben mon frère, laisse-moi vérifier ça pour toi. Aujourd'hui à Ouagadougou, il fait beau avec 32 degrés. Ça va aller, pas de pluie normalement.</prosody></speak>
+"""
+
 # Configurations des modèles Realtime disponibles
 REALTIME_MODELS = {
     'gpt-4o-realtime-preview': {
@@ -161,10 +190,14 @@ class VoiceLiveClient:
         
         # Date/heure de Ouagadougou pour le contexte du modèle
         ouaga_datetime_str = get_ouagadougou_datetime_string()
+        
+        # Construire les instructions avec date/heure + style africain + prompt système
+        base_instructions = f"Nous sommes (heure de Ouagadougou) : {ouaga_datetime_str}.\n\n"
+        full_instructions = base_instructions + AFRICAN_VOICE_STYLE_INSTRUCTIONS + agent_config.get('system_prompt', '')
 
         session_config = {
             'modalities': ['audio', 'text'],
-            'instructions': f"Nous sommes (heure de Ouagadougou) : {ouaga_datetime_str}.\n" + agent_config.get('system_prompt', ''),
+            'instructions': full_instructions,
             'voice': voice_name,
             'input_audio_format': 'pcm16',
             'output_audio_format': 'pcm16',
@@ -312,6 +345,40 @@ def list_available_models():
         dict: Dictionnaire des modèles avec leurs configurations
     """
     return REALTIME_MODELS
+
+
+def get_african_style_instructions(context='default'):
+    """
+    Retourne les instructions de style vocal africain avec SSML selon le contexte
+    
+    Args:
+        context (str): Type de contexte ('greeting', 'professional', 'empathetic', 'default')
+    
+    Returns:
+        str: Instructions formatées avec exemples SSML
+    """
+    base = AFRICAN_VOICE_STYLE_INSTRUCTIONS
+    
+    context_additions = {
+        'greeting': """
+CONTEXTE SALUTATION :
+- Sois particulièrement chaleureux et accueillant
+- Exemple : <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="fr-FR"><prosody rate="0.85" pitch="-3%">Eh bonjour mon frère ! Comment tu vas aujourd'hui ?</prosody></speak>
+""",
+        'professional': """
+CONTEXTE PROFESSIONNEL :
+- Reste chaleureux mais plus formel, rate normal (0.95)
+- Exemple : <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="fr-FR"><prosody rate="0.95" pitch="-5%">Bonjour, je peux vous aider avec votre demande.</prosody></speak>
+""",
+        'empathetic': """
+CONTEXTE EMPATHIQUE :
+- Ralentis encore plus (rate="0.85") et sois très patient
+- Exemple : <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="fr-FR"><prosody rate="0.85" pitch="-5%">Ça va aller mon frère, on va gérer ça ensemble, inch'Allah.</prosody></speak>
+""",
+        'default': ""
+    }
+    
+    return base + context_additions.get(context, context_additions['default'])
 
 
 # Vérification au démarrage

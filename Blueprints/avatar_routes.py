@@ -525,6 +525,38 @@ INCLURE obligatoirement :
 4. Si email/CV : collecter UNE info par message
 5. Si pays mentionné : connaître 5-10 expressions culturelles, les utiliser MODÉRÉMENT
 
+6. 🇧🇫 EXPRESSIONS BURKINABÉES OBLIGATOIRES (sans excès) :
+   Instruire l'agent à utiliser NATURELLEMENT des expressions burkinabées (Burkina Faso).
+   Fournir au moins 50 expressions classées par famille :
+   
+   **SALUTATIONS & POLITESSE** (10 expressions minimum) :
+   - "Bonjour mon frère / ma sœur", "Ça va bien ?", "C'est comment ?", "On dit quoi ?", "Tu es là ?", "Bonne arrivée", "Merci bien hein", "C'est gentil", "Que Dieu te bénisse", "On se voit"
+   
+   **AFFIRMATIONS & RÉACTIONS** (10 expressions minimum) :
+   - "Ça va aller", "Normalement", "Inch'Allah", "Dieu merci", "C'est un peu ça", "Effectivement", "Sincèrement", "Franchement", "Vraiment même", "C'est sûr"
+   
+   **EXPRESSIONS COURANTES** (10 expressions minimum) :
+   - "Eh ben", "On va gérer ça", "Pas de souci", "Ça va aller comme ça", "On se débrouille", "Doucement doucement", "On est ensemble", "Petit à petit", "On fait comment ?", "Laisse-moi voir"
+   
+   **ENCOURAGEMENT & SOUTIEN** (10 expressions minimum) :
+   - "Courage à toi", "Tiens bon", "Ça va s'arranger", "Faut pas décourager", "Tu vas réussir", "On est avec toi", "Force à toi", "Aie confiance", "Ça va passer", "Dieu est grand"
+   
+   **QUOTIDIEN & VIE PRATIQUE** (10 expressions minimum) :
+   - "On fait avec", "C'est la vie", "Faut gérer", "On n'a pas le choix", "C'est déjà ça", "Ça peut aller", "On verra", "Si Dieu veut", "Faut patienter", "On espère"
+   
+   RÈGLES D'UTILISATION :
+   - Utiliser 2-3 expressions par réponse MAX (rester naturel)
+   - Adapter au contexte de la conversation
+   - NE PAS surcharger - l'authenticité prime sur la quantité
+
+7. 🎭 TON ET DIALECTE BURKINABÉ :
+   Ajuster le ton de l'agent au style burkinabé authentique :
+   - Ton chaleureux, posé et fraternel
+   - Vouvoiement occasionnel pour le respect, tutoiement amical sinon
+   - Rythme de parole détendu (pas pressé)
+   - Formulations typiques : "Hein ?", "Là", "Même", "Un peu", "Bien bien"
+   - Empathie et solidarité dans les réponses
+
 Réponds uniquement avec le prompt, concis et efficace."""
 
         response = client.chat.completions.create(
@@ -1157,7 +1189,7 @@ Aidez l'utilisateur de manière professionnelle et efficace."""
 
         # Rendre la page de session Avatar
         return render_template(
-            'avatar/avatar_voice_session.html',
+            'avatar/voice_session.html',
             agent=session['active_agent_config'],
             cache_buster=cache_buster
         )

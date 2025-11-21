@@ -3,421 +3,18 @@
 {% block title %}Voix Personnelles{% endblock %}
 
 {% block extra_css %}
-<style>
-    /* Stepper */
-    .stepper-container {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 40px;
-        padding: 20px;
-        background: var(--waka-white);
-        border-radius: 16px;
-        box-shadow: 0 4px 20px var(--waka-shadow);
-    }
-
-    .stepper {
-        display: flex;
-        align-items: center;
-        gap: 0;
-    }
-
-    .step {
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .step-circle {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        background: var(--waka-off-white);
-        border: 3px solid var(--waka-border);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 1.1rem;
-        color: var(--waka-text-muted);
-        transition: all 0.3s ease;
-    }
-
-    .step.active .step-circle {
-        background: var(--gradient-primary);
-        border-color: var(--waka-primary);
-        color: white;
-        box-shadow: 0 4px 15px rgba(74, 20, 140, 0.4);
-    }
-
-    .step.completed .step-circle {
-        background: #4CAF50;
-        border-color: #4CAF50;
-        color: white;
-    }
-
-    .step-label {
-        margin-left: 12px;
-        font-weight: 600;
-        color: var(--waka-text-muted);
-        font-size: 0.9rem;
-        white-space: nowrap;
-    }
-
-    .step.active .step-label {
-        color: var(--waka-primary);
-    }
-
-    .step.completed .step-label {
-        color: #4CAF50;
-    }
-
-    .step-connector {
-        width: 60px;
-        height: 3px;
-        background: var(--waka-border);
-        margin: 0 10px;
-    }
-
-    .step.completed + .step-connector,
-    .step.active + .step-connector {
-        background: var(--waka-primary-light);
-    }
-
-    /* Cards */
-    .step-content {
-        display: none;
-    }
-
-    .step-content.active {
-        display: block;
-        animation: fadeIn 0.4s ease;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .card-custom {
-        background: var(--waka-white);
-        border-radius: 16px;
-        padding: 30px;
-        box-shadow: 0 4px 20px var(--waka-shadow);
-        border: 1px solid var(--waka-border);
-    }
-
-    .card-header-custom {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 25px;
-        padding-bottom: 20px;
-        border-bottom: 2px solid var(--waka-primary-pale);
-    }
-
-    .card-header-custom i {
-        font-size: 2rem;
-        color: var(--waka-primary);
-    }
-
-    .card-header-custom h3 {
-        margin: 0;
-        color: var(--waka-primary);
-        font-weight: 700;
-    }
-
-    /* Form elements */
-    .form-group {
-        margin-bottom: 20px;
-    }
-
-    .form-label {
-        font-weight: 600;
-        color: var(--waka-text);
-        margin-bottom: 8px;
-        display: block;
-    }
-
-    .form-control, .form-select {
-        border: 2px solid var(--waka-border);
-        border-radius: 10px;
-        padding: 12px 16px;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-    }
-
-    .form-control:focus, .form-select:focus {
-        border-color: var(--waka-primary);
-        box-shadow: 0 0 0 3px rgba(74, 20, 140, 0.1);
-    }
-
-    /* Buttons */
-    .btn-primary-custom {
-        background: var(--gradient-primary);
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 10px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .btn-primary-custom:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(74, 20, 140, 0.4);
-        color: white;
-    }
-
-    .btn-secondary-custom {
-        background: var(--waka-off-white);
-        color: var(--waka-primary);
-        border: 2px solid var(--waka-border);
-        padding: 12px 24px;
-        border-radius: 10px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .btn-secondary-custom:hover {
-        background: var(--waka-primary-pale);
-        color: var(--waka-primary);
-    }
-
-    .btn-accent {
-        background: var(--gradient-accent);
-        color: var(--waka-text);
-        border: none;
-        padding: 12px 24px;
-        border-radius: 10px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .btn-accent:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(255, 111, 0, 0.4);
-    }
-
-    /* Audio Recorder */
-    .recorder-container {
-        background: var(--waka-bg-light);
-        border-radius: 12px;
-        padding: 30px;
-        text-align: center;
-        border: 2px dashed var(--waka-border);
-        margin: 20px 0;
-    }
-
-    .recorder-container.recording {
-        border-color: #f44336;
-        background: #ffebee;
-    }
-
-    .recorder-btn {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        border: none;
-        cursor: pointer;
-        font-size: 2rem;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .recorder-btn.record {
-        background: var(--gradient-primary);
-        color: white;
-    }
-
-    .recorder-btn.recording {
-        background: #f44336;
-        color: white;
-        animation: pulse 1.5s infinite;
-    }
-
-    .recorder-btn.stop {
-        background: #f44336;
-        color: white;
-    }
-
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.1); }
-    }
-
-    .recording-time {
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--waka-primary);
-        margin: 15px 0;
-        font-family: 'Orbitron', monospace;
-    }
-
-    .audio-preview {
-        margin-top: 20px;
-    }
-
-    .audio-preview audio {
-        width: 100%;
-        max-width: 400px;
-    }
-
-    /* Info boxes */
-    .info-box {
-        background: var(--waka-bg-light);
-        border-left: 4px solid var(--waka-primary);
-        padding: 15px 20px;
-        border-radius: 0 10px 10px 0;
-        margin: 15px 0;
-    }
-
-    .info-box i {
-        color: var(--waka-primary);
-        margin-right: 8px;
-    }
-
-    .consent-text-box {
-        background: #fff3e0;
-        border: 2px solid var(--waka-accent-orange);
-        border-radius: 10px;
-        padding: 20px;
-        margin: 15px 0;
-        font-style: italic;
-    }
-
-    /* Status badges */
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
-    }
-
-    .status-badge.pending {
-        background: #fff3e0;
-        color: #e65100;
-    }
-
-    .status-badge.success {
-        background: #e8f5e9;
-        color: #2e7d32;
-    }
-
-    .status-badge.error {
-        background: #ffebee;
-        color: #c62828;
-    }
-
-    .status-badge.processing {
-        background: #e3f2fd;
-        color: #1565c0;
-    }
-
-    /* Projects list */
-    .projects-list {
-        max-height: 300px;
-        overflow-y: auto;
-        margin-top: 20px;
-    }
-
-    .project-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 15px;
-        background: var(--waka-off-white);
-        border-radius: 10px;
-        margin-bottom: 10px;
-        border: 1px solid var(--waka-border);
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .project-item:hover {
-        background: var(--waka-primary-pale);
-        transform: translateX(5px);
-    }
-
-    .project-item.selected {
-        background: var(--waka-primary-pale);
-        border-color: var(--waka-primary);
-    }
-
-    /* Voice synthesis */
-    .synthesis-result {
-        background: var(--waka-bg-light);
-        border-radius: 12px;
-        padding: 20px;
-        margin-top: 20px;
-        text-align: center;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .stepper {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 20px;
-        }
-
-        .step-connector {
-            width: 3px;
-            height: 30px;
-            margin: 0 0 0 24px;
-        }
-
-        .step-label {
-            display: none;
-        }
-    }
-
-    /* Loading spinner */
-    .spinner-custom {
-        width: 40px;
-        height: 40px;
-        border: 4px solid var(--waka-primary-pale);
-        border-top-color: var(--waka-primary);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-
-    /* Action buttons group */
-    .btn-group-custom {
-        display: flex;
-        gap: 12px;
-        margin-top: 25px;
-        flex-wrap: wrap;
-    }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/personal_voice.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid px-0">
-    <!-- Page Header -->
-    <div class="text-center mb-4">
-        <h1 style="color: var(--waka-primary); font-weight: 700;">
-            <i class="bi bi-mic-fill"></i> Voix Personnelles Azure AI
-        </h1>
-        <p class="text-muted">Créez votre propre voix IA personnalisée en 4 étapes simples</p>
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="page-title">
+                <i class="bi bi-mic-fill"></i> Création de Voix Personnelles
+            </h1>
+            <p class="page-subtitle">Créez votre propre voix synthétique avec Azure AI Speech</p>
+        </div>
     </div>
 
     <!-- Stepper -->
@@ -425,1041 +22,460 @@
         <div class="stepper">
             <div class="step active" data-step="1">
                 <div class="step-circle">1</div>
-                <span class="step-label">Créer Projet</span>
+                <div class="step-label">Projet</div>
             </div>
             <div class="step-connector"></div>
             <div class="step" data-step="2">
                 <div class="step-circle">2</div>
-                <span class="step-label">Consentement</span>
+                <div class="step-label">Consentement</div>
             </div>
             <div class="step-connector"></div>
             <div class="step" data-step="3">
                 <div class="step-circle">3</div>
-                <span class="step-label">Créer Voix</span>
+                <div class="step-label">Échantillons Vocaux</div>
             </div>
             <div class="step-connector"></div>
             <div class="step" data-step="4">
                 <div class="step-circle">4</div>
-                <span class="step-label">Utiliser</span>
+                <div class="step-label">Synthèse</div>
             </div>
         </div>
     </div>
 
-    <!-- Step 1: Créer Projet -->
+    <!-- ÉTAPE 1: Projet -->
     <div class="step-content active" id="step1">
-        <div class="row">
-            <div class="col-lg-6 mb-4">
-                <div class="card-custom">
-                    <div class="card-header-custom">
-                        <i class="bi bi-folder-plus"></i>
-                        <div>
-                            <h3>Créer un nouveau projet</h3>
-                            <small class="text-muted">Étape 1/4</small>
-                        </div>
-                    </div>
-
-                    <form id="createProjectForm">
-                        <div class="form-group">
-                            <label class="form-label">Nom du projet *</label>
-                            <input type="text" class="form-control" id="projectName" 
-                                   placeholder="Ex: Voix Assistant Client" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Description</label>
-                            <textarea class="form-control" id="projectDescription" rows="3"
-                                      placeholder="Description de l'utilisation prévue..."></textarea>
-                        </div>
-
-                        <div class="info-box">
-                            <i class="bi bi-info-circle"></i>
-                            Le projet contiendra le consentement et la voix personnelle. 
-                            Un seul projet peut contenir plusieurs voix.
-                        </div>
-
-                        <div class="btn-group-custom">
-                            <button type="submit" class="btn-primary-custom">
-                                <i class="bi bi-plus-circle"></i> Créer le projet
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="col-lg-6 mb-4">
-                <div class="card-custom">
-                    <div class="card-header-custom">
-                        <i class="bi bi-folder2-open"></i>
-                        <div>
-                            <h3>Projets existants</h3>
-                            <small class="text-muted">Sélectionnez pour continuer</small>
-                        </div>
-                    </div>
-
-                    <div class="projects-list" id="projectsList">
-                        <p class="text-muted text-center py-4">
-                            <i class="bi bi-hourglass-split"></i> Chargement...
+        <!-- Message Service Indisponible -->
+        <div class="alert alert-warning" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border: 2px solid #ffc107; border-radius: 15px; padding: 25px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.2);">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <i class="bi bi-clock-history" style="font-size: 3rem; color: #ff6b6b;"></i>
+                <div>
+                    <h4 style="color: #856404; margin: 0 0 10px 0; font-weight: 700;">
+                        <i class="bi bi-exclamation-triangle-fill"></i> Service Temporairement Indisponible
+                    </h4>
+                    <p style="margin: 0 0 8px 0; color: #533f03; font-size: 1.05rem; line-height: 1.6;">
+                        La création de voix personnalisées est actuellement suspendue dans l'attente de l'accord de Microsoft.
+                    </p>
+                    <div style="background: rgba(255, 255, 255, 0.7); padding: 12px; border-radius: 8px; margin-top: 12px;">
+                        <p style="margin: 0 0 5px 0; color: #533f03; font-size: 0.95rem;">
+                            📅 <strong>Demande initiale :</strong> 14 novembre 2025
+                        </p>
+                        <p style="margin: 0 0 5px 0; color: #533f03; font-size: 0.95rem;">
+                            🔄 <strong>Relance effectuée :</strong> 20 novembre 2025
+                        </p>
+                        <p style="margin: 0; color: #533f03; font-size: 0.95rem;">
+                            ⏳ <strong>Statut :</strong> En attente de validation Microsoft
                         </p>
                     </div>
-
-                    <div class="btn-group-custom">
-                        <button class="btn-secondary-custom" onclick="loadProjects()">
-                            <i class="bi bi-arrow-clockwise"></i> Actualiser
-                        </button>
-                    </div>
+                    <p style="margin: 15px 0 0 0; color: #856404; font-size: 0.9rem; font-style: italic;">
+                        Merci de votre patience. Nous vous informerons dès que le service sera rétabli.
+                    </p>
                 </div>
+            </div>
+        </div>
+        
+        <div class="card-custom" style="opacity: 0.6; pointer-events: none;">
+            <div class="card-header-custom">
+                <i class="bi bi-folder-plus"></i>
+                <h3>Créer ou Sélectionner un Projet</h3>
+            </div>
+
+            <!-- Projets existants -->
+            <div class="mb-4">
+                <label class="form-label">Projets existants</label>
+                <select class="form-select" id="existingProjects" onchange="selectExistingProject()">
+                    <option value="">-- Sélectionner un projet --</option>
+                </select>
+            </div>
+
+            <div class="text-center mb-3">
+                <strong>OU</strong>
+            </div>
+
+            <!-- Nouveau projet -->
+            <form id="createProjectForm">
+                <div class="form-group">
+                    <label class="form-label">Nom du projet</label>
+                    <input type="text" class="form-control" id="projectName" placeholder="Mon projet vocal" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" id="projectDescription" rows="3" placeholder="Description du projet..."></textarea>
+                </div>
+                <div class="text-end">
+                    <button type="button" class="btn-primary-custom" onclick="createProject()">
+                        <i class="bi bi-plus-circle"></i> Créer le projet
+                    </button>
+                </div>
+            </form>
+
+            <div class="text-end mt-4">
+                <button class="btn-primary-custom" onclick="goToStep(2)" id="step1NextBtn" disabled>
+                    Suivant <i class="bi bi-arrow-right"></i>
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Step 2: Consentement -->
+    <!-- ÉTAPE 2: Consentement -->
     <div class="step-content" id="step2">
-        <div class="row">
-            <div class="col-lg-8 mx-auto mb-4">
-                <div class="card-custom">
-                    <div class="card-header-custom">
-                        <i class="bi bi-shield-check"></i>
-                        <div>
-                            <h3>Enregistrer le consentement</h3>
-                            <small class="text-muted">Étape 2/4</small>
-                        </div>
-                    </div>
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <i class="bi bi-shield-check"></i>
+                <h3>Enregistrement du Consentement</h3>
+            </div>
 
-                    <div class="info-box">
-                        <i class="bi bi-exclamation-triangle"></i>
-                        <strong>Important:</strong> Le consentement vocal est obligatoire pour créer une voix personnelle.
-                        La personne doit lire le texte ci-dessous clairement.
-                    </div>
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                <strong>Important :</strong> L'enregistrement du consentement doit correspondre au texte (score minimum requis : <strong>90%</strong>)
+            </div>
 
+            <!-- Informations personnelles -->
+            <div class="row mb-4">
+                <div class="col-md-6">
                     <div class="form-group">
-                        <label class="form-label">Langue du consentement</label>
-                        <select class="form-select" id="consentLocale" onchange="updateConsentText()">
-                            <option value="fr-FR">Français (France)</option>
-                            <option value="en-US">English (US)</option>
-                            <option value="es-ES">Español</option>
-                            <option value="de-DE">Deutsch</option>
-                            <option value="pt-BR">Português (Brasil)</option>
-                        </select>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label class="form-label">Prénom *</label>
-                                <input type="text" class="form-control" id="firstName" 
-                                       placeholder="Votre prénom" required onkeyup="updateConsentTextWithNames()">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label class="form-label">Nom *</label>
-                                <input type="text" class="form-control" id="lastName" 
-                                       placeholder="Votre nom" required onkeyup="updateConsentTextWithNames()">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label class="form-label">Nom de l'entreprise *</label>
-                                <input type="text" class="form-control" id="companyName" 
-                                       placeholder="Nom de votre entreprise" required onkeyup="updateConsentTextWithNames()">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="consent-text-box" id="consentTextBox">
-                        <i class="bi bi-quote"></i>
-                        <p style="margin: 0; line-height: 1.6;">
-                            "Je <strong><span id="fullNameDisplay">[prénom et nom]</span></strong> suis conscient(e) que les enregistrements de ma voix 
-                            seront utilisés par <strong><span id="companyNameDisplay">[nom de l'entreprise]</span></strong> pour créer et utiliser 
-                            une version synthétique de ma voix."
-                        </p>
-                    </div>
-
-                    <div class="recorder-container" id="consentRecorder">
-                        <h5>Enregistrer le consentement</h5>
-                        <p class="text-muted mb-3">Cliquez pour démarrer l'enregistrement</p>
-                        
-                        <button class="recorder-btn record" id="consentRecordBtn" onclick="toggleConsentRecording()">
-                            <i class="bi bi-mic-fill"></i>
-                        </button>
-                        
-                        <div class="recording-time" id="consentRecordingTime">00:00</div>
-                        
-                        <div class="audio-preview" id="consentAudioPreview" style="display: none;">
-                            <audio id="consentAudioPlayer" controls></audio>
-                        </div>
-                    </div>
-
-                    <div class="btn-group-custom">
-                        <button class="btn-secondary-custom" onclick="goToStep(1)">
-                            <i class="bi bi-arrow-left"></i> Retour
-                        </button>
-                        <button class="btn-primary-custom" onclick="submitConsent()" id="submitConsentBtn" disabled>
-                            <i class="bi bi-cloud-upload"></i> Envoyer le consentement
-                        </button>
+                        <label class="form-label">Prénom</label>
+                        <input type="text" class="form-control" id="firstName" placeholder="Votre prénom" required>
                     </div>
                 </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Nom</label>
+                        <input type="text" class="form-control" id="lastName" placeholder="Votre nom" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Nom de l'entreprise</label>
+                <input type="text" class="form-control" id="companyName" placeholder="Nom de votre entreprise" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Langue</label>
+                <select class="form-select" id="locale" onchange="updateConsentText()">
+                    <option value="fr-FR">Français (France)</option>
+                    <option value="en-US">English (US)</option>
+                    <option value="en-GB">English (UK)</option>
+                    <option value="es-ES">Español</option>
+                    <option value="de-DE">Deutsch</option>
+                    <option value="pt-BR">Português (Brasil)</option>
+                </select>
+            </div>
+
+            <!-- Texte de consentement -->
+            <div class="consent-text-box">
+                <h5><i class="bi bi-file-text"></i> Texte à lire (durée: 8-15 secondes)</h5>
+                <p id="consentTextDisplay" class="consent-text">
+                    Je <strong id="fullNameDisplay">[prénom et nom]</strong> suis conscient(e) que les enregistrements de ma voix 
+                    seront utilisés par <strong id="companyNameDisplay">[nom de l'entreprise]</strong> pour créer et 
+                    utiliser une version synthétique de ma voix.
+                </p>
+                <div class="alert alert-warning mt-2">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <small><strong>Lisez ce texte avec précision.</strong> Un score minimum de 90% est requis pour valider.</small>
+                </div>
+            </div>
+
+            <!-- Enregistreur -->
+            <div class="recorder-container" id="consentRecorder">
+                <button class="recorder-btn record" id="consentRecorderBtn" onclick="toggleConsentRecording()">
+                    <i class="bi bi-mic-fill"></i>
+                </button>
+                <div class="recording-time" id="consentRecordingTime">00:00</div>
+                <p class="recorder-hint">
+                    <strong>Cliquez pour enregistrer</strong><br>
+                    Lisez le texte de consentement ci-dessus (8-15 secondes)
+                </p>
+            </div>
+
+            <!-- Aperçu audio -->
+            <div id="consentAudioPreview" style="display: none; margin-top: 20px;">
+                <div class="card-custom" style="background: var(--waka-bg-light);">
+                    <h5><i class="bi bi-volume-up-fill"></i> Aperçu</h5>
+                    <audio controls id="consentAudio" style="width: 100%; margin-top: 10px;"></audio>
+                    
+                    <button class="btn-primary-custom" onclick="validateConsentTranscription()" style="width: 100%; margin-top: 15px;">
+                        <i class="bi bi-shield-check"></i> Valider la transcription
+                    </button>
+                </div>
+            </div>
+
+            <!-- Résultats validation -->
+            <div id="consentValidation" style="display: none; margin-top: 20px;"></div>
+
+            <!-- Navigation -->
+            <div class="d-flex justify-content-between mt-4">
+                <button class="btn-secondary-custom" onclick="goToStep(1)">
+                    <i class="bi bi-arrow-left"></i> Retour
+                </button>
+                <button class="btn-primary-custom" onclick="submitConsent()" id="submitConsentBtn" disabled>
+                    Soumettre le consentement <i class="bi bi-arrow-right"></i>
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Step 3: Créer la voix -->
+    <!-- ÉTAPE 3: Échantillons Vocaux (3 audios) -->
     <div class="step-content" id="step3">
-        <div class="row">
-            <div class="col-lg-8 mx-auto mb-4">
-                <div class="card-custom">
-                    <div class="card-header-custom">
-                        <i class="bi bi-soundwave"></i>
-                        <div>
-                            <h3>Créer la voix personnelle</h3>
-                            <small class="text-muted">Étape 3/4</small>
-                        </div>
-                    </div>
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <i class="bi bi-soundwave"></i>
+                <h3>Échantillons Vocaux (3 enregistrements)</h3>
+            </div>
 
-                    <div class="info-box">
-                        <i class="bi bi-info-circle"></i>
-                        Enregistrez un échantillon vocal de 60 secondes minimum. 
-                        Parlez clairement dans un environnement calme.
-                    </div>
+            <div class="alert alert-info">
+                <i class="bi bi-lightbulb"></i>
+                <strong>Instructions :</strong> Enregistrez 3 échantillons de votre voix dans différents contextes. 
+                Chaque enregistrement doit correspondre au texte fourni avec un score minimum de <strong>80%</strong>.
+            </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Nom de la voix *</label>
-                        <input type="text" class="form-control" id="voiceName" 
-                               placeholder="Ex: Voix Claire Assistant">
-                    </div>
+            <div class="form-group">
+                <label class="form-label">Nom de la voix</label>
+                <input type="text" class="form-control" id="voiceName" placeholder="Ma voix personnelle" required>
+            </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-control" id="voiceDescription" rows="2"
-                                  placeholder="Description de la voix..."></textarea>
-                    </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" id="voiceDescription" rows="2" placeholder="Description de la voix..."></textarea>
+            </div>
 
-                    <div class="info-box" style="background: #e8f5e9; border-left-color: #4CAF50;">
-                        <i class="bi bi-book" style="color: #4CAF50;"></i>
-                        <strong>Textes recommandés à lire :</strong> Choisissez un ou plusieurs paragraphes ci-dessous pour atteindre 60 secondes d'enregistrement.
+            <!-- AUDIO 1 : Formation -->
+            <div class="voice-sample-card" id="voiceSample1Card">
+                <div class="sample-header">
+                    <div>
+                        <span class="sample-number">1</span>
+                        <h5 class="sample-title">Contexte : Formation / Éducation</h5>
                     </div>
+                    <span class="validation-badge not-validated" id="sample1Badge">
+                        <i class="bi bi-x-circle"></i> Non validé
+                    </span>
+                </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-4 mb-3">
-                            <div class="card h-100" style="border: 2px solid var(--waka-border); border-radius: 10px;">
-                                <div class="card-body">
-                                    <h6 class="card-title" style="color: var(--waka-primary);"><i class="bi bi-1-circle-fill"></i> Service Client</h6>
-                                    <p class="card-text" style="font-size: 0.9rem; line-height: 1.5;">
-                                        "Bonjour et bienvenue chez Waka Afrique. Je suis ravi de vous accompagner aujourd'hui. 
-                                        Notre équipe s'engage à vous offrir une expérience exceptionnelle. N'hésitez pas à me poser 
-                                        toutes vos questions, je suis là pour vous aider à trouver les meilleures solutions adaptées 
-                                        à vos besoins. Ensemble, nous allons transformer chaque interaction en une opportunité de réussite."
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="card h-100" style="border: 2px solid var(--waka-border); border-radius: 10px;">
-                                <div class="card-body">
-                                    <h6 class="card-title" style="color: var(--waka-primary);"><i class="bi bi-2-circle-fill"></i> Information Technique</h6>
-                                    <p class="card-text" style="font-size: 0.9rem; line-height: 1.5;">
-                                        "L'intelligence artificielle révolutionne notre manière de communiquer. Grâce aux technologies 
-                                        Azure AI et aux modèles de langage avancés, nous créons des expériences vocales naturelles et personnalisées. 
-                                        La synthèse vocale permet de générer une voix unique qui vous ressemble, en préservant vos intonations 
-                                        et votre style de communication. C'est une avancée majeure dans l'accessibilité et l'efficacité des services."
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="card h-100" style="border: 2px solid var(--waka-border); border-radius: 10px;">
-                                <div class="card-body">
-                                    <h6 class="card-title" style="color: var(--waka-primary);"><i class="bi bi-3-circle-fill"></i> Message Inspirant</h6>
-                                    <p class="card-text" style="font-size: 0.9rem; line-height: 1.5;">
-                                        "Chaque interaction compte, chaque voix est unique. Au Burkina Faso et partout en Afrique, 
-                                        nous croyons au pouvoir de la technologie pour créer des liens authentiques. Votre voix porte 
-                                        vos valeurs, votre chaleur humaine et votre professionnalisme. Ensemble, construisons un avenir 
-                                        où la technologie amplifie l'humain plutôt que de le remplacer. L'innovation est au service de l'émotion."
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                <div class="sample-text-box">
+                    <h6><i class="bi bi-book"></i> Texte à lire :</h6>
+                    <p class="sample-text" id="sample1Text">
+                        Bienvenue dans ce module de formation sur l'intelligence artificielle. Aujourd'hui, nous allons 
+                        découvrir les concepts fondamentaux du machine learning et leurs applications pratiques. 
+                        N'hésitez pas à poser des questions si certains points nécessitent des éclaircissements. 
+                        Ensemble, nous progresserons étape par étape vers la maîtrise de ces technologies.
+                    </p>
+                </div>
+
+                <div class="recorder-container" id="voiceRecorder1">
+                    <button class="recorder-btn record" id="voiceRecorderBtn1" onclick="toggleVoiceRecording(1)">
+                        <i class="bi bi-mic-fill"></i>
+                    </button>
+                    <div class="recording-time" id="voiceRecordingTime1">00:00</div>
+                    <p class="recorder-hint">Enregistrez le texte ci-dessus (15-25 secondes)</p>
+                </div>
+
+                <div id="voiceAudioPreview1" style="display: none; margin-top: 15px;">
+                    <audio controls id="voiceAudio1" style="width: 100%;"></audio>
+                    <button class="btn-primary-custom mt-2" onclick="validateVoiceSample(1)" style="width: 100%;">
+                        <i class="bi bi-shield-check"></i> Valider la transcription
+                    </button>
+                </div>
+
+                <div id="voiceValidation1" style="display: none; margin-top: 15px;"></div>
+            </div>
+
+            <!-- AUDIO 2 : Service Client -->
+            <div class="voice-sample-card" id="voiceSample2Card">
+                <div class="sample-header">
+                    <div>
+                        <span class="sample-number">2</span>
+                        <h5 class="sample-title">Contexte : Service Client</h5>
                     </div>
+                    <span class="validation-badge not-validated" id="sample2Badge">
+                        <i class="bi bi-x-circle"></i> Non validé
+                    </span>
+                </div>
 
-                    <div class="recorder-container" id="voiceRecorder">
-                        <h5>Enregistrer l'échantillon vocal</h5>
-                        <p class="text-muted mb-3">Minimum 60 secondes - Lisez un ou plusieurs paragraphes ci-dessus</p>
-                        
-                        <button class="recorder-btn record" id="voiceRecordBtn" onclick="toggleVoiceRecording()">
-                            <i class="bi bi-mic-fill"></i>
-                        </button>
-                        
-                        <div class="recording-time" id="voiceRecordingTime">00:00</div>
-                        
-                        <div class="audio-preview" id="voiceAudioPreview" style="display: none;">
-                            <audio id="voiceAudioPlayer" controls></audio>
-                        </div>
+                <div class="sample-text-box">
+                    <h6><i class="bi bi-headset"></i> Texte à lire :</h6>
+                    <p class="sample-text" id="sample2Text">
+                        Bonjour et merci d'avoir contacté notre service client. Je suis là pour vous aider aujourd'hui. 
+                        Pourriez-vous me donner plus de détails sur votre demande ? Je vais faire mon possible pour 
+                        résoudre votre problème rapidement et efficacement. Votre satisfaction est notre priorité 
+                        et nous sommes à votre écoute.
+                    </p>
+                </div>
+
+                <div class="recorder-container" id="voiceRecorder2">
+                    <button class="recorder-btn record" id="voiceRecorderBtn2" onclick="toggleVoiceRecording(2)">
+                        <i class="bi bi-mic-fill"></i>
+                    </button>
+                    <div class="recording-time" id="voiceRecordingTime2">00:00</div>
+                    <p class="recorder-hint">Enregistrez le texte ci-dessus (15-25 secondes)</p>
+                </div>
+
+                <div id="voiceAudioPreview2" style="display: none; margin-top: 15px;">
+                    <audio controls id="voiceAudio2" style="width: 100%;"></audio>
+                    <button class="btn-primary-custom mt-2" onclick="validateVoiceSample(2)" style="width: 100%;">
+                        <i class="bi bi-shield-check"></i> Valider la transcription
+                    </button>
+                </div>
+
+                <div id="voiceValidation2" style="display: none; margin-top: 15px;"></div>
+            </div>
+
+            <!-- AUDIO 3 : Podcast/Vidéo -->
+            <div class="voice-sample-card" id="voiceSample3Card">
+                <div class="sample-header">
+                    <div>
+                        <span class="sample-number">3</span>
+                        <h5 class="sample-title">Contexte : Podcast / Vidéo</h5>
                     </div>
+                    <span class="validation-badge not-validated" id="sample3Badge">
+                        <i class="bi bi-x-circle"></i> Non validé
+                    </span>
+                </div>
 
-                    <div id="voiceCreationStatus" style="display: none;">
-                        <div class="text-center py-3">
-                            <div class="spinner-custom mx-auto mb-3"></div>
-                            <p class="text-muted">Création de la voix en cours...</p>
-                        </div>
+                <div class="sample-text-box">
+                    <h6><i class="bi bi-broadcast"></i> Texte à lire :</h6>
+                    <p class="sample-text" id="sample3Text">
+                        Bienvenue dans cet épisode où nous explorons les dernières innovations technologiques. 
+                        Aujourd'hui, nous allons discuter de l'impact de l'intelligence artificielle sur notre quotidien. 
+                        Ces avancées transforment profondément notre façon de travailler et de communiquer. 
+                        Restez avec nous pour découvrir comment ces technologies façonnent notre avenir.
+                    </p>
+                </div>
+
+                <div class="recorder-container" id="voiceRecorder3">
+                    <button class="recorder-btn record" id="voiceRecorderBtn3" onclick="toggleVoiceRecording(3)">
+                        <i class="bi bi-mic-fill"></i>
+                    </button>
+                    <div class="recording-time" id="voiceRecordingTime3">00:00</div>
+                    <p class="recorder-hint">Enregistrez le texte ci-dessus (15-25 secondes)</p>
+                </div>
+
+                <div id="voiceAudioPreview3" style="display: none; margin-top: 15px;">
+                    <audio controls id="voiceAudio3" style="width: 100%;"></audio>
+                    <button class="btn-primary-custom mt-2" onclick="validateVoiceSample(3)" style="width: 100%;">
+                        <i class="bi bi-shield-check"></i> Valider la transcription
+                    </button>
+                </div>
+
+                <div id="voiceValidation3" style="display: none; margin-top: 15px;"></div>
+            </div>
+
+            <!-- Récapitulatif validation -->
+            <div class="validation-summary">
+                <h6><i class="bi bi-clipboard-check"></i> Récapitulatif des validations</h6>
+                <div class="validation-progress">
+                    <div class="validation-item" id="validationItem1">
+                        <i class="bi bi-circle"></i> <span>Échantillon 1 (Formation)</span>
                     </div>
-
-                    <div class="btn-group-custom">
-                        <button class="btn-secondary-custom" onclick="goToStep(2)">
-                            <i class="bi bi-arrow-left"></i> Retour
-                        </button>
-                        <button class="btn-primary-custom" onclick="createPersonalVoice()" id="createVoiceBtn" disabled>
-                            <i class="bi bi-magic"></i> Créer la voix
-                        </button>
+                    <div class="validation-item" id="validationItem2">
+                        <i class="bi bi-circle"></i> <span>Échantillon 2 (Service Client)</span>
+                    </div>
+                    <div class="validation-item" id="validationItem3">
+                        <i class="bi bi-circle"></i> <span>Échantillon 3 (Podcast/Vidéo)</span>
                     </div>
                 </div>
+            </div>
+
+            <!-- Statut création -->
+            <div id="voiceCreationStatus" style="display: none; margin-top: 20px;">
+                <div class="alert alert-info">
+                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                    <strong>Création en cours...</strong> Cela peut prendre quelques minutes.
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="d-flex justify-content-between mt-4">
+                <button class="btn-secondary-custom" onclick="goToStep(2)">
+                    <i class="bi bi-arrow-left"></i> Retour
+                </button>
+                <button class="btn-primary-custom" onclick="createPersonalVoice()" id="createVoiceBtn" disabled>
+                    <i class="bi bi-check-circle"></i> Créer la voix (0/3 validés)
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Step 4: Utiliser la voix -->
+    <!-- ÉTAPE 4: Synthèse -->
     <div class="step-content" id="step4">
-        <div class="row">
-            <div class="col-lg-8 mx-auto mb-4">
-                <div class="card-custom">
-                    <div class="card-header-custom">
-                        <i class="bi bi-play-circle"></i>
-                        <div>
-                            <h3>Utiliser la voix personnelle</h3>
-                            <small class="text-muted">Étape 4/4</small>
-                        </div>
-                    </div>
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <i class="bi bi-play-circle"></i>
+                <h3>Test de Synthèse Vocale</h3>
+            </div>
 
-                    <div class="alert alert-success" role="alert" id="voiceSuccessAlert">
-                        <i class="bi bi-check-circle-fill me-2"></i>
-                        <strong>Félicitations!</strong> Votre voix personnelle est prête.
-                    </div>
+            <div class="alert alert-success">
+                <i class="bi bi-check-circle-fill"></i>
+                <strong>Félicitations !</strong> Votre voix personnelle a été créée avec succès.
+            </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Speaker Profile ID</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="speakerProfileId" readonly>
-                            <button class="btn btn-outline-secondary" onclick="copySpeakerProfileId()">
-                                <i class="bi bi-clipboard"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Texte à synthétiser</label>
-                        <textarea class="form-control" id="synthesisText" rows="4"
-                                  placeholder="Entrez le texte que vous souhaitez faire prononcer par votre voix..."></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Voix de base</label>
-                        <select class="form-select" id="baseVoice">
-                            <option value="en-US-AvaMultilingualNeural">Ava (Multilingue)</option>
-                            <option value="en-US-AndrewMultilingualNeural">Andrew (Multilingue)</option>
-                            <option value="fr-FR-DeniseNeural">Denise (Français)</option>
-                            <option value="fr-FR-HenriNeural">Henri (Français)</option>
-                        </select>
-                    </div>
-
-                    <div class="btn-group-custom">
-                        <button class="btn-accent" onclick="synthesizeSpeech()">
-                            <i class="bi bi-volume-up"></i> Synthétiser
-                        </button>
-                    </div>
-
-                    <div class="synthesis-result" id="synthesisResult" style="display: none;">
-                        <h5><i class="bi bi-music-note-beamed"></i> Résultat</h5>
-                        <audio id="synthesizedAudio" controls class="mt-3"></audio>
-                        <div class="mt-3">
-                            <button class="btn-secondary-custom btn-sm" onclick="downloadSynthesizedAudio()">
-                                <i class="bi bi-download"></i> Télécharger
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="btn-group-custom mt-4">
-                        <button class="btn-secondary-custom" onclick="resetWizard()">
-                            <i class="bi bi-arrow-repeat"></i> Créer une nouvelle voix
-                        </button>
-                        <button class="btn-primary-custom" onclick="window.location.href='/creer-une-voix/create-agent'">
-                            <i class="bi bi-robot"></i> Créer un agent avec cette voix
-                        </button>
-                    </div>
+            <!-- Speaker Profile ID -->
+            <div class="form-group">
+                <label class="form-label">Speaker Profile ID</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="speakerProfileId" readonly>
+                    <button class="btn btn-secondary" onclick="copySpeakerProfileId()">
+                        <i class="bi bi-clipboard"></i> Copier
+                    </button>
                 </div>
+            </div>
+
+            <!-- Synthèse -->
+            <div class="form-group">
+                <label class="form-label">Texte à synthétiser</label>
+                <textarea class="form-control" id="synthesisText" rows="4" placeholder="Entrez le texte que vous souhaitez synthétiser avec votre voix..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Voix de base</label>
+                <select class="form-select" id="baseVoice">
+                    <option value="en-US-AvaMultilingualNeural">en-US-AvaMultilingualNeural</option>
+                    <option value="fr-FR-DeniseNeural">fr-FR-DeniseNeural</option>
+                    <option value="fr-FR-HenriNeural">fr-FR-HenriNeural</option>
+                </select>
+            </div>
+
+            <button class="btn-accent" onclick="synthesizeSpeech()" style="width: 100%;">
+                <i class="bi bi-play-fill"></i> Synthétiser
+            </button>
+
+            <!-- Résultat synthèse -->
+            <div id="synthesisResult" style="display: none; margin-top: 20px;">
+                <div class="card-custom" style="background: var(--waka-bg-light);">
+                    <h5><i class="bi bi-volume-up-fill"></i> Résultat</h5>
+                    <audio controls id="synthesizedAudio" style="width: 100%; margin-top: 10px;"></audio>
+                    <button class="btn-secondary-custom mt-3" onclick="downloadSynthesizedAudio()" style="width: 100%;">
+                        <i class="bi bi-download"></i> Télécharger
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="d-flex justify-content-between mt-4">
+                <button class="btn-secondary-custom" onclick="goToStep(3)">
+                    <i class="bi bi-arrow-left"></i> Retour
+                </button>
+                <button class="btn-accent" onclick="resetWizard()">
+                    <i class="bi bi-arrow-clockwise"></i> Nouvelle voix
+                </button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Toast notifications -->
+<!-- Toast Notifications -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
     <div id="notificationToast" class="toast" role="alert">
         <div class="toast-header">
-            <i class="bi bi-bell-fill me-2" style="color: var(--waka-primary);"></i>
+            <i class="bi bi-info-circle-fill me-2"></i>
             <strong class="me-auto">Notification</strong>
             <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
         </div>
-        <div class="toast-body" id="toastMessage"></div>
+        <div class="toast-body"></div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    // Variables globales
-    let currentStep = 1;
-    let selectedProjectId = null;
-    let consentId = null;
-    let personalVoiceId = null;
-    let speakerProfileId = null;
-
-    // MediaRecorder
-    let consentMediaRecorder = null;
-    let voiceMediaRecorder = null;
-    let consentAudioChunks = [];
-    let voiceAudioChunks = [];
-    let consentRecordingInterval = null;
-    let voiceRecordingInterval = null;
-    let consentRecordingSeconds = 0;
-    let voiceRecordingSeconds = 0;
-    let consentAudioBlob = null;
-    let voiceAudioBlob = null;
-
-    // Initialisation
-    document.addEventListener('DOMContentLoaded', function() {
-        loadProjects();
-        updateConsentText();
-        
-        // Form submit
-        document.getElementById('createProjectForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            createProject();
-        });
-    });
-
-    // Navigation entre les étapes
-    function goToStep(step) {
-        // Mise à jour du stepper visuel
-        document.querySelectorAll('.step').forEach((el, index) => {
-            if (index + 1 < step) {
-                el.classList.add('completed');
-                el.classList.remove('active');
-            } else if (index + 1 === step) {
-                el.classList.add('active');
-                el.classList.remove('completed');
-            } else {
-                el.classList.remove('active', 'completed');
-            }
-        });
-
-        // Afficher le contenu correspondant
-        document.querySelectorAll('.step-content').forEach(el => {
-            el.classList.remove('active');
-        });
-        document.getElementById(`step${step}`).classList.add('active');
-
-        currentStep = step;
-    }
-
-    // Notifications
-    function showNotification(message, type = 'info') {
-        const toast = document.getElementById('notificationToast');
-        const toastMessage = document.getElementById('toastMessage');
-        toastMessage.innerHTML = message;
-        
-        const bsToast = new bootstrap.Toast(toast);
-        bsToast.show();
-    }
-
-    // ============================================
-    // ÉTAPE 1: Gestion des projets
-    // ============================================
-    async function createProject() {
-        const name = document.getElementById('projectName').value;
-        const description = document.getElementById('projectDescription').value;
-
-        if (!name) {
-            showNotification('Veuillez entrer un nom de projet', 'error');
-            return;
-        }
-
-        try {
-            const response = await fetch('/creer-une-voix/api/projects', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    project_name: name,
-                    description: description
-                })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                selectedProjectId = data.project_id;
-                
-                // Si le projet est en cours de création, attendre qu'il soit prêt
-                if (data.status === 'Creating') {
-                    showNotification('Projet en cours de création... Veuillez patienter');
-                    await waitForProjectReady(data.project_id);
-                } else {
-                    showNotification('Projet créé avec succès!');
-                    loadProjects();
-                    goToStep(2);
-                }
-            } else {
-                showNotification(`Erreur: ${data.error}`, 'error');
-            }
-        } catch (error) {
-            showNotification(`Erreur: ${error.message}`, 'error');
-        }
-    }
-
-    async function waitForProjectReady(projectId) {
-        const maxAttempts = 30; // 30 tentatives = 2.5 minutes max
-        let attempts = 0;
-
-        const checkStatus = async () => {
-            try {
-                const response = await fetch(`/creer-une-voix/api/projects/${projectId}`);
-                const data = await response.json();
-
-                if (data.success && data.project) {
-                    const status = data.project.status;
-                    
-                    if (status === 'Succeeded') {
-                        showNotification('✅ Projet créé avec succès!');
-                        loadProjects();
-                        goToStep(2);
-                        return;
-                    } else if (status === 'Failed') {
-                        showNotification('❌ Échec de la création du projet', 'error');
-                        loadProjects();
-                        return;
-                    }
-                }
-
-                attempts++;
-                if (attempts < maxAttempts) {
-                    setTimeout(checkStatus, 5000); // Vérifier toutes les 5 secondes
-                } else {
-                    showNotification('⏱️ Délai d\'attente dépassé. Vérifiez la liste des projets.', 'error');
-                    loadProjects();
-                }
-
-            } catch (error) {
-                console.error('Erreur vérification statut:', error);
-                attempts++;
-                if (attempts < maxAttempts) {
-                    setTimeout(checkStatus, 5000);
-                }
-            }
-        };
-
-        checkStatus();
-    }
-
-    async function loadProjects() {
-        try {
-            const response = await fetch('/creer-une-voix/api/projects');
-            const data = await response.json();
-
-            const container = document.getElementById('projectsList');
-
-            if (data.success && data.projects.length > 0) {
-                container.innerHTML = data.projects.map(project => {
-                    let statusClass = 'pending';
-                    let statusText = project.status || 'Créé';
-                    
-                    if (project.status === 'Succeeded' || project.status === 'created') {
-                        statusClass = 'success';
-                        statusText = '✅ Prêt';
-                    } else if (project.status === 'Creating') {
-                        statusClass = 'processing';
-                        statusText = '⏳ En cours';
-                    } else if (project.status === 'Failed') {
-                        statusClass = 'error';
-                        statusText = '❌ Échec';
-                    }
-                    
-                    return `
-                        <div class="project-item ${selectedProjectId === project.id ? 'selected' : ''}" 
-                             onclick="selectProject('${project.id}', '${project.status}')">
-                            <div>
-                                <strong>${project.project_name || project.id}</strong>
-                                <br><small class="text-muted">${project.description || 'Pas de description'}</small>
-                            </div>
-                            <span class="status-badge ${statusClass}">
-                                ${statusText}
-                            </span>
-                        </div>
-                    `;
-                }).join('');
-            } else {
-                container.innerHTML = '<p class="text-muted text-center py-4">Aucun projet trouvé</p>';
-            }
-        } catch (error) {
-            console.error('Erreur chargement projets:', error);
-        }
-    }
-
-    async function selectProject(projectId, status) {
-        selectedProjectId = projectId;
-        document.querySelectorAll('.project-item').forEach(el => {
-            el.classList.remove('selected');
-        });
-        event.currentTarget.classList.add('selected');
-        
-        // Si le projet est en cours de création, attendre qu'il soit prêt
-        if (status === 'Creating') {
-            showNotification('Projet en cours de création... Veuillez patienter');
-            await waitForProjectReady(projectId);
-        } else if (status === 'Succeeded' || status === 'created') {
-            showNotification('Projet sélectionné');
-            setTimeout(() => goToStep(2), 500);
-        } else if (status === 'Failed') {
-            showNotification('Ce projet a échoué. Veuillez en créer un nouveau.', 'error');
-        }
-    }
-
-    // ============================================
-    // ÉTAPE 2: Enregistrement du consentement
-    // ============================================
-    async function updateConsentText() {
-        const locale = document.getElementById('consentLocale').value;
-        
-        try {
-            const response = await fetch(`/creer-une-voix/api/consent-text/${locale}`);
-            const data = await response.json();
-            
-            if (data.success) {
-                // On ne fait rien ici car on utilise updateConsentTextWithNames() à la place
-            }
-        } catch (error) {
-            console.error('Erreur chargement texte consentement:', error);
-        }
-    }
-
-    function updateConsentTextWithNames() {
-        const firstName = document.getElementById('firstName').value.trim();
-        const lastName = document.getElementById('lastName').value.trim();
-        const companyName = document.getElementById('companyName').value.trim();
-        
-        const fullName = firstName && lastName ? `${firstName} ${lastName}` : '[prénom et nom]';
-        const company = companyName || '[nom de l\'entreprise]';
-        
-        document.getElementById('fullNameDisplay').textContent = fullName;
-        document.getElementById('companyNameDisplay').textContent = company;
-    }
-
-    async function toggleConsentRecording() {
-        const btn = document.getElementById('consentRecordBtn');
-        const container = document.getElementById('consentRecorder');
-
-        if (!consentMediaRecorder || consentMediaRecorder.state === 'inactive') {
-            // Démarrer l'enregistrement
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                consentMediaRecorder = new MediaRecorder(stream);
-                consentAudioChunks = [];
-
-                consentMediaRecorder.ondataavailable = (e) => {
-                    consentAudioChunks.push(e.data);
-                };
-
-                consentMediaRecorder.onstop = () => {
-                    consentAudioBlob = new Blob(consentAudioChunks, { type: 'audio/wav' });
-                    const audioUrl = URL.createObjectURL(consentAudioBlob);
-                    document.getElementById('consentAudioPlayer').src = audioUrl;
-                    document.getElementById('consentAudioPreview').style.display = 'block';
-                    document.getElementById('submitConsentBtn').disabled = false;
-                    stream.getTracks().forEach(track => track.stop());
-                };
-
-                consentMediaRecorder.start();
-                btn.classList.remove('record');
-                btn.classList.add('recording');
-                btn.innerHTML = '<i class="bi bi-stop-fill"></i>';
-                container.classList.add('recording');
-
-                // Timer
-                consentRecordingSeconds = 0;
-                consentRecordingInterval = setInterval(() => {
-                    consentRecordingSeconds++;
-                    const mins = Math.floor(consentRecordingSeconds / 60).toString().padStart(2, '0');
-                    const secs = (consentRecordingSeconds % 60).toString().padStart(2, '0');
-                    document.getElementById('consentRecordingTime').textContent = `${mins}:${secs}`;
-                }, 1000);
-
-            } catch (error) {
-                showNotification('Erreur accès microphone: ' + error.message, 'error');
-            }
-        } else {
-            // Arrêter l'enregistrement
-            consentMediaRecorder.stop();
-            clearInterval(consentRecordingInterval);
-            btn.classList.remove('recording');
-            btn.classList.add('record');
-            btn.innerHTML = '<i class="bi bi-mic-fill"></i>';
-            container.classList.remove('recording');
-        }
-    }
-
-    async function submitConsent() {
-        if (!consentAudioBlob) {
-            showNotification('Veuillez enregistrer le consentement', 'error');
-            return;
-        }
-
-        const firstName = document.getElementById('firstName').value.trim();
-        const lastName = document.getElementById('lastName').value.trim();
-        const companyName = document.getElementById('companyName').value.trim();
-        const locale = document.getElementById('consentLocale').value;
-
-        if (!firstName || !lastName || !companyName) {
-            showNotification('Veuillez remplir tous les champs obligatoires', 'error');
-            return;
-        }
-
-        const voiceTalentName = `${firstName} ${lastName}`;
-        const submitBtn = document.getElementById('submitConsentBtn');
-        const originalBtnText = submitBtn.innerHTML;
-
-        try {
-            // Désactiver le bouton et afficher le spinner
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="bi bi-hourglass-split spinner-border spinner-border-sm"></i> Envoi en cours...';
-            
-            // 1. Upload de l'audio
-            submitBtn.innerHTML = '<i class="bi bi-cloud-upload spinner-border spinner-border-sm"></i> Upload audio...';
-            
-            const formData = new FormData();
-            formData.append('audio', consentAudioBlob, 'consent.wav');
-            formData.append('type', 'consent');
-            formData.append('project_id', selectedProjectId);
-
-            const uploadResponse = await fetch('/creer-une-voix/api/upload-audio', {
-                method: 'POST',
-                body: formData
-            });
-
-            const uploadData = await uploadResponse.json();
-
-            if (!uploadData.success) {
-                showNotification(`Erreur upload: ${uploadData.error}`, 'error');
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-                console.error('Erreur upload:', uploadData);
-                return;
-            }
-            
-            console.log('✅ Upload réussi:', uploadData.blob_url);
-
-            // 2. Créer le consentement
-            submitBtn.innerHTML = '<i class="bi bi-file-earmark-check spinner-border spinner-border-sm"></i> Création consentement...';
-            
-            const consentResponse = await fetch('/creer-une-voix/api/consents', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    project_id: selectedProjectId,
-                    voice_talent_name: voiceTalentName,
-                    company_name: companyName,
-                    audio_url: uploadData.blob_url,
-                    locale: locale,
-                    description: `Consentement pour ${voiceTalentName}`
-                })
-            });
-
-            const consentData = await consentResponse.json();
-
-            if (consentData.success) {
-                consentId = consentData.consent_id;
-                submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Succès!';
-                showNotification('Consentement envoyé avec succès!');
-                setTimeout(() => goToStep(3), 500);
-            } else {
-                showNotification(`Erreur: ${consentData.error}`, 'error');
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-                console.error('Erreur consentement:', consentData);
-            }
-
-        } catch (error) {
-            showNotification(`Erreur: ${error.message}`, 'error');
-            submitBtn.innerHTML = originalBtnText;
-            submitBtn.disabled = false;
-            console.error('Erreur exception:', error);
-        }
-    }
-
-    // ============================================
-    // ÉTAPE 3: Création de la voix
-    // ============================================
-    async function toggleVoiceRecording() {
-        const btn = document.getElementById('voiceRecordBtn');
-        const container = document.getElementById('voiceRecorder');
-
-        if (!voiceMediaRecorder || voiceMediaRecorder.state === 'inactive') {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                voiceMediaRecorder = new MediaRecorder(stream);
-                voiceAudioChunks = [];
-
-                voiceMediaRecorder.ondataavailable = (e) => {
-                    voiceAudioChunks.push(e.data);
-                };
-
-                voiceMediaRecorder.onstop = () => {
-                    voiceAudioBlob = new Blob(voiceAudioChunks, { type: 'audio/wav' });
-                    const audioUrl = URL.createObjectURL(voiceAudioBlob);
-                    document.getElementById('voiceAudioPlayer').src = audioUrl;
-                    document.getElementById('voiceAudioPreview').style.display = 'block';
-                    
-                    // Activer le bouton si > 60 secondes
-                    if (voiceRecordingSeconds >= 60) {
-                        document.getElementById('createVoiceBtn').disabled = false;
-                    } else {
-                        showNotification('L\'enregistrement doit durer au moins 60 secondes', 'error');
-                    }
-                    
-                    stream.getTracks().forEach(track => track.stop());
-                };
-
-                voiceMediaRecorder.start();
-                btn.classList.remove('record');
-                btn.classList.add('recording');
-                btn.innerHTML = '<i class="bi bi-stop-fill"></i>';
-                container.classList.add('recording');
-
-                voiceRecordingSeconds = 0;
-                voiceRecordingInterval = setInterval(() => {
-                    voiceRecordingSeconds++;
-                    const mins = Math.floor(voiceRecordingSeconds / 60).toString().padStart(2, '0');
-                    const secs = (voiceRecordingSeconds % 60).toString().padStart(2, '0');
-                    document.getElementById('voiceRecordingTime').textContent = `${mins}:${secs}`;
-                }, 1000);
-
-            } catch (error) {
-                showNotification('Erreur accès microphone: ' + error.message, 'error');
-            }
-        } else {
-            voiceMediaRecorder.stop();
-            clearInterval(voiceRecordingInterval);
-            btn.classList.remove('recording');
-            btn.classList.add('record');
-            btn.innerHTML = '<i class="bi bi-mic-fill"></i>';
-            container.classList.remove('recording');
-        }
-    }
-
-    async function createPersonalVoice() {
-        if (!voiceAudioBlob) {
-            showNotification('Veuillez enregistrer un échantillon vocal', 'error');
-            return;
-        }
-
-        const voiceName = document.getElementById('voiceName').value;
-        const description = document.getElementById('voiceDescription').value;
-
-        document.getElementById('voiceCreationStatus').style.display = 'block';
-        document.getElementById('createVoiceBtn').disabled = true;
-
-        try {
-            // 1. Upload de l'audio
-            const formData = new FormData();
-            formData.append('audio', voiceAudioBlob, 'voice_sample.wav');
-            formData.append('type', 'voice');
-            formData.append('project_id', selectedProjectId);
-
-            const uploadResponse = await fetch('/creer-une-voix/api/upload-audio', {
-                method: 'POST',
-                body: formData
-            });
-
-            const uploadData = await uploadResponse.json();
-
-            if (!uploadData.success) {
-                showNotification(`Erreur upload: ${uploadData.error}`, 'error');
-                document.getElementById('voiceCreationStatus').style.display = 'none';
-                document.getElementById('createVoiceBtn').disabled = false;
-                return;
-            }
-
-            // 2. Créer la voix personnelle
-            const voiceResponse = await fetch('/creer-une-voix/api/personal-voices', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    project_id: selectedProjectId,
-                    consent_id: consentId,
-                    audio_url: uploadData.blob_url,
-                    voice_name: voiceName,
-                    description: description
-                })
-            });
-
-            const voiceData = await voiceResponse.json();
-
-            if (voiceData.success) {
-                personalVoiceId = voiceData.personal_voice_id;
-                
-                // Polling pour vérifier le statut
-                await pollVoiceStatus(personalVoiceId);
-                
-            } else {
-                showNotification(`Erreur: ${voiceData.error}`, 'error');
-                document.getElementById('voiceCreationStatus').style.display = 'none';
-                document.getElementById('createVoiceBtn').disabled = false;
-            }
-
-        } catch (error) {
-            showNotification(`Erreur: ${error.message}`, 'error');
-            document.getElementById('voiceCreationStatus').style.display = 'none';
-            document.getElementById('createVoiceBtn').disabled = false;
-        }
-    }
-
-    async function pollVoiceStatus(voiceId) {
-        const maxAttempts = 60;
-        let attempts = 0;
-
-        const checkStatus = async () => {
-            try {
-                const response = await fetch(`/creer-une-voix/api/personal-voices/${voiceId}`);
-                const data = await response.json();
-
-                if (data.success) {
-                    const status = data.voice.status;
-                    
-                    if (status === 'Succeeded' && data.voice.speakerProfileId) {
-                        speakerProfileId = data.voice.speakerProfileId;
-                        document.getElementById('speakerProfileId').value = speakerProfileId;
-                        document.getElementById('voiceCreationStatus').style.display = 'none';
-                        showNotification('Voix personnelle créée avec succès!');
-                        goToStep(4);
-                        return;
-                    } else if (status === 'Failed') {
-                        showNotification('Échec de la création de la voix', 'error');
-                        document.getElementById('voiceCreationStatus').style.display = 'none';
-                        document.getElementById('createVoiceBtn').disabled = false;
-                        return;
-                    }
-                }
-
-                attempts++;
-                if (attempts < maxAttempts) {
-                    setTimeout(checkStatus, 5000);
-                } else {
-                    showNotification('Délai d\'attente dépassé', 'error');
-                    document.getElementById('voiceCreationStatus').style.display = 'none';
-                    document.getElementById('createVoiceBtn').disabled = false;
-                }
-
-            } catch (error) {
-                console.error('Erreur polling:', error);
-                setTimeout(checkStatus, 5000);
-            }
-        };
-
-        checkStatus();
-    }
-
-    // ============================================
-    // ÉTAPE 4: Synthèse vocale
-    // ============================================
-    async function synthesizeSpeech() {
-        const text = document.getElementById('synthesisText').value;
-        const baseVoice = document.getElementById('baseVoice').value;
-
-        if (!text) {
-            showNotification('Veuillez entrer un texte à synthétiser', 'error');
-            return;
-        }
-
-        if (!speakerProfileId) {
-            showNotification('Speaker Profile ID manquant', 'error');
-            return;
-        }
-
-        try {
-            const response = await fetch('/creer-une-voix/api/synthesize', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    text: text,
-                    speaker_profile_id: speakerProfileId,
-                    voice_name: baseVoice
-                })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                document.getElementById('synthesizedAudio').src = data.audio_url;
-                document.getElementById('synthesisResult').style.display = 'block';
-                showNotification('Synthèse réussie!');
-            } else {
-                showNotification(`Erreur: ${data.error}`, 'error');
-            }
-
-        } catch (error) {
-            showNotification(`Erreur: ${error.message}`, 'error');
-        }
-    }
-
-    function copySpeakerProfileId() {
-        const input = document.getElementById('speakerProfileId');
-        input.select();
-        document.execCommand('copy');
-        showNotification('Speaker Profile ID copié!');
-    }
-
-    function downloadSynthesizedAudio() {
-        const audio = document.getElementById('synthesizedAudio');
-        if (audio.src) {
-            const a = document.createElement('a');
-            a.href = audio.src;
-            a.download = 'synthesized_voice.mp3';
-            a.click();
-        }
-    }
-
-    function resetWizard() {
-        selectedProjectId = null;
-        consentId = null;
-        personalVoiceId = null;
-        speakerProfileId = null;
-        consentAudioBlob = null;
-        voiceAudioBlob = null;
-
-        // Reset forms
-        document.getElementById('createProjectForm').reset();
-        document.getElementById('firstName').value = '';
-        document.getElementById('lastName').value = '';
-        document.getElementById('companyName').value = '';
-        document.getElementById('voiceName').value = '';
-        document.getElementById('voiceDescription').value = '';
-        document.getElementById('synthesisText').value = '';
-        
-        // Reset consent text display
-        document.getElementById('fullNameDisplay').textContent = '[prénom et nom]';
-        document.getElementById('companyNameDisplay').textContent = '[nom de l\'entreprise]';
-
-        // Reset audio previews
-        document.getElementById('consentAudioPreview').style.display = 'none';
-        document.getElementById('voiceAudioPreview').style.display = 'none';
-        document.getElementById('synthesisResult').style.display = 'none';
-
-        // Reset buttons
-        document.getElementById('submitConsentBtn').disabled = true;
-        document.getElementById('createVoiceBtn').disabled = true;
-
-        // Reset timers
-        document.getElementById('consentRecordingTime').textContent = '00:00';
-        document.getElementById('voiceRecordingTime').textContent = '00:00';
-
-        goToStep(1);
-        loadProjects();
-    }
-</script>
+<script src="{{ url_for('static', filename='js/audio_recorder.js') }}"></script>
+<script src="{{ url_for('static', filename='js/personal_voice.js') }}"></script>
 {% endblock %}

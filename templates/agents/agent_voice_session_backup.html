@@ -1,0 +1,1779 @@
+{% extends "base.html" %}
+
+{% block title %}{{ agent.agent_name }} - Session Vocale{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/agent_voice_session.css') }}?v={{ range(1, 9999) | random }}">
+{% endblock %}
+
+{% block content %}
+<div class="device-frame">
+    <!-- Status Bar (Mobile Style) -->
+    <div class="status-bar">
+        <div class="status-left">
+            <span class="status-time" id="statusTime">12:00</span>
+        </div>
+        <div class="status-notch"></div>
+        <div class="status-right">
+            <i class="fas fa-wifi"></i>
+            <i class="fas fa-signal"></i>
+            <i class="fas fa-battery-three-quarters"></i>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="session-container">
+    }
+
+    /* Notch (encoche) style iPhone */
+    .device-notch {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 180px;
+        height: 30px;
+        background: #1a202c;
+        border-radius: 0 0 20px 20px;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .notch-camera {
+        width: 10px;
+        height: 10px;
+        background: #374151;
+        border-radius: 50%;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    .notch-speaker {
+        width: 60px;
+        height: 4px;
+        background: #374151;
+        border-radius: 2px;
+    }
+
+    /* Écran du dispositif */
+    .device-screen {
+        background: var(--screen-bg);
+        border-radius: 32px;
+        overflow: hidden;
+        position: relative;
+        min-height: 800px;
+        box-shadow: 
+            inset 0 0 0 1px rgba(0, 0, 0, 0.05),
+            0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Barre de statut style smartphone */
+    .status-bar {
+        height: 44px;
+        background: linear-gradient(135deg, var(--primary) 0%, #764ba2 100%);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 20px;
+        color: white;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .status-time {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .status-icons {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .status-icon {
+        font-size: 14px;
+        opacity: 0.9;
+    }
+
+    /* En-tête de l'agent */
+    .session-header {
+        background: white;
+        padding: 24px 20px;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .agent-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .agent-avatar {
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, var(--primary) 0%, #764ba2 100%);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        color: white;
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .agent-avatar::after {
+        content: '';
+        position: absolute;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        animation: shine 3s infinite;
+    }
+
+    @keyframes shine {
+        0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+        100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    }
+
+    .agent-details h1 {
+        margin: 0 0 6px 0;
+        color: var(--text-dark);
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+    }
+
+    .agent-details p {
+        margin: 0;
+        color: #64748b;
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+    .session-status {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+
+    .status-badge {
+        padding: 10px 18px;
+        border-radius: 50px;
+        font-size: 14px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        backdrop-filter: blur(10px);
+        border: 1.5px solid;
+        transition: all 0.3s ease;
+    }
+
+    .status-badge.disconnected {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(185, 28, 28, 0.15));
+        color: #dc2626;
+        border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    .status-badge.connecting {
+        background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.15));
+        color: #d97706;
+        border-color: rgba(251, 191, 36, 0.4);
+    }
+
+    .status-badge.connected {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.15));
+        color: #059669;
+        border-color: rgba(34, 197, 94, 0.4);
+    }
+
+    .status-badge i {
+        animation: pulse-glow 2s infinite;
+        font-size: 12px;
+        filter: drop-shadow(0 0 4px currentColor);
+    }
+
+    @keyframes pulse-glow {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.6; transform: scale(1.1); }
+    }
+
+    /* Modern Session Panel */
+    .session-panel {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border-radius: 28px;
+        padding: 32px;
+        box-shadow: var(--glass-shadow);
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(360px, 1fr);
+        gap: 32px;
+        min-height: 700px;
+        border: 1px solid var(--glass-border);
+        position: relative;
+    }
+
+    /* Conversation Area */
+    .conversation-area {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .conversation-controls {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        align-items: center;
+        margin-top: 8px;
+    }
+
+    /* Ultra Modern Voice Button */
+    .voice-button {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        border: none;
+        font-size: 64px;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .voice-button::before {
+        content: "";
+        position: absolute;
+        inset: -10px;
+        background: conic-gradient(from 0deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        animation: rotate 3s linear infinite;
+    }
+
+    @keyframes rotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .voice-button.start {
+        background: var(--gradient-success);
+        color: white;
+    }
+
+    .voice-button.stop {
+        background: var(--gradient-danger);
+        color: white;
+    }
+
+    .voice-button:hover {
+        transform: scale(1.08) translateY(-5px);
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+    }
+
+    .voice-button:hover::before {
+        opacity: 1;
+    }
+
+    .voice-button:active {
+        transform: scale(0.95);
+    }
+
+    .voice-button.recording {
+        animation: recording-pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes recording-pulse {
+        0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.8), 0 20px 60px rgba(0, 0, 0, 0.25);
+        }
+        50% {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 30px rgba(16, 185, 129, 0), 0 30px 80px rgba(0, 0, 0, 0.35);
+        }
+    }
+
+    .conversation-display {
+        flex: 1;
+        background: rgba(248, 250, 252, 0.6);
+        border-radius: 20px;
+        padding: 24px;
+        overflow-y: auto;
+        max-height: 400px;
+        min-height: 300px;
+        border: 1px solid rgba(226, 232, 240, 0.6);
+        backdrop-filter: blur(10px);
+    }
+
+    .conversation-display::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .conversation-display::-webkit-scrollbar-track {
+        background: rgba(148, 163, 184, 0.1);
+        border-radius: 10px;
+    }
+
+    .conversation-display::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 10px;
+    }
+
+    .message {
+        margin-bottom: 16px;
+        padding: 14px 18px;
+        border-radius: 18px;
+        max-width: 82%;
+        animation: messageSlide 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        word-wrap: break-word;
+        white-space: pre-wrap;
+        font-size: 15px;
+        line-height: 1.6;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    @keyframes messageSlide {
+        from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .message.user {
+        background: var(--gradient-primary);
+        color: white;
+        margin-left: auto;
+        text-align: right;
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .message.agent {
+        background: white;
+        color: #334155;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
+    }
+
+    .message.system {
+        background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(245, 158, 11, 0.1));
+        color: #92400e;
+        text-align: center;
+        margin: 0 auto 16px;
+        font-size: 13px;
+        border: 1.5px dashed rgba(245, 158, 11, 0.5);
+        font-weight: 500;
+    }
+
+    .message-meta {
+        font-size: 11px;
+        opacity: 0.7;
+        margin-top: 4px;
+        font-weight: 500;
+    }
+
+    /* Modern Config Panel */
+    .config-panel {
+        background: rgba(248, 250, 252, 0.6);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 24px;
+        border: 1px solid rgba(226, 232, 240, 0.6);
+    }
+
+    .config-section {
+        margin-bottom: 28px;
+    }
+
+    .config-section h3 {
+        font-size: 16px;
+        font-weight: 700;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        letter-spacing: -0.01em;
+    }
+
+    .config-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+        transition: all 0.2s ease;
+    }
+
+    .config-item:hover {
+        padding-left: 8px;
+        background: linear-gradient(90deg, rgba(102, 126, 234, 0.05), transparent);
+        border-radius: 8px;
+    }
+
+    .config-item:last-child {
+        border-bottom: none;
+    }
+
+    .config-label {
+        font-size: 14px;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .config-value {
+        font-size: 14px;
+        color: #1e293b;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .tool-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        background: var(--gradient-primary);
+        color: white;
+        border-radius: 50px;
+        font-size: 12px;
+        font-weight: 600;
+        margin: 4px;
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.35);
+        transition: all 0.3s ease;
+    }
+
+    .tool-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 30px rgba(102, 126, 234, 0.5);
+    }
+
+    /* Sophisticated Audio Visualizer */
+    .audio-visualizer {
+        height: 64px;
+        background: linear-gradient(135deg, #1e293b, #334155);
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        padding: 10px 10px;
+        margin-bottom: 18px;
+        box-shadow: 0 16px 40px rgba(102, 126, 234, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .audio-visualizer::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(45deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+        opacity: 0.5;
+    }
+
+    .visualizer-bar {
+        width: 4px;
+        height: 18px;
+        background: linear-gradient(180deg, #10b981, #34d399);
+        border-radius: 999px;
+        transition: height 0.1s ease;
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    }
+
+    .visualizer-bar.active {
+        animation: audioWave 0.5s infinite alternate;
+    }
+
+    @keyframes audioWave {
+        from { 
+            height: 10px;
+            background: linear-gradient(180deg, #10b981, #34d399);
+        }
+        to { 
+            height: 40px;
+            background: linear-gradient(180deg, #34d399, #6ee7b7);
+        }
+    }
+
+    /* Responsive */
+    @media (max-width: 968px) {
+        .session-panel {
+            grid-template-columns: 1fr;
+        }
+
+        .config-panel {
+            order: -1;
+        }
+
+        .voice-button {
+            width: 140px;
+            height: 140px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="session-container">
+    <!-- Session Header -->
+    <div class="session-header">
+        <div class="agent-info">
+            <div class="agent-avatar">
+                <i class="bi bi-robot"></i>
+            </div>
+            <div class="agent-details">
+                <h1>{{ agent.agent_name }}</h1>
+                <p>{{ agent.role or 'Assistant vocal intelligent' }}</p>
+                <div class="session-status">
+                    <span class="status-badge disconnected" id="connectionStatus">
+                        <i class="bi bi-circle-fill"></i>
+                        <span>Déconnecté</span>
+                    </span>
+                    <span class="status-badge" style="background: #e6fffa; color: #234e52;">
+                        <i class="bi bi-cpu-fill"></i>
+                        {{ agent.model_name }}
+                    </span>
+                    <span class="status-badge" style="background: #fef5e7; color: #7d6608;">
+                        <i class="bi bi-mic-fill"></i>
+                        {{ agent.voice.name.split(':')[0] if ':' in agent.voice.name else agent.voice.name }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Session Panel -->
+    <div class="session-panel">
+        <!-- Conversation Area -->
+        <div class="conversation-area">
+            <!-- Audio Visualizer -->
+            <div class="audio-visualizer" id="audioVisualizer">
+                {% for i in range(1, 25) %}
+                <div class="visualizer-bar"></div>
+                {% endfor %}
+            </div>
+
+            <!-- Conversation Display -->
+            <div class="conversation-display" id="conversationDisplay">
+                <div class="message system">
+                    <i class="bi bi-info-circle-fill"></i>
+                    Session prête. Cliquez sur le bouton pour commencer la conversation.
+                </div>
+            </div>
+
+            <!-- Voice Controls -->
+            <div class="conversation-controls">
+                <button class="voice-button start" id="startButton" onclick="startConversation()">
+                    <i class="bi bi-mic-fill"></i>
+                </button>
+                <button class="voice-button stop" id="stopButton" onclick="stopConversation()" style="display: none;">
+                    <i class="bi bi-stop-fill"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Config Panel -->
+        <div class="config-panel">
+            <div class="config-section">
+                <h3><i class="bi bi-gear-fill"></i> Configuration</h3>
+                <div class="config-item">
+                    <span class="config-label">Agent ID</span>
+                    <span class="config-value">{{ agent.agent_id }}</span>
+                </div>
+                <div class="config-item">
+                    <span class="config-label">Modèle</span>
+                    <span class="config-value">{{ agent.model_id }}</span>
+                </div>
+                <div class="config-item">
+                    <span class="config-label">Température</span>
+                    <span class="config-value">{{ agent.temperature }}</span>
+                </div>
+                <div class="config-item">
+                    <span class="config-label">Max Tokens</span>
+                    <span class="config-value">{{ agent.max_tokens }}</span>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3><i class="bi bi-mic-fill"></i> Configuration Vocale</h3>
+                <div class="config-item">
+                    <span class="config-label">Voix</span>
+                    <span class="config-value">{{ agent.voice.name }}</span>
+                </div>
+                <div class="config-item">
+                    <span class="config-label">Vitesse</span>
+                    <span class="config-value">{{ agent.voice.rate }}x</span>
+                </div>
+                <div class="config-item">
+                    <span class="config-label">Température vocale</span>
+                    <span class="config-value">{{ agent.voice.temperature }}</span>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3><i class="bi bi-tools"></i> Outils Actifs ({{ agent.tools|length }})</h3>
+                <div style="margin-top: 10px;">
+                    {% if agent.tools %}
+                        {% for tool in agent.tools %}
+                        <span class="tool-badge">
+                            <i class="bi bi-wrench-adjustable"></i> {{ tool.name }}
+                        </span>
+                        {% endfor %}
+                    {% else %}
+                        <p style="color: #a0aec0; font-size: 13px; margin: 0;">Aucun outil activé</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Instructions Editor -->
+            <div class="config-section">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3><i class="bi bi-chat-left-text-fill"></i> Instructions</h3>
+                    <button onclick="toggleInstructionsEditor()" style="background: none; border: none; color: #667eea; cursor: pointer; font-size: 14px;">
+                        <i class="bi bi-pencil-square"></i> Modifier
+                    </button>
+                </div>
+                <div id="instructionsDisplay" style="background: white; padding: 12px; border-radius: 8px; font-size: 13px; color: #4a5568; line-height: 1.6; max-height: 150px; overflow-y: auto;">
+                    {{ agent.instructions[:200] }}{% if agent.instructions|length > 200 %}...{% endif %}
+                </div>
+                <div id="instructionsEditor" style="display: none; margin-top: 10px;">
+                    <textarea id="instructionsTextarea" style="width: 100%; min-height: 200px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: monospace; resize: vertical;">{{ agent.instructions }}</textarea>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button onclick="saveInstructions()" style="flex: 1; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            <i class="bi bi-check-circle"></i> Enregistrer
+                        </button>
+                        <button onclick="cancelInstructionsEdit()" style="flex: 1; padding: 8px 16px; background: #e2e8f0; color: #4a5568; border: none; border-radius: 8px; cursor: pointer;">
+                            <i class="bi bi-x-circle"></i> Annuler
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lexicon URL Editor -->
+            <div class="config-section">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3><i class="bi bi-book-fill"></i> Lexique personnalisé</h3>
+                    <button onclick="toggleLexiconEditor()" style="background: none; border: none; color: #667eea; cursor: pointer; font-size: 14px;">
+                        <i class="bi bi-pencil-square"></i> Modifier
+                    </button>
+                </div>
+                <div id="lexiconDisplay" style="background: white; padding: 12px; border-radius: 8px; font-size: 13px; color: #4a5568; line-height: 1.6;">
+                    <span id="lexiconUrlText">{{ agent.custom_lexicon_url if agent.custom_lexicon_url else 'Aucun lexique configuré' }}</span>
+                </div>
+                <div id="lexiconEditor" style="display: none; margin-top: 10px;">
+                    <input type="text" id="lexiconUrlInput" placeholder="https://..." value="{{ agent.custom_lexicon_url if agent.custom_lexicon_url else '' }}" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px;">
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button onclick="saveLexiconUrl()" style="flex: 1; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            <i class="bi bi-check-circle"></i> Enregistrer
+                        </button>
+                        <button onclick="cancelLexiconEdit()" style="flex: 1; padding: 8px 16px; background: #e2e8f0; color: #4a5568; border: none; border-radius: 8px; cursor: pointer;">
+                            <i class="bi bi-x-circle"></i> Annuler
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // ============================================
+    // VOICE SESSION CLIENT
+    // ============================================
+
+    let websocket = null;
+    let isRecording = false;
+    let mediaRecorder = null;
+    let audioContext = null;
+    let audioChunks = [];
+    window.callId = null; // ID unique pour cette session d'appel (global pour accès par les tools)
+    let sessionTokens = null; // Tokens globaux de la conversation (mis à jour par response.done)
+    let isSpeaking = false; // Flag pour indiquer si l'assistant parle
+    let audioProcessor = null; // Référence au ScriptProcessor pour pouvoir le mettre en pause
+    let isResponseActive = false; // Flag pour suivre si une réponse est active côté serveur
+
+    // Fonction pour générer un UUID
+    function generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    // Initialiser callId au chargement
+    // Vérifier si un call_id existe déjà dans sessionStorage (conversation en cours)
+    const existingCallId = sessionStorage.getItem('current_call_id');
+    if (existingCallId) {
+        window.callId = existingCallId;
+        console.log('📞 Call ID récupéré (conversation en cours):', window.callId);
+    } else {
+        window.callId = generateUUID();
+        sessionStorage.setItem('current_call_id', window.callId);
+        console.log('📞 Call ID généré (nouvelle conversation):', window.callId);
+    }
+
+    // Agent Configuration
+    const agentConfig = {
+        agentId: '{{ agent.agent_id }}',
+        agentName: '{{ agent.agent_name }}',
+        modelId: '{{ agent.model_id }}',
+        websocketUrl: '{{ agent.websocket_url | safe }}',
+        voice: {
+            name: '{{ agent.voice.name }}',
+            type: '{{ agent.voice.type }}',
+            rate: parseFloat('{{ agent.voice.rate }}'),
+            temperature: parseFloat('{{ agent.voice.temperature }}')
+        },
+        instructions: `{{ agent.instructions | replace('\n', '\\n') | replace('"', '\\"') }}`,
+        tools: {{ agent.tools | tojson }},
+        temperature: parseFloat('{{ agent.temperature }}'),
+        maxTokens: parseInt('{{ agent.max_tokens }}')
+    };
+
+    console.log('🤖 Agent Configuration:', agentConfig);
+
+    // ============================================
+    // CONVERSATION PERSISTENCE
+    // ============================================
+
+    async function saveMessageToCosmosDB(messageType, content, metadata = {}) {
+        try {
+            const payload = {
+                call_id: window.callId,
+                agent_id: agentConfig.agentId,
+                message_type: messageType,
+                content: content,
+                metadata: metadata,
+                model: agentConfig.modelId  // Ajouter le model pour le calcul des coûts
+            };
+            
+            console.log('💾 Sauvegarde message - model:', agentConfig.modelId);
+            
+            const response = await fetch('/agents/api/conversation/save-message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                console.warn('⚠️ Failed to save message to Cosmos DB:', response.status);
+            }
+        } catch (error) {
+            console.error('❌ Error saving message to Cosmos DB:', error);
+        }
+    }
+
+    async function endConversationInCosmosDB(toolsUsed = []) {
+        try {
+            const requestBody = {
+                call_id: window.callId,
+                tools_used: toolsUsed
+            };
+            
+            // Ajouter les tokens si disponibles
+            if (sessionTokens) {
+                requestBody.tokens = sessionTokens;
+                console.log('📊 Sending tokens for cost calculation:', sessionTokens);
+            } else {
+                console.warn('⚠️ No tokens captured - costs will be estimated');
+            }
+            
+            const response = await fetch('/agents/api/conversation/end', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                console.warn('⚠️ Failed to end conversation in Cosmos DB:', response.status);
+            } else {
+                const result = await response.json();
+                console.log('✅ Conversation ended in Cosmos DB');
+                console.log('📊 Analysis results:', result.data);
+            }
+        } catch (error) {
+            console.error('❌ Error ending conversation in Cosmos DB:', error);
+        }
+    }
+
+    // ============================================
+    // CONNECTION MANAGEMENT
+    // ============================================
+
+    function startNewConversation() {
+        console.log('🆕 Starting NEW conversation...');
+        
+        // Générer un nouveau call_id
+        window.callId = generateUUID();
+        sessionStorage.setItem('current_call_id', window.callId);
+        console.log('📞 New Call ID generated:', window.callId);
+        
+        // Effacer l'affichage
+        document.getElementById('conversationDisplay').innerHTML = '';
+        
+        // Démarrer la conversation
+        startConversation();
+    }
+
+    async function startConversation() {
+        console.log('🎙️ Starting conversation...');
+        
+        try {
+            // Reset audio playback timing
+            nextPlaybackTime = 0;
+            
+            // Update UI
+            updateConnectionStatus('connecting', 'Connexion...');
+            document.getElementById('startButton').style.display = 'none';
+            document.getElementById('stopButton').style.display = 'block';
+
+            // Connect to WebSocket
+            await connectWebSocket();
+
+            // Start audio recording
+            await startAudioRecording();
+
+            addMessage('system', 'Connexion établie. Parlez maintenant...');
+            updateConnectionStatus('connected', 'Connecté');
+
+        } catch (error) {
+            console.error('❌ Error starting conversation:', error);
+            addMessage('system', 'Erreur de connexion: ' + error.message);
+            updateConnectionStatus('disconnected', 'Erreur');
+            resetUI();
+        }
+    }
+
+    function stopConversation() {
+        console.log('🛑 Stopping conversation...');
+
+        // Close WebSocket
+        if (websocket) {
+            websocket.close();
+            websocket = null;
+        }
+
+        // Stop audio recording
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+        }
+
+        // Stop audio visualizer
+        stopAudioVisualizer();
+
+        // Stop and reset audio playback context to prevent audio overlap
+        stopAllAudio();
+        currentResponseId = null;
+
+        // Terminer la conversation dans Cosmos DB
+        endConversationInCosmosDB();
+
+        // 🗑️ Effacer le call_id pour permettre une nouvelle conversation
+        sessionStorage.removeItem('current_call_id');
+        console.log('🗑️ Call ID cleared - prêt pour nouvelle conversation');
+
+        addMessage('system', 'Conversation terminée.');
+        updateConnectionStatus('disconnected', 'Déconnecté');
+        resetUI();
+    }
+
+    async function connectWebSocket() {
+        return new Promise((resolve, reject) => {
+            console.log('🔌 Connecting to:', agentConfig.websocketUrl);
+
+            websocket = new WebSocket(agentConfig.websocketUrl);
+
+            websocket.onopen = () => {
+                console.log('✅ WebSocket connected');
+
+                // Générer la date du jour en français
+                const today = new Date();
+                const days = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+                const months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+                
+                const dayName = days[today.getDay()];
+                const day = today.getDate().toString().padStart(2, '0');
+                const month = months[today.getMonth()];
+                const year = today.getFullYear();
+                
+                const dateContext = `\n\nContexte temporel : Nous sommes le ${dayName} ${day} ${month} ${year}.`;
+                
+                // Send session configuration
+                const sessionConfig = {
+                    type: 'session.update',
+                    session: {
+                        modalities: ['text', 'audio'],
+                        instructions: agentConfig.instructions + dateContext,
+                        voice: {
+                            name: agentConfig.voice.name,
+                            type: agentConfig.voice.type
+                        },
+                        temperature: agentConfig.temperature,
+                        max_response_output_tokens: agentConfig.maxTokens,
+                        input_audio_transcription: {
+                            model: 'whisper-1'
+                        },
+                        turn_detection: {
+                            type: 'server_vad',
+                            threshold: 0.5,
+                            prefix_padding_ms: 300,
+                            silence_duration_ms: 500
+                        }
+                    }
+                };
+
+                // Add voice.temperature only if defined (GPT-5 models don't support it)
+                if (agentConfig.voice.temperature !== null && agentConfig.voice.temperature !== undefined) {
+                    sessionConfig.session.voice.temperature = agentConfig.voice.temperature;
+                }
+
+                // Add custom_lexicon_url to voice if it exists and is not empty
+                if (agentConfig.voice.custom_lexicon_url && agentConfig.voice.custom_lexicon_url.trim() !== '') {
+                    sessionConfig.session.voice.custom_lexicon_url = agentConfig.voice.custom_lexicon_url;
+                }
+
+                // Add tools if any
+                if (agentConfig.tools && agentConfig.tools.length > 0) {
+                    sessionConfig.session.tools = agentConfig.tools;
+                }
+
+                websocket.send(JSON.stringify(sessionConfig));
+                console.log('📤 Session config sent');
+
+                resolve();
+            };
+
+            websocket.onerror = (error) => {
+                console.error('❌ WebSocket error:', error);
+                reject(new Error('WebSocket connection failed'));
+            };
+
+            websocket.onclose = () => {
+                console.log('🔌 WebSocket disconnected');
+                updateConnectionStatus('disconnected', 'Déconnecté');
+            };
+
+            websocket.onmessage = handleWebSocketMessage;
+
+            // Timeout after 10 seconds
+            setTimeout(() => {
+                if (websocket && websocket.readyState !== WebSocket.OPEN) {
+                    reject(new Error('Connection timeout'));
+                }
+            }, 10000);
+        });
+    }
+
+    // Stocker les function calls en attente
+    let pendingFunctionCalls = new Map();
+
+    function handleWebSocketMessage(event) {
+        const message = JSON.parse(event.data);
+        
+        // Logger tous les messages avec leurs détails pour debug
+        if (message.type.includes('function_call') || message.type.includes('output_item')) {
+            console.log('📥 WebSocket message:', message.type, message);
+        } else {
+            console.log('📥 WebSocket message:', message.type);
+        }
+
+        switch (message.type) {
+            case 'session.created':
+                console.log('✅ Session created:', message.session);
+                break;
+
+            case 'session.updated':
+                console.log('✅ Session updated');
+                break;
+
+            case 'response.audio.delta':
+                // Play audio response from agent IMMÉDIATEMENT
+                // Ignorer les chunks des anciennes réponses
+                if (message.response_id === currentResponseId) {
+                    playAudioChunk(message.delta, message.response_id);
+                } else {
+                    console.log(`🚫 Ignoring audio from old response: ${message.response_id}`);
+                }
+                break;
+
+            case 'response.audio_transcript.delta':
+                // Display agent's spoken text
+                console.log('📝 Transcript delta:', message.delta);
+                if (message.delta && message.delta !== '<|audio_text|>') {
+                    addOrUpdateMessage('agent', message.delta, message.response_id);
+                }
+                break;
+
+            case 'response.audio_transcript.done':
+                // Save complete agent response to Cosmos DB
+                console.log('📝 Transcript done:', message.transcript);
+                if (message.transcript && message.transcript !== '<|audio_text|>') {
+                    saveMessageToCosmosDB('agent', message.transcript);
+                }
+                break;
+
+            case 'response.text.delta':
+                // Display agent's text response (for realtime models)
+                console.log('📝 Text delta:', message.delta);
+                if (message.delta) {
+                    addOrUpdateMessage('agent', message.delta, message.response_id);
+                }
+                break;
+
+            case 'response.text.done':
+                // Save complete text response to Cosmos DB
+                console.log('📝 Text done:', message.text);
+                if (message.text) {
+                    saveMessageToCosmosDB('agent', message.text);
+                }
+                break;
+
+            case 'conversation.item.input_audio_transcription.completed':
+                // Display user's transcribed speech
+                console.log('📝 User transcript:', message.transcript);
+                if (message.transcript && message.transcript !== '<|audio_text|>') {
+                    addMessage('user', message.transcript);
+                    // Save user message to Cosmos DB
+                    saveMessageToCosmosDB('user', message.transcript);
+                }
+                break;
+
+            case 'response.output_item.added':
+                // Capturer le response_id de la nouvelle réponse
+                if (message.response_id && message.response_id !== currentResponseId) {
+                    currentResponseId = message.response_id;
+                    console.log('🆕 New response starting:', currentResponseId);
+                }
+                
+                // Capturer le nom du tool pour les function calls
+                if (message.item && message.item.type === 'function_call') {
+                    const callId = message.item.call_id;
+                    const toolName = message.item.name;
+                    
+                    // Initialiser la function call avec le nom correct
+                    if (!pendingFunctionCalls.has(callId)) {
+                        pendingFunctionCalls.set(callId, {
+                            name: toolName,
+                            arguments: ''
+                        });
+                    } else {
+                        pendingFunctionCalls.get(callId).name = toolName;
+                    }
+                    
+                    console.log('🔧 Tool call detected:', toolName);
+                    addMessage('system', `🔧 Utilisation de l'outil: ${toolName}...`);
+                }
+                break;
+
+            case 'response.created':
+                // Nouvelle réponse commence - arrêter l'ancien audio
+                console.log('🆕 New response created');
+                stopAllAudio();
+                isResponseActive = true; // Marquer la réponse comme active
+                break;
+
+            case 'input_audio_buffer.speech_started':
+                // L'utilisateur commence à parler - arrêter immédiatement l'audio de l'IA
+                console.log('🎤 User started speaking - INTERRUPTING AI audio');
+                stopAllAudio();
+                currentResponseId = null; // Invalider la réponse en cours
+                isSpeaking = false; // Réactiver le micro immédiatement
+                
+                // Envoyer response.cancel SEULEMENT si une réponse est active côté serveur
+                if (isResponseActive && websocket && websocket.readyState === WebSocket.OPEN) {
+                    websocket.send(JSON.stringify({
+                        type: 'response.cancel'
+                    }));
+                    console.log('📤 Sent response.cancel to server');
+                    isResponseActive = false; // Marquer comme terminée
+                } else if (!isResponseActive) {
+                    console.log('ℹ️ No active response to cancel (already completed)');
+                }
+                
+                addMessage('system', '🎤 Interruption détectée');
+                break;
+
+            case 'response.cancelled':
+                // La réponse a été annulée (interruption) - arrêter l'audio
+                console.log('🚫 Response cancelled - stopping audio');
+                stopAllAudio();
+                currentResponseId = null; // Invalider la réponse annulée
+                isSpeaking = false; // Réactiver le micro
+                isResponseActive = false; // Marquer la réponse comme terminée
+                break;
+
+            case 'response.function_call_arguments.delta':
+                // Accumuler les arguments de la function call
+                if (!pendingFunctionCalls.has(message.call_id)) {
+                    pendingFunctionCalls.set(message.call_id, {
+                        name: 'unknown',
+                        arguments: ''
+                    });
+                }
+                pendingFunctionCalls.get(message.call_id).arguments += message.delta;
+                break;
+
+            case 'response.function_call_arguments.done':
+                // Exécuter la function call
+                if (pendingFunctionCalls.has(message.call_id)) {
+                    const functionCall = pendingFunctionCalls.get(message.call_id);
+                    console.log('🔧 Tool call done:', functionCall.name, functionCall.arguments);
+                    executeToolCall(message.call_id, functionCall.name, functionCall.arguments);
+                    pendingFunctionCalls.delete(message.call_id);
+                }
+                break;
+
+            case 'response.done':
+                // Log complet pour debug
+                console.log('📊 Response.done complete:', JSON.stringify(message, null, 2));
+                
+                // Extraire la transcription de la réponse si disponible
+                if (message.response && message.response.output) {
+                    for (const item of message.response.output) {
+                        if (item.type === 'message' && item.content) {
+                            for (const content of item.content) {
+                                if (content.type === 'audio' && content.transcript) {
+                                    console.log('📝 Transcript from response.done:', content.transcript);
+                                    if (content.transcript !== '<|audio_text|>') {
+                                        // Sauvegarder le transcript complet
+                                        saveMessageToCosmosDB('agent', content.transcript);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Capturer les tokens globaux de la conversation (mis à jour à chaque réponse)
+                if (message.response && message.response.usage) {
+                    sessionTokens = {
+                        inputs_text_tokens: message.response.usage.input_token_details?.text_tokens || 0,
+                        inputs_cached_tokens: message.response.usage.input_token_details?.cached_tokens || 0,
+                        inputs_audio_tokens: message.response.usage.input_token_details?.audio_tokens || 0,
+                        outputs_text_tokens: message.response.usage.output_token_details?.text_tokens || 0,
+                        outputs_audio_tokens: message.response.usage.output_token_details?.audio_tokens || 0
+                    };
+                    console.log('📊 Tokens updated from response.done:', sessionTokens);
+                }
+                
+                // Marquer la réponse comme terminée côté serveur
+                isResponseActive = false;
+                console.log('✅ Response completed on server side');
+                break;
+
+            case 'error':
+                console.error('❌ Server error:', message.error);
+                addMessage('system', 'Erreur: ' + message.error.message);
+                break;
+        }
+    }
+
+    // ============================================
+    // AUDIO RECORDING
+    // ============================================
+
+    async function startAudioRecording() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    channelCount: 1,
+                    sampleRate: 24000,
+                    echoCancellation: true,
+                    noiseSuppression: true
+                } 
+            });
+
+            // Use AudioContext to capture raw PCM audio
+            audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+            const source = audioContext.createMediaStreamSource(stream);
+            audioProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+
+            source.connect(audioProcessor);
+            audioProcessor.connect(audioContext.destination);
+
+            audioProcessor.onaudioprocess = (e) => {
+                const inputData = e.inputBuffer.getChannelData(0);
+                
+                // Détecter si l'utilisateur parle (niveau audio > seuil)
+                let sum = 0;
+                for (let i = 0; i < inputData.length; i++) {
+                    sum += inputData[i] * inputData[i];
+                }
+                const rms = Math.sqrt(sum / inputData.length);
+                const isSpeakingNow = rms > 0.01; // Seuil de détection de parole
+                
+                // Si on détecte de la parole et que l'IA parle, l'interrompre immédiatement
+                if (isSpeakingNow && isSpeaking) {
+                    console.log('🎤 LOCAL INTERRUPT: User speaking detected while AI is talking');
+                    stopAllAudio();
+                    currentResponseId = null;
+                    isSpeaking = false;
+                    
+                    // Annuler la réponse côté serveur SEULEMENT si elle est active
+                    if (isResponseActive && websocket && websocket.readyState === WebSocket.OPEN) {
+                        websocket.send(JSON.stringify({
+                            type: 'response.cancel'
+                        }));
+                        isResponseActive = false;
+                    }
+                }
+                
+                // Ne pas envoyer d'audio si l'assistant parle (évite l'écho)
+                if (isSpeaking) {
+                    return;
+                }
+                
+                if (websocket && websocket.readyState === WebSocket.OPEN) {
+                    // Convert Float32 to Int16 PCM
+                    const pcmData = new Int16Array(inputData.length);
+                    for (let i = 0; i < inputData.length; i++) {
+                        const s = Math.max(-1, Math.min(1, inputData[i]));
+                        pcmData[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                    }
+                    
+                    // Ensure even length for PCM16
+                    const evenLength = pcmData.length % 2 === 0 ? pcmData.length : pcmData.length - 1;
+                    const evenPcmData = pcmData.slice(0, evenLength);
+                    
+                    // Convert to base64
+                    const base64Audio = arrayBufferToBase64(evenPcmData.buffer);
+                    
+                    websocket.send(JSON.stringify({
+                        type: 'input_audio_buffer.append',
+                        audio: base64Audio
+                    }));
+                }
+            };
+
+            startAudioVisualizer(stream);
+            console.log('🎤 Audio recording started');
+        } catch (error) {
+            console.error('❌ Error accessing microphone:', error);
+            throw new Error('Impossible d\'accéder au microphone');
+        }
+    }
+
+    // Helper function to convert ArrayBuffer to Base64
+    function arrayBufferToBase64(buffer) {
+        let binary = '';
+        const bytes = new Uint8Array(buffer);
+        const len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return window.btoa(binary);
+    }
+
+    // ============================================
+    // AUDIO VISUALIZER
+    // ============================================
+
+    function startAudioVisualizer(stream) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const analyser = audioContext.createAnalyser();
+        const microphone = audioContext.createMediaStreamSource(stream);
+        
+        microphone.connect(analyser);
+        analyser.fftSize = 64;
+        
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        const bars = document.querySelectorAll('.visualizer-bar');
+
+        function animate() {
+            if (!audioContext) return;
+
+            requestAnimationFrame(animate);
+            analyser.getByteFrequencyData(dataArray);
+
+            bars.forEach((bar, index) => {
+                const value = dataArray[index] || 0;
+                const height = (value / 255) * 40 + 10;
+                bar.style.height = height + 'px';
+                bar.classList.add('active');
+            });
+        }
+
+        animate();
+    }
+
+    function stopAudioVisualizer() {
+        if (audioContext) {
+            audioContext.close();
+            audioContext = null;
+        }
+
+        const bars = document.querySelectorAll('.visualizer-bar');
+        bars.forEach(bar => {
+            bar.style.height = '20px';
+            bar.classList.remove('active');
+        });
+    }
+
+    // ============================================
+    // AUDIO PLAYBACK WITH QUEUE
+    // ============================================
+
+    let playbackContext = null;
+    let nextPlaybackTime = 0;
+    const MAX_AUDIO_LAG = 0.5; // Limite le lag audio à 500ms
+    let activeSources = []; // Suivre toutes les sources audio actives
+    let currentResponseId = null; // ID de la réponse en cours
+    
+    // 🔥 File d'attente pour lecture séquentielle
+    let audioQueue = [];
+    let isProcessingQueue = false;
+
+    function stopAllAudio() {
+        console.log('🔇 Stopping ALL audio - sources:', activeSources.length, 'queued:', audioQueue.length);
+        
+        // Arrêter toutes les sources audio en cours de lecture
+        activeSources.forEach(source => {
+            try {
+                source.stop(0); // Arrêt immédiat
+                source.disconnect(); // Déconnecter immédiatement
+            } catch (e) {
+                // Ignore si déjà arrêté
+            }
+        });
+        activeSources = [];
+        
+        // 🔥 Vider complètement la file d'attente
+        audioQueue = [];
+        isProcessingQueue = false;
+        
+        // FERMER et recréer le contexte audio pour vraiment tout réinitialiser
+        if (playbackContext) {
+            try {
+                // Suspendre immédiatement puis fermer
+                playbackContext.suspend().then(() => {
+                    playbackContext.close();
+                }).catch(e => {
+                    // Ignore errors
+                });
+            } catch (e) {
+                // Ignore si déjà fermé
+            }
+            playbackContext = null;
+        }
+        
+        nextPlaybackTime = 0;
+        
+        console.log('🔇 ✅ All audio stopped and context reset');
+    }
+
+    async function processAudioQueue() {
+        if (isProcessingQueue || audioQueue.length === 0) {
+            return;
+        }
+        
+        isProcessingQueue = true;
+        
+        while (audioQueue.length > 0) {
+            const { base64Audio, responseId } = audioQueue.shift();
+            
+            // Vérifier que c'est toujours la réponse actuelle
+            if (responseId !== currentResponseId) {
+                console.log(`🚫 Skipping queued audio from old response: ${responseId}`);
+                continue;
+            }
+            
+            try {
+                await playAudioChunkNow(base64Audio, responseId);
+            } catch (error) {
+                console.error('❌ Error playing audio chunk:', error);
+            }
+        }
+        
+        isProcessingQueue = false;
+    }
+
+    function playAudioChunk(base64Audio, responseId) {
+        // 🔥 Ajouter à la file d'attente au lieu de jouer immédiatement
+        audioQueue.push({ base64Audio, responseId });
+        
+        // Démarrer le traitement de la file
+        processAudioQueue();
+    }
+
+    function playAudioChunkNow(base64Audio, responseId) {
+        return new Promise((resolve) => {
+            // Vérification renforcée: ignorer si la réponse a été annulée
+            if (!currentResponseId || responseId !== currentResponseId) {
+                console.log(`🚫 Skipping audio chunk from ${responseId === currentResponseId ? 'cancelled' : 'old'} response: ${responseId}`);
+                resolve();
+                return;
+            }
+            
+            // 🎤 Mettre le flag isSpeaking à true pour bloquer l'envoi du micro
+            isSpeaking = true;
+            
+            // Decode base64 to PCM16 audio
+            const audioData = atob(base64Audio);
+            const arrayBuffer = new ArrayBuffer(audioData.length);
+            const view = new Uint8Array(arrayBuffer);
+            
+            for (let i = 0; i < audioData.length; i++) {
+                view[i] = audioData.charCodeAt(i);
+            }
+
+            // Convert PCM16 to Float32 for Web Audio API
+            const pcm16 = new Int16Array(arrayBuffer);
+            const float32 = new Float32Array(pcm16.length);
+            for (let i = 0; i < pcm16.length; i++) {
+                float32[i] = pcm16[i] / 32768.0;
+            }
+
+            // Initialize audio context if needed
+            if (!playbackContext) {
+                playbackContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+                nextPlaybackTime = playbackContext.currentTime;
+            }
+
+            // Create audio buffer
+            const audioBuffer = playbackContext.createBuffer(1, float32.length, 24000);
+            audioBuffer.getChannelData(0).set(float32);
+
+            // Schedule playback sequentially
+            const source = playbackContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(playbackContext.destination);
+            
+            // Play at the next available time slot, but avoid excessive lag
+            const now = playbackContext.currentTime;
+            const startTime = Math.max(now, Math.min(nextPlaybackTime, now + MAX_AUDIO_LAG));
+            source.start(startTime);
+            
+            // Ajouter à la liste des sources actives
+            activeSources.push(source);
+            
+            // Retirer de la liste quand terminé
+            source.onended = () => {
+                const index = activeSources.indexOf(source);
+                if (index > -1) {
+                    activeSources.splice(index, 1);
+                }
+                
+                // 🎤 Réactiver le micro seulement quand TOUS les chunks sont finis
+                if (activeSources.length === 0 && audioQueue.length === 0) {
+                    isSpeaking = false;
+                    console.log('🎤 Assistant terminé - Micro réactivé');
+                }
+                
+                resolve();
+            };
+            
+            // Update next playback time (current start + duration of this chunk)
+            nextPlaybackTime = startTime + audioBuffer.duration;
+            
+            console.log(`🔊 Audio chunk playing (lag: ${Math.round((startTime - now) * 1000)}ms, queue: ${audioQueue.length})`);
+        });
+    }
+
+    // ============================================
+    // TOOL EXECUTION
+    // ============================================
+
+    async function executeToolCall(callId, toolName, argumentsJson) {
+        console.log(`🔧 Executing tool: ${toolName}`);
+        console.log(`📋 Arguments JSON:`, argumentsJson);
+        
+        try {
+            // Vérifier que le nom du tool est valide
+            if (!toolName || toolName === 'unknown') {
+                throw new Error('Tool name is missing or unknown');
+            }
+            
+            const args = JSON.parse(argumentsJson);
+            console.log(`📦 Parsed arguments:`, args);
+            
+            // Injecter automatiquement le call_id pour tous les outils
+            args.call_id = window.callId;
+            console.log(`📞 Added call_id to arguments:`, window.callId);
+            
+            // Appeler le backend pour exécuter le tool
+            const response = await fetch('/api/tools/execute', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tool_name: toolName,
+                    arguments: args,
+                    agent_id: '{{ agent.agent_id }}'
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Backend returned ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            console.log('✅ Tool result:', result);
+            
+            // Sauvegarder l'appel d'outil dans Cosmos DB
+            saveMessageToCosmosDB('tool', `Tool ${toolName} executed`, { 
+                tool_name: toolName, 
+                arguments: args,
+                result: result 
+            });
+            
+            // 🛑 Détecter si c'est le tool end_conversation
+            if (toolName === 'end_conversation' && result.action === 'end_conversation') {
+                console.log('🛑 end_conversation tool detected - triggering automatic conversation end');
+                console.log('📝 User farewell:', result.user_farewell);
+                console.log('📝 Summary:', result.summary);
+                
+                // Attendre que l'agent réponde au revoir (délai de 2 secondes)
+                setTimeout(() => {
+                    console.log('🛑 Auto-stopping conversation after end_conversation tool');
+                    stopConversation();
+                }, 2000);
+            }
+            
+            // Envoyer le résultat au modèle via WebSocket
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                websocket.send(JSON.stringify({
+                    type: 'conversation.item.create',
+                    item: {
+                        type: 'function_call_output',
+                        call_id: callId,
+                        output: JSON.stringify(result)
+                    }
+                }));
+                
+                // Demander une nouvelle réponse
+                websocket.send(JSON.stringify({
+                    type: 'response.create'
+                }));
+            }
+            
+            addMessage('system', `✅ ${toolName} exécuté avec succès`);
+            
+        } catch (error) {
+            console.error('❌ Tool execution error:', error);
+            addMessage('system', `❌ Erreur lors de l'exécution de ${toolName}`);
+            
+            // Envoyer l'erreur au modèle
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                websocket.send(JSON.stringify({
+                    type: 'conversation.item.create',
+                    item: {
+                        type: 'function_call_output',
+                        call_id: callId,
+                        output: JSON.stringify({ error: error.message })
+                    }
+                }));
+            }
+        }
+    }
+
+    // ============================================
+    // UI HELPERS
+    // ============================================
+
+    function updateConnectionStatus(status, text) {
+        const badge = document.getElementById('connectionStatus');
+        badge.className = 'status-badge ' + status;
+        badge.querySelector('span').textContent = text;
+    }
+
+    function addMessage(type, content, id = null) {
+        const display = document.getElementById('conversationDisplay');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message ' + type;
+        if (id) messageDiv.dataset.messageId = id;
+
+        const time = new Date().toLocaleTimeString('fr-FR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+
+        messageDiv.innerHTML = `
+            <div>${content}</div>
+            <div class="message-meta">${time}</div>
+        `;
+
+        display.appendChild(messageDiv);
+        display.scrollTop = display.scrollHeight;
+    }
+
+    function addOrUpdateMessage(type, content, id) {
+        const display = document.getElementById('conversationDisplay');
+        let messageDiv = display.querySelector(`[data-message-id="${id}"]`);
+
+        if (messageDiv) {
+            // Update existing message
+            messageDiv.querySelector('div:first-child').textContent += content;
+        } else {
+            // Create new message
+            addMessage(type, content, id);
+        }
+
+        display.scrollTop = display.scrollHeight;
+    }
+
+    function resetUI() {
+        document.getElementById('startButton').style.display = 'block';
+        document.getElementById('stopButton').style.display = 'none';
+    }
+
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+
+    console.log('✅ Voice Session Client Ready');
+    console.log('🤖 Agent:', agentConfig.agentName);
+    console.log('🎯 Model:', agentConfig.modelId);
+    console.log('🔧 Tools:', agentConfig.tools.length);
+
+    // ============================================
+    // INSTRUCTIONS & LEXICON EDITORS
+    // ============================================
+
+    function toggleInstructionsEditor() {
+        const display = document.getElementById('instructionsDisplay');
+        const editor = document.getElementById('instructionsEditor');
+        
+        if (editor.style.display === 'none') {
+            display.style.display = 'none';
+            editor.style.display = 'block';
+        } else {
+            display.style.display = 'block';
+            editor.style.display = 'none';
+        }
+    }
+
+    function cancelInstructionsEdit() {
+        document.getElementById('instructionsDisplay').style.display = 'block';
+        document.getElementById('instructionsEditor').style.display = 'none';
+    }
+
+    async function saveInstructions() {
+        const newInstructions = document.getElementById('instructionsTextarea').value;
+        
+        try {
+            const response = await fetch(`/agents/api/${agentConfig.agentId}/update_session_config`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    instructions: newInstructions
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                // Update display
+                document.getElementById('instructionsDisplay').innerHTML = newInstructions.substring(0, 200) + (newInstructions.length > 200 ? '...' : '');
+                
+                // Update agent config
+                agentConfig.instructions = newInstructions;
+                
+                // Close editor
+                cancelInstructionsEdit();
+                
+                // Show success message
+                addMessage('system', '✅ Instructions mises à jour avec succès');
+                
+                console.log('✅ Instructions saved successfully');
+            } else {
+                throw new Error(result.error || 'Erreur lors de la sauvegarde');
+            }
+        } catch (error) {
+            console.error('❌ Error saving instructions:', error);
+            addMessage('system', `❌ Erreur: ${error.message}`);
+        }
+    }
+
+    function toggleLexiconEditor() {
+        const display = document.getElementById('lexiconDisplay');
+        const editor = document.getElementById('lexiconEditor');
+        
+        if (editor.style.display === 'none') {
+            display.style.display = 'none';
+            editor.style.display = 'block';
+        } else {
+            display.style.display = 'block';
+            editor.style.display = 'none';
+        }
+    }
+
+    function cancelLexiconEdit() {
+        document.getElementById('lexiconDisplay').style.display = 'block';
+        document.getElementById('lexiconEditor').style.display = 'none';
+    }
+
+    async function saveLexiconUrl() {
+        const newLexiconUrl = document.getElementById('lexiconUrlInput').value;
+        
+        try {
+            const response = await fetch(`/agents/api/${agentConfig.agentId}/update_session_config`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    custom_lexicon_url: newLexiconUrl
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                // Update display
+                document.getElementById('lexiconUrlText').textContent = newLexiconUrl || 'Aucun lexique configuré';
+                
+                // Close editor
+                cancelLexiconEdit();
+                
+                // Show success message
+                addMessage('system', '✅ URL du lexique mise à jour avec succès');
+                
+                console.log('✅ Lexicon URL saved successfully');
+            } else {
+                throw new Error(result.error || 'Erreur lors de la sauvegarde');
+            }
+        } catch (error) {
+            console.error('❌ Error saving lexicon URL:', error);
+            addMessage('system', `❌ Erreur: ${error.message}`);
+        }
+    }
+
+</script>
+{% endblock %}

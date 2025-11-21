@@ -8,8 +8,11 @@ import os
 import uuid
 import requests
 from datetime import datetime, timedelta
-from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions
-
+from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions       
+import azure.cognitiveservices.speech as speechsdk    
+import re
+from difflib import SequenceMatcher
+import tempfile
 logger = logging.getLogger(__name__)
 
 personal_voice_bp = Blueprint('personal_voice', __name__, url_prefix='/creer-une-voix')
@@ -19,13 +22,21 @@ AZURE_SPEECH_KEY = os.getenv('PERSONAL_VOICE_KEY') or os.getenv('AZURE_SPEECH_KE
 AZURE_SPEECH_REGION = os.getenv('PERSONAL_VOICE_REGION') or os.getenv('AZURE_SPEECH_REGION', 'eastus')
 CUSTOM_VOICE_API_VERSION = '2024-02-01-preview'
 
+# Log de la configuration au démarrage
+logger.info(f"🔑 Personal Voice configuré:")
+logger.info(f"   - Région: {AZURE_SPEECH_REGION}")
+logger.info(f"   - Clé: {'✅ PERSONAL_VOICE_KEY' if os.getenv('PERSONAL_VOICE_KEY') else '⚠️ AZURE_SPEECH_KEY (fallback)'}")
+logger.info(f"   - API Version: {CUSTOM_VOICE_API_VERSION}")
+
 # Configuration Azure Blob Storage
 AZURE_STORAGE_CONNECTION_STRING = os.getenv('BLOB_CONNECTION_STRING')
 BLOB_CONTAINER_ENREGISTREMENTS = 'enregistrements'
 
 # URLs de base pour l'API Custom Voice
 def get_custom_voice_base_url():
-    return f"https://{AZURE_SPEECH_REGION}.api.cognitive.microsoft.com/customvoice"
+    base_url = f"https://{AZURE_SPEECH_REGION}.api.cognitive.microsoft.com/customvoice"
+    logger.debug(f"📍 Custom Voice API URL: {base_url}")
+    return base_url
 
 def get_headers():
     """Retourne les headers pour les appels API Azure Custom Voice"""
@@ -109,7 +120,222 @@ def calculate_usage_counts():
         logger.warning(f"⚠️ Erreur lors du calcul des usage_counts: {e}")
         return {}
 
+def compare_texts(expected, transcribed):
+    """Compare deux textes et retourne un score de similarité"""
+    import re
+    from difflib import SequenceMatcher
+    
+    # Normaliser les textes
+    def normalize(text):
+        # Minuscules
+        text = text.lower()
+        # Supprimer ponctuation
+        text = re.sub(r'[^\w\s]', '', text)
+        # Supprimer espaces multiples
+        text = re.sub(r'\s+', ' ', text).strip()
+        return text
+    
+    expected_norm = normalize(expected)
+    transcribed_norm = normalize(transcribed)
+    
+    print(f"📊 Comparaison:")
+    print(f"  - Attendu (norm): {expected_norm}")
+    print(f"  - Transcrit (norm): {transcribed_norm}")
+    
+    # Mots attendus et transcrits
+    expected_words = expected_norm.split()
+    transcribed_words = transcribed_norm.split()
+    
+    # Mots communs
+    expected_set = set(expected_words)
+    transcribed_set = set(transcribed_words)
+    common_words = expected_set.intersection(transcribed_set)
+    
+    # Calcul scores
+    if len(expected_words) == 0:
+        word_accuracy = 0
+    else:
+        word_accuracy = int((len(common_words) / len(expected_words)) * 100)
+    
+    # Similarité globale (Levenshtein)
+    similarity_ratio = SequenceMatcher(None, expected_norm, transcribed_norm).ratio()
+    similarity_percentage = int(similarity_ratio * 100)
+    
+    # Mots manquants
+    missing_words = list(expected_set - transcribed_set)
+    
+    # Niveau de validation
+    if similarity_percentage >= 100:
+        validation_level = 'parfait'
+        recommendation = '✅ Validation parfaite ! Le texte correspond exactement.'
+    elif similarity_percentage >= 90:
+        validation_level = 'excellent'
+        recommendation = '✅ Excellente correspondance ! Vous pouvez continuer.'
+    elif similarity_percentage >= 85:
+        validation_level = 'très bien'
+        recommendation = '✅ Très bonne correspondance. Validation acceptée.'
+    elif similarity_percentage >= 75:
+        validation_level = 'bien'
+        recommendation = '⚠️ Bonne correspondance mais quelques différences. Validez ou réenregistrez.'
+    elif similarity_percentage >= 60:
+        validation_level = 'moyen'
+        recommendation = '⚠️ Correspondance moyenne. Réenregistrez pour améliorer le score.'
+    else:
+        validation_level = 'faible'
+        recommendation = '❌ Faible correspondance. Veuillez réenregistrer en lisant exactement le texte.'
+    
+    result = {
+        'similarity_percentage': similarity_percentage,
+        'word_accuracy': word_accuracy,
+        'common_words_count': len(common_words),
+        'total_expected_words': len(expected_words),
+        'total_transcribed_words': len(transcribed_words),
+        'missing_words': missing_words[:10],  # Limiter à 10 mots
+        'validation_level': validation_level,
+        'recommendation': recommendation,
+        'is_valid': similarity_percentage >= 75
+    }
+    
+    print(f"📈 Résultats comparaison:")
+    print(f"  - Similarité: {similarity_percentage}%")
+    print(f"  - Précision mots: {word_accuracy}%")
+    print(f"  - Mots communs: {len(common_words)}/{len(expected_words)}")
+    print(f"  - Validation: {validation_level}")
+    
+    return result
 
+@personal_voice_bp.route('/api/transcribe-consent', methods=['POST'])
+def transcribe_consent():
+    """Transcrit l'audio et compare avec le texte attendu"""
+    temp_audio_path = None
+    
+    try:
+        data = request.get_json()
+        audio_url = data.get('audio_url')
+        expected_text = data.get('expected_text')
+        locale = data.get('locale', 'fr-FR')
+        
+        if not audio_url or not expected_text:
+            return jsonify({
+                'success': False,
+                'error': 'audio_url et expected_text requis'
+            }), 400
+        
+        print(f"🎙️ Transcription demandée:")
+        print(f"  - Audio URL: {audio_url}")
+        print(f"  - Locale: {locale}")
+        print(f"  - Texte attendu: {expected_text[:100]}...")
+        
+        # Configuration Azure Speech
+        speech_config = speechsdk.SpeechConfig(
+            subscription=AZURE_SPEECH_KEY,
+            region=AZURE_SPEECH_REGION
+        )
+        speech_config.speech_recognition_language = locale
+        
+        print(f"✅ Speech config créé - Région: {AZURE_SPEECH_REGION}, Locale: {locale}")
+        
+        # Télécharger l'audio temporairement
+        print(f"📥 Téléchargement audio depuis: {audio_url}")
+        response = requests.get(audio_url, timeout=30)
+        
+        if response.status_code != 200:
+            print(f"❌ Erreur téléchargement: {response.status_code}")
+            return jsonify({
+                'success': False,
+                'error': f'Impossible de télécharger l\'audio (code {response.status_code})'
+            }), 400
+        
+        print(f"✅ Audio téléchargé: {len(response.content)} bytes")
+        
+        # Sauvegarder temporairement
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_audio:
+            temp_audio.write(response.content)
+            temp_audio_path = temp_audio.name
+        
+        print(f"📁 Audio sauvegardé: {temp_audio_path}")
+        
+        # Créer AudioConfig depuis le fichier
+        audio_config = speechsdk.audio.AudioConfig(filename=temp_audio_path)
+        
+        # Créer recognizer
+        speech_recognizer = speechsdk.SpeechRecognizer(
+            speech_config=speech_config,
+            audio_config=audio_config
+        )
+        
+        # Reconnaissance
+        print("🎤 Démarrage transcription...")
+        result = speech_recognizer.recognize_once()
+        
+        print(f"📊 Résultat reconnaissance: {result.reason}")
+        
+        if result.reason == speechsdk.ResultReason.RecognizedSpeech:
+            transcribed_text = result.text
+            print(f"✅ Transcription réussie: {transcribed_text}")
+            
+            # Comparer avec le texte attendu
+            comparison = compare_texts(expected_text, transcribed_text)
+            
+            return jsonify({
+                'success': True,
+                'transcribed_text': transcribed_text,
+                'expected_text': expected_text,
+                'comparison': comparison
+            })
+        
+        elif result.reason == speechsdk.ResultReason.NoMatch:
+            print("❌ Aucune parole détectée")
+            no_match_details = result.no_match_details
+            print(f"   Raison: {no_match_details}")
+            return jsonify({
+                'success': False,
+                'error': 'Aucune parole détectée dans l\'audio'
+            }), 400
+        
+        elif result.reason == speechsdk.ResultReason.Canceled:
+            cancellation_details = result.cancellation_details
+            print(f"❌ Reconnaissance annulée: {cancellation_details.reason}")
+            
+            if cancellation_details.reason == speechsdk.CancellationReason.Error:
+                print(f"   Code erreur: {cancellation_details.error_code}")
+                print(f"   Détails: {cancellation_details.error_details}")
+                
+                return jsonify({
+                    'success': False,
+                    'error': f'Erreur transcription: {cancellation_details.error_details}'
+                }), 500
+            
+            return jsonify({
+                'success': False,
+                'error': f'Reconnaissance annulée: {cancellation_details.reason}'
+            }), 500
+        
+        else:
+            print(f"❌ Statut inattendu: {result.reason}")
+            return jsonify({
+                'success': False,
+                'error': f'Erreur transcription: statut {result.reason}'
+            }), 500
+    
+    except Exception as e:
+        print(f"❌ Erreur transcribe_consent: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+    
+    finally:
+        # Nettoyer fichier temporaire dans tous les cas
+        if temp_audio_path and os.path.exists(temp_audio_path):
+            try:
+                os.remove(temp_audio_path)
+                print(f"🗑️ Fichier temporaire supprimé: {temp_audio_path}")
+            except Exception as cleanup_error:
+                print(f"⚠️ Impossible de supprimer {temp_audio_path}: {cleanup_error}")
+                
 @personal_voice_bp.route('/api/projects', methods=['GET', 'POST'])
 def manage_projects():
     """Gérer les projets de voix personnelles via Azure Custom Voice API"""
@@ -567,8 +793,33 @@ def create_personal_voice():
 
         project_id = data.get('project_id')
         consent_id = data.get('consent_id')
-        # Support ancien format (audio_url) et nouveau format (container_url)
+        
+        # Support de plusieurs formats:
+        # 1. container_url directement (ancien format)
+        # 2. audio_url (ancien format)
+        # 3. audio_urls (nouveau format - liste d'URLs)
         container_url = data.get('container_url') or data.get('audio_url')
+        audio_urls = data.get('audio_urls', [])
+        
+        # Si on a reçu audio_urls (liste), extraire le container_url
+        if audio_urls and isinstance(audio_urls, list) and len(audio_urls) > 0:
+            # Extraire l'URL du dossier depuis la première URL
+            # Format: https://account.blob.core.windows.net/container/project_id/file.wav?sas_token
+            # On veut: https://account.blob.core.windows.net/container/project_id?sas_token
+            first_url = audio_urls[0]
+            
+            # Retirer le nom du fichier pour garder le dossier
+            if '/' in first_url:
+                # Séparer l'URL et le SAS token
+                if '?' in first_url:
+                    url_part, sas_part = first_url.rsplit('?', 1)
+                    # Retirer le nom du fichier
+                    container_url = url_part.rsplit('/', 1)[0] + '?' + sas_part
+                else:
+                    container_url = first_url.rsplit('/', 1)[0]
+                    
+            logger.info(f"📝 Container URL extrait de audio_urls: {container_url}")
+        
         audio_prefix = data.get('audio_prefix', '')  # Préfixe optionnel pour les fichiers
         audio_extensions = data.get('audio_extensions', ['.wav'])  # Extensions avec point
         voice_name = data.get('voice_name', '')
@@ -577,15 +828,37 @@ def create_personal_voice():
         # Validation des entrées
         if not all([project_id, consent_id, container_url]):
             logger.error(f"❌ Paramètres manquants - project_id: {project_id}, consent_id: {consent_id}, container_url: {container_url}")
+            logger.error(f"   Données reçues - audio_urls: {audio_urls}")
             return jsonify({
                 'success': False,
-                'error': 'project_id, consent_id et container_url (ou audio_url) sont requis',
+                'error': 'project_id, consent_id et container_url (ou audio_urls) sont requis',
                 'received': {
                     'project_id': project_id,
                     'consent_id': consent_id, 
-                    'container_url': container_url
+                    'container_url': container_url,
+                    'audio_urls_count': len(audio_urls) if audio_urls else 0
                 }
             }), 400
+
+        # Vérifier que le projet existe dans Azure
+        logger.info(f"🔍 Vérification du projet {project_id} dans Azure...")
+        project_check_url = f"{get_custom_voice_base_url()}/projects/{project_id}?api-version={CUSTOM_VOICE_API_VERSION}"
+        project_response = requests.get(project_check_url, headers=get_headers())
+        
+        if project_response.status_code != 200:
+            logger.error(f"❌ Le projet {project_id} n'existe pas dans Azure (status: {project_response.status_code})")
+            logger.error(f"   - Détails: {project_response.text}")
+            return jsonify({
+                'success': False,
+                'error': f'Le projet {project_id} n\'existe pas dans Azure',
+                'details': project_response.text,
+                'status_code': project_response.status_code
+            }), 400
+        
+        logger.info(f"✅ Projet {project_id} trouvé dans Azure")
+        project_data = project_response.json()
+        logger.info(f"   - Type: {project_data.get('kind')}")
+        logger.info(f"   - Description: {project_data.get('description')}")
 
         # Générer un ID unique pour la voix personnelle
         personal_voice_id = f"voice-{uuid.uuid4().hex[:12]}"
@@ -610,7 +883,20 @@ def create_personal_voice():
         if not audio_prefix:
             del payload["audios"]["prefix"]
 
-        response = requests.put(url, headers=get_headers(), json=payload)
+        logger.info(f"📤 Appel API Azure Custom Voice:")
+        logger.info(f"   - URL: {url}")
+        logger.info(f"   - Payload: {payload}")
+        
+        headers = get_headers()
+        logger.info(f"   - Région: {AZURE_SPEECH_REGION}")
+        logger.info(f"   - Clé utilisée: {AZURE_SPEECH_KEY[:10]}...{AZURE_SPEECH_KEY[-10:] if AZURE_SPEECH_KEY else 'None'}")
+
+        response = requests.put(url, headers=headers, json=payload)
+        
+        logger.info(f"📥 Réponse Azure: {response.status_code}")
+        if response.status_code not in [200, 201, 202]:
+            logger.error(f"❌ Erreur Azure API: {response.status_code}")
+            logger.error(f"   - Détails: {response.text}")
 
         if response.status_code in [200, 201, 202]:
             result = response.json()

@@ -2185,6 +2185,79 @@
     </form>
 </div>
 
+<script>
+    // Configuration chargée - approche simple et fiable
+    console.log('📋 Chargement de la configuration...');
+    
+    // Charger les valeurs dès que le DOM est prêt
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🔄 DOM prêt - chargement des valeurs');
+        
+        // Fonction helper pour définir une valeur
+        function setValue(id, value) {
+            const field = document.getElementById(id);
+            if (field && value !== null && value !== undefined && value !== '' && value !== 'None') {
+                field.value = value;
+                console.log('✅', id, '=', value);
+            }
+        }
+        
+        function setChecked(id, value) {
+            const field = document.getElementById(id);
+            if (field && value !== null && value !== undefined) {
+                field.checked = !!value;
+                console.log('✅', id, '(checked) =', !!value);
+            }
+        }
+        
+        // Model config
+        setValue('maxTokens', '{{ config.max_tokens if config and config.max_tokens else "" }}');
+        setValue('temperature', '{{ config.temperature if config and config.temperature is not none else "" }}');
+        setValue('topP', '{{ config.top_p if config and config.top_p is not none else "" }}');
+        setValue('frequencyPenalty', '{{ config.frequency_penalty if config and config.frequency_penalty is not none else "" }}');
+        setValue('presencePenalty', '{{ config.presence_penalty if config and config.presence_penalty is not none else "" }}');
+        
+        // Input Audio
+        setValue('inputAudioSamplingRate', '{{ config.input_audio_sampling_rate if config and config.input_audio_sampling_rate else "" }}');
+        setValue('inputAudioFormat', '{{ config.input_audio_format if config and config.input_audio_format else "" }}');
+        setValue('inputLanguage', '{{ config.input_language if config and config.input_language else "" }}');
+        
+        // Input Transcription
+        setValue('inputTranscriptionModel', '{{ config.input_transcription_model if config and config.input_transcription_model else "" }}');
+        setValue('inputTranscriptionLanguage', '{{ config.input_transcription_language if config and config.input_transcription_language else "" }}');
+        setValue('inputTranscriptionPrompt', '{{ config.input_transcription_prompt if config and config.input_transcription_prompt else "" }}');
+        setValue('inputTranscriptionTemperature', '{{ config.input_transcription_temperature if config and config.input_transcription_temperature is not none else "" }}');
+        
+        // VAD
+        setValue('vadType', '{{ config.vad_type if config and config.vad_type else "" }}');
+        setValue('vadThreshold', '{{ config.vad_threshold if config and config.vad_threshold is not none else "" }}');
+        setValue('vadPrefixPaddingMs', '{{ config.vad_prefix_padding_ms if config and config.vad_prefix_padding_ms else "" }}');
+        setValue('vadSilenceDurationMs', '{{ config.vad_silence_duration_ms if config and config.vad_silence_duration_ms else "" }}');
+        setValue('vadEagerness', '{{ config.vad_eagerness if config and config.vad_eagerness else "" }}');
+        
+        // Turn Detection
+        setChecked('enableTurnDetection', {{ 'true' if config and config.enable_turn_detection else 'false' }});
+        setValue('turnDetectionCreateResponseThreshold', '{{ config.turn_detection_create_response_threshold if config and config.turn_detection_create_response_threshold is not none else "" }}');
+        setValue('turnDetectionSilenceThreshold', '{{ config.turn_detection_silence_threshold if config and config.turn_detection_silence_threshold is not none else "" }}');
+        setValue('turnDetectionPrefixPadding', '{{ config.turn_detection_prefix_padding if config and config.turn_detection_prefix_padding else "" }}');
+        
+        // Output Audio
+        setValue('outputAudioFormat', '{{ config.output_audio_format if config and config.output_audio_format else "" }}');
+        setValue('outputAudioSamplingRate', '{{ config.output_audio_sampling_rate if config and config.output_audio_sampling_rate else "" }}');
+        
+        // Voice
+        setValue('voiceName', '{{ config.voice_name if config and config.voice_name else "" }}');
+        setValue('voiceRate', '{{ config.voice_rate if config and config.voice_rate else "" }}');
+        setValue('voicePitch', '{{ config.voice_pitch if config and config.voice_pitch else "" }}');
+        setValue('voiceVolume', '{{ config.voice_volume if config and config.voice_volume else "" }}');
+        setValue('voiceStyle', '{{ config.voice_style if config and config.voice_style else "" }}');
+        setValue('voiceTemperature', '{{ config.voice_temperature if config and config.voice_temperature is not none else "" }}');
+        setValue('customLexiconSelect', '{{ config.custom_lexicon_url if config and config.custom_lexicon_url else "" }}');
+        setChecked('enableOutputTimestamps', {{ 'true' if config and config.enable_output_timestamps else 'false' }});
+        
+        console.log('✅ Valeurs chargées');
+    });
+</script>
 <script src="{{ url_for('static', filename='js/agent_config_step2.js') }}?v={{ range(1, 9999999) | random }}"></script>
 <script src="{{ url_for('static', filename='js/azure_voice_selector.js') }}?v={{ range(1, 9999999) | random }}"></script>
 <script>

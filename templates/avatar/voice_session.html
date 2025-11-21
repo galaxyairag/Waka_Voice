@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Session Vocale - {{ agent.agent_name }}{% endblock %}
+
+{% block head %}
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/voice_session.css') }}?v={{ range(1, 9999) | random }}">
+{% endblock %}
+
+{% block content %}
+<div class="session-container">
+    <!-- Header -->
+    <div class="session-header">
+        <div class="agent-info">
+            <div class="agent-avatar">
+                <i class="bi bi-robot"></i>
+            </div>
+            <div class="agent-details">
+                <h1>{{ agent.agent_name }}</h1>
+                <p>{{ agent.role or 'Assistant vocal intelligent' }}</p>
+            </div>
+        </div>
+        <div class="session-status">
+            <span class="status-badge disconnected" id="connectionStatus">
+                <i class="bi bi-circle-fill"></i>
+                <span>Déconnecté</span>
+            </span>
+            <span class="status-badge" style="background: rgba(98, 100, 167, 0.15); color: #A0A2E1; border-color: rgba(98, 100, 167, 0.3);">
+                <i class="bi bi-cpu-fill"></i>
+                {{ agent.model_name }}
+            </span>
+            <span class="status-badge" style="background: rgba(146, 195, 83, 0.15); color: var(--teams-accent-green); border-color: rgba(146, 195, 83, 0.3);">
+                <i class="bi bi-mic-fill"></i>
+                {{ agent.voice.name.split(':')[0] if ':' in agent.voice.name else agent.voice.name }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="session-main">
+        <!-- Video Stage -->
+        <div class="video-stage">
+            <!-- Avatar Container -->
+            <div class="video-container">
+                <div id="audioControlButton" style="display: none;">
+                    <button onclick="enableAvatarAudio()">
+                        <i class="bi bi-volume-up-fill"></i> Activer l'audio
+                    </button>
+                </div>
+                
+                <div id="avatarContainer">
+                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center; color: white; padding: 40px;">
+                        <i class="bi bi-person-video3" style="font-size: 80px; opacity: 0.9; margin-bottom: 24px; animation: float 3s ease-in-out infinite;"></i>
+                        <p style="font-size: 20px; font-weight: 600; margin-bottom: 12px; opacity: 0.95;">Avatar Visuel</p>
+                        {% if agent.avatar_config %}
+                        <p style="font-size: 14px; opacity: 0.8; background: rgba(255, 255, 255, 0.15); padding: 8px 20px; border-radius: 20px;">
+                            {{ agent.avatar_config.character }} - {{ agent.avatar_config.style }}
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audio Visualizer -->
+            <div class="audio-visualizer" id="audioVisualizer">
+                {% for i in range(1, 25) %}
+                <div class="visualizer-bar"></div>
+                {% endfor %}
+            </div>
+
+            <!-- Controls Bar -->
+            <div class="controls-bar">
+                <button class="voice-button start" id="startButton" onclick="startConversation()">
+                    <i class="bi bi-mic-fill"></i>
+                    <span>Démarrer</span>
+                </button>
+                <button class="voice-button stop" id="stopButton" onclick="stopConversation()" style="display: none;">
+                    <i class="bi bi-stop-fill"></i>
+                    <span>Arrêter</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Sidebar Panel -->
+        <div class="sidebar-panel">
+            <div class="sidebar-header">
+                <h2>
+                    <i class="bi bi-info-circle-fill"></i>
+                    Informations de session
+                </h2>
+            </div>
+
+            <div class="sidebar-content">
+                <!-- Conversation Display -->
+                <div class="conversation-section">
+                    <div class="section-title">
+                        <i class="bi bi-chat-dots-fill"></i>
+                        Conversation
+                    </div>
+                    <div id="conversationDisplay">
+                        <div class="message system">
+                            <i class="bi bi-info-circle-fill"></i>
+                            Session prête. Cliquez sur Démarrer pour commencer.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configuration -->
+                <div class="config-section">
+                    <h3><i class="bi bi-gear-fill"></i> Configuration</h3>
+                    <div class="config-item">
+                        <span class="config-label">Agent ID</span>
+                        <span class="config-value">{{ agent.agent_id }}</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Modèle</span>
+                        <span class="config-value">{{ agent.model_id }}</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Température</span>
+                        <span class="config-value">{{ agent.temperature }}</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Max Tokens</span>
+                        <span class="config-value">{{ agent.max_tokens }}</span>
+                    </div>
+                </div>
+
+                <!-- Voice Config -->
+                <div class="config-section">
+                    <h3><i class="bi bi-mic-fill"></i> Configuration Vocale</h3>
+                    <div class="config-item">
+                        <span class="config-label">Voix</span>
+                        <span class="config-value">{{ agent.voice.name }}</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Vitesse</span>
+                        <span class="config-value">{{ agent.voice.rate }}x</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Température vocale</span>
+                        <span class="config-value">{{ agent.voice.temperature }}</span>
+                    </div>
+                </div>
+
+                <!-- Tools -->
+                <div class="config-section">
+                    <h3><i class="bi bi-tools"></i> Outils Actifs ({{ agent.tools|length }})</h3>
+                    <div>
+                        {% if agent.tools %}
+                            {% for tool in agent.tools %}
+                            <span class="tool-badge">
+                                <i class="bi bi-wrench-adjustable"></i> {{ tool.name }}
+                            </span>
+                            {% endfor %}
+                        {% else %}
+                            <p style="color: var(--teams-text-secondary); font-size: 13px; margin: 0;">Aucun outil activé</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Instructions Editor -->
+                <div class="config-section">
+                    <div class="edit-header">
+                        <h3><i class="bi bi-chat-left-text-fill"></i> Instructions</h3>
+                        <button class="edit-button" onclick="toggleInstructionsEditor()">
+                            <i class="bi bi-pencil-square"></i> Modifier
+                        </button>
+                    </div>
+                    <div id="instructionsDisplay">
+                        {{ agent.instructions[:200] }}{% if agent.instructions|length > 200 %}...{% endif %}
+                    </div>
+                    <div id="instructionsEditor" style="display: none;">
+                        <textarea id="instructionsTextarea">{{ agent.instructions }}</textarea>
+                        <div class="editor-actions">
+                            <button onclick="saveInstructions()">
+                                <i class="bi bi-check-circle"></i> Enregistrer
+                            </button>
+                            <button onclick="cancelInstructionsEdit()">
+                                <i class="bi bi-x-circle"></i> Annuler
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lexicon Editor -->
+                <div class="config-section">
+                    <div class="edit-header">
+                        <h3><i class="bi bi-book-fill"></i> Lexique personnalisé</h3>
+                        <button class="edit-button" onclick="toggleLexiconEditor()">
+                            <i class="bi bi-pencil-square"></i> Modifier
+                        </button>
+                    </div>
+                    <div id="lexiconDisplay">
+                        <span id="lexiconUrlText">{{ agent.custom_lexicon_url if agent.custom_lexicon_url else 'Aucun lexique configuré' }}</span>
+                    </div>
+                    <div id="lexiconEditor" style="display: none;">
+                        <input type="text" id="lexiconUrlInput" placeholder="https://..." value="{{ agent.custom_lexicon_url if agent.custom_lexicon_url else '' }}">
+                        <div class="editor-actions">
+                            <button onclick="saveLexiconUrl()">
+                                <i class="bi bi-check-circle"></i> Enregistrer
+                            </button>
+                            <button onclick="cancelLexiconEdit()">
+                                <i class="bi bi-x-circle"></i> Annuler
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Azure Speech SDK for Avatar -->
+{% if agent.avatar_enabled %}
+<script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
+{% endif %}
+
+<!-- Agent Configuration (passed to JS) -->
+<script>
+    window.AGENT_CONFIG = {
+        agentId: '{{ agent.agent_id }}',
+        agentName: '{{ agent.agent_name }}',
+        modelId: '{{ agent.model_id }}',
+        websocketUrl: '{{ agent.websocket_url | safe }}',
+        modalities: {{ agent.modalities | tojson | safe }},
+        voice: {
+            name: '{{ agent.voice.name }}',
+            rate: parseFloat('{{ agent.voice.rate }}'),
+            temperature: parseFloat('{{ agent.voice.temperature }}'),
+            custom_lexicon_url: '{{ agent.voice.custom_lexicon_url if agent.voice.custom_lexicon_url else "" }}'
+        },
+        instructions: `{{ agent.instructions | replace('\n', '\\n') | replace('"', '\\"') }}`,
+        tools: {{ agent.tools | tojson | safe }},
+        temperature: parseFloat('{{ agent.temperature }}'),
+        maxTokens: parseInt('{{ agent.max_tokens }}'),
+        avatarEnabled: {{ 'true' if agent.avatar_enabled else 'false' }}{% if agent.avatar_enabled %},
+        avatarConfig: {
+            character: '{{ agent.avatar_config.character }}',
+            style: '{{ agent.avatar_config.style }}',
+            backgroundColor: '{{ agent.avatar_config.background_color or "#FFFFFF" }}',
+            backgroundImage: '{{ agent.avatar_config.background_image or "" }}'
+        },
+        speechKey: '{{ agent.speech_key }}',
+        speechRegion: '{{ agent.speech_region }}'{% endif %}
+    };
+</script>
+
+<!-- Main Voice Session Script -->
+<script src="{{ url_for('static', filename='js/voice_session.js') }}?v={{ range(1, 9999) | random }}"></script>
+{% endblock %}

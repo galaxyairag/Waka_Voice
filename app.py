@@ -120,6 +120,24 @@ def home():
     """
     return render_template('home.html')
 
+@app.route('/debug/routes')
+def debug_routes():
+    """
+    Route de débogage - Liste toutes les routes enregistrées
+    """
+    routes = []
+    for rule in app.url_map.iter_rules():
+        routes.append({
+            'endpoint': rule.endpoint,
+            'methods': ','.join(sorted(rule.methods - {'HEAD', 'OPTIONS'})),
+            'path': str(rule)
+        })
+    routes_sorted = sorted(routes, key=lambda x: x['path'])
+    html = "<h1>Routes enregistrées</h1><table border='1'><tr><th>Path</th><th>Endpoint</th><th>Methods</th></tr>"
+    for route in routes_sorted:
+        html += f"<tr><td>{route['path']}</td><td>{route['endpoint']}</td><td>{route['methods']}</td></tr>"
+    html += "</table>"
+    return html
 
 @app.route('/quality')
 def quality_dashboard():

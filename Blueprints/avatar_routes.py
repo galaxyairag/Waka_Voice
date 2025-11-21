@@ -1001,10 +1001,15 @@ def call_avatar(agent_id):
     Charge la configuration de l'avatar depuis Cosmos DB et initialise la session
     """
     try:
-        from flask import session
+        from flask import session, request
         from configuration.cosmos_config import get_avatar_config
         from configuration.voice_live_config import VoiceLiveClient
         from tools import get_tools_definition
+        
+        # 🔄 FORCE REFRESH: Vider TOUTE la session Flask si refresh=1
+        if request.args.get('refresh') == '1':
+            session.clear()
+            logger.info("🔄 Session Flask complètement vidée (refresh=1)")
         
         # 🔄 FORCE REFRESH: Vider la session Flask pour forcer le rechargement
         session.pop('active_agent_id', None)
@@ -1132,6 +1137,10 @@ Aidez l'utilisateur de manière professionnelle et efficace."""
         
         # Stocker la config dans la session Flask
         session['active_agent_id'] = agent_id
+        # Log modalities from DB for debugging
+        db_modalities = avatar_config.get('modalities', ['text', 'audio'])
+        logger.info(f"🎯 Modalities depuis Cosmos DB: {db_modalities}")
+        
         session['active_agent_config'] = {
             'agent_id': agent_id,
             'agent_name': avatar_config.get('agent_name', 'Avatar'),
@@ -1139,7 +1148,7 @@ Aidez l'utilisateur de manière professionnelle et efficace."""
             'model_id': model_id,
             'model_name': avatar_config.get('model_name', model_id),
             'websocket_url': websocket_url,
-            'modalities': avatar_config.get('modalities', ['text', 'audio']),
+            'modalities': db_modalities,
             'voice': {
                 'name': voice_name,
                 'type': voice_type,

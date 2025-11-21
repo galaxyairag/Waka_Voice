@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Avatar Images</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .avatar-item {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+        .avatar-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 6px;
+            background: #f0f0f0;
+        }
+        .avatar-item h3 {
+            margin: 10px 0 5px 0;
+            font-size: 16px;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .test-card {
+            border: 2px solid #007bff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .test-card h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        .preview-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin: 10px auto;
+            border: 3px solid #007bff;
+            background: #f0f0f0;
+        }
+        .preview-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test des Images d'Avatars Azure</h1>
+    
+    <div class="test-container">
+        <h2>1. Test de l'API Backend</h2>
+        <button onclick="testBackendAPI()">Tester /avatar/api/avatars</button>
+        <pre id="apiResult" style="background: #f8f9fa; padding: 10px; border-radius: 4px; max-height: 300px; overflow: auto;"></pre>
+    </div>
+
+    <div class="test-container">
+        <h2>2. Galerie des Avatars (Chargement Direct)</h2>
+        <div id="avatarGallery" class="avatar-grid"></div>
+    </div>
+
+    <div class="test-container">
+        <h2>3. Test d'Extraction depuis background-image</h2>
+        <p>Simulation de ce qui se passe dans le preview panel :</p>
+        
+        <div class="test-card" style="background-image: url('https://learn.microsoft.com/en-us/azure/ai-services/speech-service/text-to-speech-avatar/media/lisa-casual-sitting.png'); background-size: cover; height: 200px;">
+            <div style="background: rgba(255,255,255,0.9); padding: 10px; display: inline-block;">
+                Card avec background-image CSS
+            </div>
+        </div>
+        
+        <div class="test-card">
+            <h3>Preview Circle (Extraction)</h3>
+            <div id="previewCircle" class="preview-circle">
+                <div style="padding: 50px; text-align: center;">🧍</div>
+            </div>
+            <button onclick="extractAndDisplay()">Extraire & Afficher</button>
+            <pre id="extractionLog" style="background: #f8f9fa; padding: 10px; margin-top: 10px; border-radius: 4px;"></pre>
+        </div>
+    </div>
+
+    <script>
+        let avatarsData = [];
+
+        // Test 1: Backend API
+        async function testBackendAPI() {
+            const resultEl = document.getElementById('apiResult');
+            resultEl.textContent = 'Chargement...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/avatar/api/avatars');
+                const data = await response.json();
+                avatarsData = data.avatars || [];
+                
+                resultEl.textContent = JSON.stringify(data, null, 2);
+                
+                // Load gallery automatically
+                loadGallery(avatarsData);
+                
+            } catch (error) {
+                resultEl.textContent = `❌ Erreur: ${error.message}`;
+            }
+        }
+
+        // Test 2: Load Gallery
+        function loadGallery(avatars) {
+            const gallery = document.getElementById('avatarGallery');
+            gallery.innerHTML = '';
+            
+            if (!avatars || avatars.length === 0) {
+                gallery.innerHTML = '<p>Aucun avatar chargé. Cliquez sur "Tester /avatar/api/avatars" d\'abord.</p>';
+                return;
+            }
+            
+            avatars.forEach(avatar => {
+                const item = document.createElement('div');
+                item.className = 'avatar-item';
+                
+                const img = document.createElement('img');
+                img.src = avatar.preview_url;
+                img.alt = avatar.avatar_name;
+                
+                img.onload = () => {
+                    const status = item.querySelector('.status');
+                    status.className = 'status success';
+                    status.textContent = '✅ Chargée';
+                };
+                
+                img.onerror = () => {
+                    const status = item.querySelector('.status');
+                    status.className = 'status error';
+                    status.textContent = '❌ Erreur CORS ou URL invalide';
+                };
+                
+                item.innerHTML = `
+                    <h3>${avatar.avatar_name}</h3>
+                    <div class="status">⏳ Chargement...</div>
+                `;
+                item.insertBefore(img, item.querySelector('h3').nextSibling);
+                
+                gallery.appendChild(item);
+            });
+        }
+
+        // Test 3: Extract from background-image
+        function extractAndDisplay() {
+            const logEl = document.getElementById('extractionLog');
+            const previewCircle = document.getElementById('previewCircle');
+            
+            // Simulate what happens in avatar_step2.html
+            const testCard = document.querySelector('.test-card[style*="background-image"]');
+            
+            if (!testCard) {
+                logEl.textContent = '❌ Card de test non trouvée';
+                return;
+            }
+            
+            const bgImage = testCard.style.backgroundImage;
+            logEl.textContent = `CSS backgroundImage: ${bgImage}\n\n`;
+            
+            // Extract URL using regex (same as in avatar_step2.html)
+            const urlMatch = bgImage.match(/url\(['"]?([^'"]+)['"]?\)/);
+            
+            if (urlMatch && urlMatch[1]) {
+                const imageUrl = urlMatch[1];
+                logEl.textContent += `✅ URL extraite: ${imageUrl}\n\n`;
+                
+                // Create img element
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                img.style.borderRadius = '50%';
+                
+                img.onload = () => {
+                    logEl.textContent += '✅ Image chargée avec succès dans le preview circle!\n';
+                    logEl.textContent += `Dimensions: ${img.naturalWidth}x${img.naturalHeight}`;
+                };
+                
+                img.onerror = () => {
+                    logEl.textContent += '❌ Erreur de chargement de l\'image';
+                };
+                
+                previewCircle.innerHTML = '';
+                previewCircle.appendChild(img);
+                
+            } else {
+                logEl.textContent += '❌ Échec extraction URL avec regex';
+            }
+        }
+
+        // Auto-test on load
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('🧪 Page de test chargée');
+            testBackendAPI();
+        });
+    </script>
+</body>
+</html>

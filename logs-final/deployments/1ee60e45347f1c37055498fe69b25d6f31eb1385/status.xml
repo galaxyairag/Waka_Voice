@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>1ee60e45347f1c37055498fe69b25d6f31eb1385</id>
+  <author>nabil</author>
+  <deployer>$waka</deployer>
+  <authorEmail>nabil@galaxyai.digital</authorEmail>
+  <message>Debug: Log dtaill enregistrement agents_config_bp</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-11-21T04:24:26.1411913Z</lastSuccessEndTime>
+  <receivedTime>2025-11-21T04:23:54.7723957Z</receivedTime>
+  <startTime>2025-11-21T04:23:56.7181885Z</startTime>
+  <endTime>2025-11-21T04:24:26.1411913Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>False</is_readonly>
+  <buildSummary />
+</deployment>

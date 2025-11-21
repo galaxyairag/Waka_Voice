@@ -1,0 +1,2271 @@
+{% extends "base.html" %}
+
+{% block title %}Étape 2 : Configuration Voice Live{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ========================================
+   SECTION : Page header et progression
+   ======================================== */
+
+.page-header {
+    background: var(--waka-white);
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 16px rgba(74, 20, 140, 0.1);
+    border: 2px solid var(--waka-border);
+    margin-bottom: 40px;
+}
+
+.page-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--waka-primary);
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 16px;
+}
+
+.progress-step {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #6B7280;
+    transition: all 0.3s ease;
+}
+
+.progress-step.active {
+    font-weight: 700;
+    color: var(--waka-primary);
+}
+
+/* ========================================
+   SECTION : Model info card
+   ======================================== */
+
+.model-info-card {
+    background: var(--waka-white);
+    border-radius: 16px;
+    padding: 24px;
+    border: 2px solid var(--waka-border);
+    box-shadow: 0 4px 16px rgba(74, 20, 140, 0.1);
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.model-info-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.model-info-icon.f1 {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.model-info-icon.f2 {
+    background: linear-gradient(135deg, #FF6F00, #FFC107);
+}
+
+.model-info-icon.f3 {
+    background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+.model-info-details h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--waka-primary);
+    margin: 0 0 8px 0;
+}
+
+.model-info-details p {
+    color: #6B7280;
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.model-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: auto;
+}
+
+/* ========================================
+   SECTION : Configuration sections
+   ======================================== */
+
+.config-section {
+    background: var(--waka-white);
+    border-radius: 16px;
+    padding: 32px;
+    border: 2px solid var(--waka-border);
+    box-shadow: 0 4px 16px rgba(74, 20, 140, 0.1);
+    margin-bottom: 24px;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--waka-border);
+}
+
+.section-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+}
+
+.section-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--waka-primary);
+    margin: 0;
+}
+
+.section-description {
+    color: #6B7280;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* ========================================
+   SECTION : Form elements
+   ======================================== */
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--waka-primary);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+}
+
+.form-label .optional-badge {
+    background: #E3F2FD;
+    color: #1976D2;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.form-label .azure-only-badge {
+    background: #E8F5E9;
+    color: #2E7D32;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 4px;
+}
+
+.form-label .required-badge {
+    background: #FFEBEE;
+    color: #C62828;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Icône d'information avec tooltip */
+.info-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2196F3, #1976D2);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: help;
+    transition: all 0.3s ease;
+    position: relative;
+    margin-left: 6px;
+}
+
+.info-icon:hover {
+    transform: scale(1.15);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+}
+
+.info-icon i {
+    font-size: 11px;
+}
+
+/* Tooltip container */
+.tooltip-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip-content {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    background: linear-gradient(135deg, #1976D2, #1565C0);
+    color: white;
+    padding: 16px 20px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    font-weight: 400;
+    width: 320px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.tooltip-content::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-top-color: #1565C0;
+}
+
+.tooltip-wrapper:hover .tooltip-content {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(-12px);
+}
+
+/* Style pour les exemples dans les tooltips */
+.tooltip-example {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-top: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    border-left: 3px solid #FFC107;
+}
+
+.tooltip-emoji {
+    font-size: 1.2rem;
+    margin-right: 6px;
+}
+
+.form-help {
+    font-size: 0.85rem;
+    color: #6B7280;
+    margin-top: 6px;
+    font-style: italic;
+}
+
+.form-control, .form-select {
+    border-radius: 10px;
+    border: 2px solid var(--waka-border);
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--waka-primary);
+    box-shadow: 0 0 0 3px rgba(74, 20, 140, 0.1);
+    outline: none;
+}
+
+.form-check {
+    padding-left: 2rem;
+    margin-bottom: 12px;
+}
+
+.form-check-input {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.15rem;
+    border: 2px solid var(--waka-border);
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: var(--waka-primary);
+    border-color: var(--waka-primary);
+}
+
+.form-check-label {
+    font-size: 0.95rem;
+    color: var(--waka-text);
+    cursor: pointer;
+    margin-left: 8px;
+}
+
+/* ========================================
+   SECTION : Voice Selection Hiérarchique
+   ======================================== */
+
+.voice-selection-step {
+    background: var(--waka-off-white);
+    border: 2px solid var(--waka-border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.voice-selection-step.active {
+    border-color: var(--waka-primary);
+    box-shadow: 0 4px 12px rgba(74, 20, 140, 0.15);
+}
+
+.step-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.step-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.step-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--waka-primary);
+}
+
+.step-info {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: #6B7280;
+    font-style: italic;
+}
+
+/* Gender Buttons */
+.gender-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.gender-button {
+    background: white;
+    border: 2px solid var(--waka-border);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.gender-button:hover {
+    border-color: var(--waka-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 20, 140, 0.2);
+}
+
+.gender-button.selected {
+    background: var(--gradient-primary);
+    border-color: var(--waka-primary);
+    color: white;
+}
+
+.gender-button-emoji {
+    font-size: 2rem;
+}
+
+.gender-button-text {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.gender-button-count {
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+/* Voices Grid */
+.voices-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    max-height: 600px;
+    overflow-y: auto;
+    padding: 8px;
+}
+
+.voice-card {
+    background: white;
+    border: 2px solid var(--waka-border);
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.voice-card:hover {
+    border-color: var(--waka-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 20, 140, 0.2);
+}
+
+.voice-card.selected {
+    background: var(--gradient-primary);
+    border-color: var(--waka-primary);
+    color: white;
+}
+
+.voice-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.voice-card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+}
+
+.voice-card.selected .voice-card-icon {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.voice-card-title {
+    flex: 1;
+}
+
+.voice-card-name {
+    font-weight: 700;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.voice-card-local {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    margin: 0;
+}
+
+.voice-card-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: #E8EAF6;
+    color: #3F51B5;
+}
+
+.voice-card.selected .voice-card-badge {
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+.voice-card-details {
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+
+.voice-card-detail {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.voice-card-detail i {
+    width: 16px;
+    text-align: center;
+    opacity: 0.7;
+}
+
+.voice-card-styles {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--waka-border);
+}
+
+.voice-card.selected .voice-card-styles {
+    border-top-color: rgba(255, 255, 255, 0.3);
+}
+
+.voice-card-styles-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    opacity: 0.8;
+}
+
+.voice-styles-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.voice-style-tag {
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    background: #F3E5F5;
+    color: #7B1FA2;
+}
+
+.voice-card.selected .voice-style-tag {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+}
+
+/* Badges for personal voices */
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-success {
+    background: #D4EDDA;
+    color: #155724;
+}
+
+.badge-warning {
+    background: #FFF3CD;
+    color: #856404;
+}
+
+.voice-card-footer {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    font-size: 0.75rem;
+    color: #6B7280;
+}
+
+.voice-icon {
+    font-size: 2rem;
+}
+
+.voice-info {
+    flex: 1;
+}
+
+.voice-name {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    color: var(--waka-primary);
+}
+
+.voice-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 0.75rem;
+    color: #6B7280;
+}
+
+.voice-description {
+    margin: 8px 0 0 0;
+    font-size: 0.85rem;
+    color: #6B7280;
+}
+
+.no-voices-message {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6B7280;
+}
+
+.no-voices-message i {
+    font-size: 3rem;
+    color: var(--waka-primary-pale);
+    margin-bottom: 16px;
+}
+
+.no-voices-message p {
+    margin: 8px 0;
+}
+
+.error-message {
+    text-align: center;
+    padding: 40px 20px;
+    color: #dc3545;
+    background: #f8d7da;
+    border-radius: 12px;
+    border: 2px solid #f5c2c7;
+}
+
+.error-message i {
+    font-size: 2rem;
+    margin-bottom: 12px;
+}
+
+/* Loading state */
+.loading-spinner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    font-size: 0.9rem;
+    color: #6B7280;
+}
+
+.loading-spinner i {
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+    font-size: 1.5rem;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #6B7280;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: 0.3;
+}
+
+/* ========================================
+   SECTION : Restrictions et warnings
+   ======================================== */
+
+
+.restriction-warning {
+    background: #FFF3CD;
+    border-left: 4px solid #FFC107;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-top: 12px;
+    font-size: 0.9rem;
+    color: #856404;
+    display: flex;
+    align-items: start;
+    gap: 10px;
+}
+
+.restriction-warning i {
+    font-size: 1.2rem;
+    margin-top: 2px;
+}
+
+.info-box {
+    background: #E3F2FD;
+    border-left: 4px solid #2196F3;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+    color: #0D47A1;
+}
+
+.disabled-field {
+    opacity: 0.6;
+    pointer-events: none;
+    background: #F5F5F5 !important;
+}
+
+/* ========================================
+   SECTION : Language selector
+   ======================================== */
+
+.language-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.language-checkbox {
+    background: var(--waka-off-white);
+    border: 2px solid var(--waka-border);
+    border-radius: 10px;
+    padding: 12px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.language-checkbox:hover {
+    border-color: var(--waka-primary);
+    background: white;
+}
+
+.language-checkbox input:checked ~ label {
+    font-weight: 700;
+    color: var(--waka-primary);
+}
+
+/* ========================================
+   SECTION : Action buttons
+   ======================================== */
+
+.action-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    margin-top: 40px;
+    padding-top: 32px;
+    border-top: 2px solid var(--waka-border);
+}
+
+.btn-back {
+    background: white;
+    border: 2px solid var(--waka-border);
+    color: var(--waka-primary);
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-back:hover {
+    background: var(--waka-off-white);
+    border-color: var(--waka-primary);
+    transform: translateX(-4px);
+}
+
+.btn-next {
+    background: var(--gradient-primary);
+    border: none;
+    color: white;
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 12px rgba(74, 20, 140, 0.3);
+}
+
+.btn-next:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(74, 20, 140, 0.4);
+}
+
+/* ========================================
+   SECTION : Responsive
+   ======================================== */
+
+@media (max-width: 768px) {
+    .model-info-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .model-badge {
+        margin-left: 0;
+        margin-top: 12px;
+    }
+    
+    .language-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        flex-direction: column-reverse;
+    }
+    
+    .btn-back, .btn-next {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- En-tête avec progression -->
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="page-title mb-0">
+                <i class="bi bi-sliders"></i> 
+                <span>Configuration Voice Live</span>
+            </h2>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> Annuler
+            </a>
+        </div>
+        
+        <!-- Barre de progression -->
+        <div class="progress mb-3" style="height: 10px;">
+            <div class="progress-bar" role="progressbar" style="width: 66%;" aria-valuenow="66" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        
+        <div class="progress-steps">
+            <span class="progress-step">
+                <i class="bi bi-check-circle-fill"></i> Étape 1 : Configuration
+            </span>
+            <span class="progress-step active">
+                <i class="bi bi-check-circle-fill"></i> Étape 2 : Paramètres Voice
+            </span>
+            <span class="progress-step">
+                Étape 3 : Finalisation
+            </span>
+        </div>
+    </div>
+
+    <!-- Informations sur le modèle sélectionné -->
+    <div class="model-info-card" id="modelInfoCard">
+        <div class="model-info-icon f1">
+            <i class="bi bi-robot"></i>
+        </div>
+        <div class="model-info-details">
+            <h3 id="selectedModelName">Modèle sélectionné</h3>
+            <p id="selectedModelDescription">Description du modèle</p>
+        </div>
+        <span class="model-badge bg-primary text-white" id="selectedModelFamily">F1_Realtime</span>
+    </div>
+
+    <!-- Formulaire de configuration -->
+    <form id="voiceLiveForm" method="POST" action="{{ url_for('agents_manager.agent_config_step3', agent_id=agent_id) }}">
+        <!-- Champs cachés pour les informations du modèle -->
+        <input type="hidden" name="config_type" id="configType" value="{{ config_type }}">
+        <input type="hidden" name="model_id" id="modelId" value="{{ model_id }}">
+        <input type="hidden" name="model_name" id="modelName" value="{{ model_name }}">
+        <input type="hidden" name="model_description" id="modelDescription" value="{{ model_description }}">
+        <input type="hidden" name="model_family" id="modelFamily" value="{{ model_family }}">
+
+        <!-- Section : Model Configuration -->
+        <div class="config-section">
+            <div class="section-header">
+                <div class="section-icon">
+                    <i class="bi bi-cpu"></i>
+                </div>
+                <div>
+                    <h3 class="section-title">Configuration du Modèle</h3>
+                    <p class="section-description">Paramètres de génération de texte</p>
+                </div>
+            </div>
+
+            <!-- Max Tokens / Max Completion Tokens -->
+            <div class="form-group">
+                <label for="maxTokens" class="form-label">
+                    <span id="maxTokensLabel">Tokens maximum</span>
+                    <span class="optional-badge">Optionnel</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">📏</span> <strong>Longueur maximale de la réponse</strong><br>
+                            Limite le nombre de tokens générés par le modèle.<br><br>
+                            <strong id="maxTokensTooltipTitle">Max Tokens :</strong><br>
+                            <span id="maxTokensTooltipContent">
+                                Nombre maximum de tokens dans la réponse complète.<br>
+                                • GPT-4 : Utilise max_tokens<br>
+                                • Plage typique : 100-4096 tokens<br>
+                            </span>
+                            <span id="maxCompletionTokensTooltipContent" style="display:none;">
+                                Nombre maximum de tokens de complétion.<br>
+                                • GPT-5/o1 : Utilise max_completion_tokens<br>
+                                • Plage typique : 100-16000 tokens<br>
+                            </span>
+                            <br>
+                            <div class="tooltip-example">
+                                1000 tokens ≈ 750 mots
+                            </div>
+                            <strong>Conseil :</strong> Augmenter pour réponses longues
+                        </div>
+                    </div>
+                </label>
+                <input type="number" class="form-control" id="maxTokens" name="max_tokens" 
+                       min="1" max="16000" step="1" placeholder="ex: 1000">
+                <div class="form-help" id="maxTokensHelp">
+                    Nombre maximum de tokens dans la réponse (1-4096 pour GPT-4, 1-16000 pour GPT-5/o1)
+                </div>
+            </div>
+        </div>
+
+        <!-- Section : Input Audio Properties -->
+        <div class="config-section">
+            <div class="section-header">
+                <div class="section-icon">
+                    <i class="bi bi-soundwave"></i>
+                </div>
+                <div>
+                    <h3 class="section-title">Entrée Audio (Speech to Text)</h3>
+                    <p class="section-description">Configuration de la capture et reconnaissance audio</p>
+                </div>
+            </div>
+
+            <!-- Input Audio Sampling Rate -->
+            <div class="form-group">
+                <label for="inputAudioSamplingRate" class="form-label">
+                    Taux d'échantillonnage (Sampling Rate)
+                    <span class="optional-badge">Optionnel</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">🎵</span> <strong>Qualité de l'audio capturé</strong><br>
+                            Définit la qualité de l'enregistrement audio.<br><br>
+                            <strong>16000 Hz :</strong> Qualité téléphone, moins de bande passante<br>
+                            <strong>24000 Hz :</strong> Haute qualité (défaut, recommandé)<br><br>
+                            <div class="tooltip-example">
+                                24kHz = Qualité professionnelle
+                            </div>
+                            <strong>Conseil :</strong> Garder 24000 Hz sauf contrainte réseau
+                        </div>
+                    </div>
+                </label>
+                <select class="form-select" id="inputAudioSamplingRate" name="input_audio_sampling_rate">
+                    <option value="24000" selected>24000 Hz (Haute qualité - Défaut)</option>
+                    <option value="16000">16000 Hz (Qualité téléphone)</option>
+                </select>
+                <div class="form-help">
+                    Fréquence d'échantillonnage de l'audio d'entrée
+                </div>
+            </div>
+
+            <!-- Echo Cancellation -->
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="enableEchoCancellation" name="enable_echo_cancellation">
+                    <label class="form-check-label" for="enableEchoCancellation">
+                        Activer l'annulation d'écho (Echo Cancellation)
+                    </label>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">📢</span> <strong>Supprime l'écho de l'agent</strong><br>
+                            Élimine l'écho de la voix de l'agent capturée par le micro.<br><br>
+                            <strong>Essentiel si :</strong><br>
+                            • Haut-parleur + microphone proche<br>
+                            • Pas d'écouteurs<br>
+                            • Configuration mains-libres<br><br>
+                            <div class="tooltip-example">
+                                Agent parle → Micro capte → Annulé automatiquement
+                            </div>
+                            <strong>Conseil :</strong> TOUJOURS activer en téléphonie
+                        </div>
+                    </div>
+                </div>
+                <div class="form-help">
+                    Supprime l'écho de la voix de l'agent sans annulation côté client
+                </div>
+            </div>
+
+            <!-- Noise Reduction -->
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="enableNoiseReduction" name="enable_noise_reduction">
+                    <label class="form-check-label" for="enableNoiseReduction">
+                        Activer la réduction de bruit (Deep Noise Suppression)
+                    </label>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">🔇</span> <strong>Supprime les bruits de fond</strong><br>
+                            Utilise l'IA pour éliminer les bruits environnementaux.<br><br>
+                            <strong>Filtre :</strong><br>
+                            • Circulation, vent, pluie<br>
+                            • Claviers, ventilateurs<br>
+                            • Conversations en arrière-plan<br><br>
+                            <div class="tooltip-example">
+                                Bureau bruyant → Voix claire uniquement
+                            </div>
+                            <strong>Conseil :</strong> Activer pour environnements non contrôlés
+                        </div>
+                    </div>
+                </div>
+                <div class="form-help">
+                    Suppression avancée du bruit optimisée pour la personne la plus proche du micro
+                </div>
+            </div>
+
+            <!-- Input Audio Transcription Model -->
+            <div class="form-group" id="inputTranscriptionGroup">
+                <label for="inputTranscriptionModel" class="form-label">
+                    Modèle de transcription (Speech to Text)
+                    <span class="optional-badge">Optionnel</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">📝</span> <strong>Convertit parole en texte</strong><br>
+                            Choisissez le moteur de reconnaissance vocale.<br><br>
+                            <strong>Azure Speech :</strong> 146 langues, modèles custom possibles<br>
+                            <strong>Auto :</strong> Le système choisit selon le modèle<br><br>
+                            <strong>F1 (Realtime) :</strong> Transcription native du modèle<br>
+                            <strong>F2/F3 :</strong> Utilise toujours Azure Speech<br><br>
+                            <strong>Conseil :</strong> Azure Speech pour meilleure précision
+                        </div>
+                    </div>
+                </label>
+                <select class="form-select" id="inputTranscriptionModel" name="input_transcription_model">
+                    <option value="">Auto (Selon modèle)</option>
+                    <option value="azure-speech">Azure Speech (Recommandé)</option>
+                </select>
+                <div class="form-help">
+                    Modèle utilisé pour convertir la parole en texte
+                </div>
+            </div>
+
+            <!-- Transcription Languages -->
+            <div class="form-group" id="transcriptionLanguagesGroup" style="display: none;">
+                <label for="transcriptionLanguages" class="form-label">
+                    Langue(s) de transcription
+                    <span class="optional-badge">Optionnel</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">🗣️</span> <strong>Langues parlées attendues</strong><br>
+                            Indiquez les langues pour améliorer la précision.<br><br>
+                            <strong>Vide :</strong> Détection automatique multilingue (défaut)<br>
+                            <strong>Une langue :</strong> Meilleure précision<br>
+                            <strong>Plusieurs :</strong> Max 10 langues<br><br>
+                            <div class="tooltip-example">
+                                "fr-FR,en-US" = Français et Anglais
+                            </div>
+                            <strong>Conseil :</strong> Spécifier améliore la qualité de 10-15%
+                        </div>
+                    </div>
+                </label>
+                <input type="text" class="form-control" id="transcriptionLanguages" name="transcription_languages" 
+                       placeholder="fr-FR,en-US,es-ES">
+                <div class="form-help">
+                    Langues séparées par des virgules (ex: fr-FR,en-US) - Vide = multilingue auto
+                </div>
+            </div>
+
+            <!-- Phrase List -->
+            <div class="form-group">
+                <label for="phraseList" class="form-label">
+                    Liste de phrases personnalisées (Phrase List)
+                    <span class="optional-badge">Optionnel</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">📋</span> <strong>Mots/phrases spécifiques</strong><br>
+                            Améliore la reconnaissance de termes métier.<br><br>
+                            <strong>Utilisez pour :</strong><br>
+                            • Noms de produits<br>
+                            • Acronymes d'entreprise<br>
+                            • Termes techniques<br>
+                            • Noms propres récurrents<br><br>
+                            <div class="tooltip-example">
+                                "Waka AI, Azure OpenAI, GPT-4o"
+                            </div>
+                            <strong>Limite :</strong> Max 500 mots/phrases<br>
+                            <strong>Conseil :</strong> Une phrase par ligne
+                        </div>
+                    </div>
+                </label>
+                <textarea class="form-control" id="phraseList" name="phrase_list" rows="4" 
+                          placeholder="Entrez vos mots ou phrases, un par ligne (max 500)"></textarea>
+                <div class="form-help">
+                    Termes spécifiques pour améliorer la reconnaissance (un par ligne, max 500)
+                </div>
+            </div>
+        </div>
+
+        <!-- Section : Configuration VAD -->
+        <div class="config-section">
+            <div class="section-header">
+                <div class="section-icon">
+                    <i class="bi bi-mic-fill"></i>
+                </div>
+                <div>
+                    <h3 class="section-title">Configuration VAD (Voice Activity Detection)</h3>
+                    <p class="section-description">Détection d'activité vocale pour identifier quand l'utilisateur parle</p>
+                </div>
+            </div>
+
+            <!-- Type de VAD -->
+            <div class="form-group">
+                <label for="vadType" class="form-label">
+                    Type de VAD
+                    <span class="required-badge">Requis</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">🎤</span> <strong>Qu'est-ce que le VAD ?</strong><br>
+                            Le VAD (Voice Activity Detection) détecte quand vous parlez et quand vous vous arrêtez.<br><br>
+                            <strong>4 types disponibles :</strong><br>
+                            • <strong>Server VAD</strong> : Basique, détecte le volume sonore<br>
+                            • <strong>Semantic VAD</strong> : Intelligent, comprend le sens (F1 uniquement)<br>
+                            • <strong>Azure Semantic VAD</strong> : Avancé, réduit les faux départs<br>
+                            • <strong>Multilingual</strong> : Comme Azure mais pour 10 langues
+                        </div>
+                    </div>
+                </label>
+                <select class="form-select" id="vadType" name="vad_type" required>
+                    <option value="server_vad">Server VAD (Par défaut)</option>
+                    <option value="semantic_vad" data-family="F1_Realtime" data-models="gpt-realtime,gpt-realtime-mini">Semantic VAD</option>
+                    <option value="azure_semantic_vad">Azure Semantic VAD</option>
+                    <option value="azure_semantic_vad_multilingual">Azure Semantic VAD Multilingual</option>
+                </select>
+                <div class="form-help">
+                    Méthode de détection d'activité vocale
+                </div>
+                <div id="vadTypeRestriction" class="restriction-warning" style="display: none;">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span>Semantic VAD est uniquement disponible pour gpt-realtime et gpt-realtime-mini</span>
+                </div>
+            </div>
+
+            <!-- Threshold -->
+            <div class="form-group">
+                <label for="vadThreshold" class="form-label">
+                    Seuil de confiance (Threshold)
+                    <span class="optional-badge">Optionnel</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">🎯</span> <strong>Sensibilité de détection</strong><br>
+                            Définit à quel point le système doit être sûr que vous parlez avant de démarrer.<br><br>
+                            <strong>Valeurs :</strong> De 0 (très sensible) à 1 (peu sensible)<br><br>
+                            <div class="tooltip-example">
+                                Exemple : 0.7 = 70% de confiance requis
+                            </div>
+                            <strong>Conseil :</strong> Plus haut = moins de faux départs, mais peut manquer des paroles douces
+                        </div>
+                    </div>
+                </label>
+                <input type="number" class="form-control" id="vadThreshold" name="vad_threshold" 
+                       min="0" max="1" step="0.1" placeholder="0.7">
+                <div class="form-help">
+                    Niveau de confiance requis pour détecter la parole (0 à 1)
+                </div>
+            </div>
+
+            <!-- Prefix Padding -->
+            <div class="form-group">
+                <label for="prefixPadding" class="form-label">
+                    Prefix Padding (ms)
+                    <span class="optional-badge">Optionnel</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">⏮️</span> <strong>Audio avant le début</strong><br>
+                            Capture un peu d'audio AVANT que la détection ne commence.<br><br>
+                            <strong>Pourquoi ?</strong> Pour ne pas couper le début de votre phrase !<br><br>
+                            <div class="tooltip-example">
+                                200ms = 0.2 seconde d'audio capturé avant
+                            </div>
+                            <strong>Conseil :</strong> 200-300ms est idéal pour ne rien manquer
+                        </div>
+                    </div>
+                </label>
+                <input type="number" class="form-control" id="prefixPadding" name="prefix_padding_ms" 
+                       min="0" step="50" placeholder="200">
+                <div class="form-help">
+                    Audio à inclure avant le début du signal détecté (en millisecondes)
+                </div>
+            </div>
+
+            <!-- Speech Duration -->
+            <div class="form-group">
+                <label for="speechDuration" class="form-label">
+                    Durée minimale de parole (ms)
+                    <span class="optional-badge">Optionnel</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">⏱️</span> <strong>Temps minimum avant démarrage</strong><br>
+                            Combien de temps vous devez parler avant que le système ne commence à écouter.<br><br>
+                            <div class="tooltip-example">
+                                80ms = 0.08 seconde (défaut)
+                            </div>
+                            <strong>But :</strong> Éviter de réagir aux bruits courts (toux, clics)<br>
+                            <strong>Conseil :</strong> Garder 80ms sauf si beaucoup de faux départs
+                        </div>
+                    </div>
+                </label>
+                <input type="number" class="form-control" id="speechDuration" name="speech_duration_ms" 
+                       min="0" step="10" placeholder="80" value="80">
+                <div class="form-help">
+                    Durée minimale de parole pour démarrer la détection (défaut: 80ms)
+                </div>
+            </div>
+
+            <!-- Silence Duration -->
+            <div class="form-group">
+                <label for="silenceDuration" class="form-label">
+                    Durée de silence (ms)
+                    <span class="optional-badge">Optionnel</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">🤫</span> <strong>Pause avant de s'arrêter</strong><br>
+                            Combien de temps de silence avant que le système considère que vous avez fini.<br><br>
+                            <div class="tooltip-example">
+                                500ms = 0.5 seconde de silence
+                            </div>
+                            <strong>Si trop court :</strong> Coupe au milieu des phrases<br>
+                            <strong>Si trop long :</strong> Temps d'attente frustrant<br>
+                            <strong>Conseil :</strong> 500-700ms pour une conversation naturelle
+                        </div>
+                    </div>
+                </label>
+                <input type="number" class="form-control" id="silenceDuration" name="silence_duration_ms" 
+                       min="0" step="50" placeholder="500">
+                <div class="form-help">
+                    Durée de silence pour détecter la fin de parole
+                </div>
+            </div>
+
+            <!-- Remove Filler Words -->
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="removeFillerWords" name="remove_filler_words">
+                    <label class="form-check-label" for="removeFillerWords">
+                        Supprimer les mots de remplissage (ah, umm, uh, etc.)
+                    </label>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">🗣️</span> <strong>Ignorer les "euh", "hmm"</strong><br>
+                            Filtre les sons de réflexion pour ne pas déclencher de fausses alertes.<br><br>
+                            <strong>Mots détectés :</strong><br>
+                            ah, umm, mm, uh, huh, oh, yeah, hmm<br><br>
+                            <div class="tooltip-example">
+                                "Euh... je voudrais..." → "je voudrais..."
+                            </div>
+                            <strong>Conseil :</strong> Activez si l'agent réagit trop vite aux hésitations
+                        </div>
+                    </div>
+                </div>
+                <div class="form-help">
+                    Détecte et supprime les mots de remplissage en anglais : ah, umm, mm, uh, huh, oh, yeah, hmm
+                </div>
+            </div>
+
+            <!-- Languages -->
+            <div class="form-group" id="languagesGroup">
+                <label class="form-label">
+                    Langues
+                    <span class="optional-badge">Optionnel</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">🌍</span> <strong>Améliore la détection</strong><br>
+                            Sélectionnez les langues pour mieux détecter les mots de remplissage.<br><br>
+                            <strong>Disponibilité :</strong><br>
+                            • Azure Semantic VAD : Anglais uniquement<br>
+                            • Multilingual : 10 langues<br><br>
+                            <strong>Conseil :</strong> Sélectionnez seulement les langues utilisées
+                        </div>
+                    </div>
+                </label>
+                <div class="info-box">
+                    <i class="bi bi-info-circle"></i>
+                    Sélectionner des langues améliore la détection des mots de remplissage
+                </div>
+                <div class="language-grid" id="languageGrid">
+                    <!-- Les langues seront ajoutées dynamiquement par JS -->
+                </div>
+            </div>
+
+            <!-- Create Response -->
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="createResponse" name="create_response" checked>
+                    <label class="form-check-label" for="createResponse">
+                        Générer une réponse automatiquement
+                    </label>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">💬</span> <strong>Réponse automatique</strong><br>
+                            Quand activé, l'agent répond automatiquement après votre parole.<br><br>
+                            <strong>Activé :</strong> Conversation fluide<br>
+                            <strong>Désactivé :</strong> Mode écoute uniquement (transcription)<br><br>
+                            <strong>Conseil :</strong> Toujours activé sauf pour transcription pure
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Eagerness (uniquement pour semantic_vad) -->
+            <div class="form-group" id="eagernessGroup" style="display: none;">
+                <label for="eagerness" class="form-label">
+                    Rapidité d'interruption (Eagerness)
+                    <span class="optional-badge">Optionnel</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">⚡</span> <strong>Vitesse de réaction</strong><br>
+                            Contrôle à quelle vitesse l'agent peut vous interrompre.<br><br>
+                            <strong>Low :</strong> Patient, vous laisse finir<br>
+                            <strong>Medium :</strong> Équilibré (défaut)<br>
+                            <strong>High :</strong> Réactif, répond vite<br><br>
+                            <div class="tooltip-example">
+                                High = Conversation rapide type hotline
+                            </div>
+                        </div>
+                    </div>
+                </label>
+                <select class="form-select" id="eagerness" name="eagerness">
+                    <option value="auto">Auto (Par défaut)</option>
+                    <option value="low">Low (Faible)</option>
+                    <option value="medium">Medium (Moyen)</option>
+                    <option value="high">High (Élevé)</option>
+                </select>
+                <div class="form-help">
+                    Contrôle la rapidité avec laquelle l'agent peut interrompre l'utilisateur
+                </div>
+                <div class="restriction-warning">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span>Disponible uniquement avec Semantic VAD</span>
+                </div>
+            </div>
+
+            <!-- Interrupt Response (uniquement pour azure_semantic_vad) -->
+            <div class="form-group" id="interruptResponseGroup">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="interruptResponse" name="interrupt_response">
+                    <label class="form-check-label" for="interruptResponse">
+                        Activer l'interruption pendant l'appel
+                    </label>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">✋</span> <strong>Barge-in activé</strong><br>
+                            Permet de couper la parole à l'agent pendant qu'il parle.<br><br>
+                            <strong>Activé :</strong> Vous pouvez interrompre comme dans une vraie conversation<br>
+                            <strong>Désactivé :</strong> L'agent finit toujours sa phrase<br><br>
+                            <div class="tooltip-example">
+                                "Oui merci j'ai compris!" → Agent s'arrête
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="restriction-warning">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span>Disponible uniquement avec Azure Semantic VAD et Azure Semantic VAD Multilingual</span>
+                </div>
+            </div>
+
+            <!-- Auto Truncate -->
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="autoTruncate" name="auto_truncate">
+                    <label class="form-check-label" for="autoTruncate">
+                        Troncation automatique lors de l'interruption
+                    </label>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">✂️</span> <strong>Coupe la parole proprement</strong><br>
+                            Quand vous interrompez, supprime la partie non dite de la réponse.<br><br>
+                            <strong>Activé :</strong> Contexte propre, pas de confusion<br>
+                            <strong>Désactivé :</strong> Garde tout en mémoire<br><br>
+                            <div class="tooltip-example">
+                                Agent : "La réponse est A, B, et..." → Vous : "Stop!"<br>
+                                Avec auto-truncate : Agent oublie "C" qu'il allait dire
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section : End of Utterance Detection (F2 et F3 uniquement) -->
+        <div class="config-section" id="endOfUtteranceSection">
+            <div class="section-header">
+                <div class="section-icon">
+                    <i class="bi bi-chat-right-dots-fill"></i>
+                </div>
+                <div>
+                    <h3 class="section-title">End of Utterance Detection</h3>
+                    <p class="section-description">Détection de fin d'énoncé pour optimiser les réponses</p>
+                </div>
+                <div class="tooltip-wrapper" style="margin-left: auto;">
+                    <span class="info-icon">
+                        <i class="bi bi-info-lg"></i>
+                    </span>
+                    <div class="tooltip-content">
+                        <span class="tooltip-emoji">🎬</span> <strong>Détection intelligente de fin</strong><br>
+                        Détermine quand vous avez vraiment fini de parler (pas juste une pause).<br><br>
+                        <strong>Avantages :</strong><br>
+                        • Évite les coupures en milieu de phrase<br>
+                        • Permet les pauses naturelles<br>
+                        • Réduit la latence perçue<br><br>
+                        <strong>⚠️ Non disponible pour F1_Realtime</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <i class="bi bi-info-circle"></i>
+                <span id="endOfUtteranceAvailability">Cette fonctionnalité est disponible pour votre modèle</span>
+            </div>
+
+            <!-- Enable End of Utterance -->
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="enableEndOfUtterance" name="enable_end_of_utterance">
+                    <label class="form-check-label" for="enableEndOfUtterance">
+                        Activer la détection de fin d'énoncé
+                    </label>
+                </div>
+            </div>
+
+            <div id="endOfUtteranceConfig" style="display: none;">
+                <!-- Model -->
+                <div class="form-group">
+                    <label for="endOfUtteranceModel" class="form-label">
+                        Modèle de détection
+                        <div class="tooltip-wrapper">
+                            <span class="info-icon">
+                                <i class="bi bi-info-lg"></i>
+                            </span>
+                            <div class="tooltip-content">
+                                <span class="tooltip-emoji">🤖</span> <strong>Modèle d'IA pour la détection</strong><br>
+                                Choisissez le modèle selon vos langues.<br><br>
+                                <strong>V1 :</strong> Anglais uniquement, très précis<br>
+                                <strong>V1 Multilingual :</strong> 10 langues supportées<br><br>
+                                <div class="tooltip-example">
+                                    Langues : EN, ES, FR, IT, DE, JA, PT, ZH, KO, HI
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                    <select class="form-select" id="endOfUtteranceModel" name="end_of_utterance_model">
+                        <option value="semantic_detection_v1">Semantic Detection V1 (Anglais uniquement)</option>
+                        <option value="semantic_detection_v1_multilingual">Semantic Detection V1 Multilingual</option>
+                    </select>
+                </div>
+
+                <!-- Threshold Level -->
+                <div class="form-group">
+                    <label for="thresholdLevel" class="form-label">
+                        Niveau de seuil
+                        <div class="tooltip-wrapper">
+                            <span class="info-icon">
+                                <i class="bi bi-info-lg"></i>
+                            </span>
+                            <div class="tooltip-content">
+                                <span class="tooltip-emoji">🎚️</span> <strong>Sensibilité de détection de fin</strong><br>
+                                Définit à quel point être sûr que vous avez fini.<br><br>
+                                <strong>Low :</strong> Répond vite, peut couper<br>
+                                <strong>Medium :</strong> Équilibré (recommandé)<br>
+                                <strong>High :</strong> Très patient, peut sembler lent<br><br>
+                                <div class="tooltip-example">
+                                    Medium = Attend confirmation avant de répondre
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                    <select class="form-select" id="thresholdLevel" name="threshold_level">
+                        <option value="low">Low (Faible)</option>
+                        <option value="medium" selected>Medium (Moyen)</option>
+                        <option value="high">High (Élevé)</option>
+                    </select>
+                </div>
+
+                <!-- Timeout -->
+                <div class="form-group">
+                    <label for="timeoutMs" class="form-label">
+                        Timeout (ms)
+                        <div class="tooltip-wrapper">
+                            <span class="info-icon">
+                                <i class="bi bi-info-lg"></i>
+                            </span>
+                            <div class="tooltip-content">
+                                <span class="tooltip-emoji">⏳</span> <strong>Temps d'attente maximum</strong><br>
+                                Durée maximale d'attente pour plus de parole.<br><br>
+                                <strong>Si dépassé :</strong> Considère que vous avez fini<br><br>
+                                <div class="tooltip-example">
+                                    1000ms = 1 seconde d'attente max
+                                </div>
+                                <strong>Conseil :</strong> 1000ms (défaut) convient à 90% des cas
+                            </div>
+                        </div>
+                    </label>
+                    <input type="number" class="form-control" id="timeoutMs" name="timeout_ms" 
+                           min="100" step="100" value="1000">
+                    <div class="form-help">
+                        Durée maximale d'attente avant de considérer la fin de l'énoncé (défaut: 1000ms)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section : Voice Output (Text to Speech) -->
+        <div class="config-section">
+            <div class="section-header">
+                <div class="section-icon">
+                    <i class="bi bi-megaphone-fill"></i>
+                </div>
+                <div>
+                    <h3 class="section-title">Sortie Vocale (Text to Speech)</h3>
+                    <p class="section-description">Configuration de la voix de l'agent</p>
+                </div>
+            </div>
+
+            <!-- Voice Selection Hiérarchique -->
+            <div class="form-group" id="azureVoiceSelectionSection" {% if voice_type == 'personal' %}style="display: none;"{% endif %}>
+                <label class="form-label">
+                    Sélection de la voix (hiérarchique)
+                    <span class="required-badge">Requis</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">🎙️</span> <strong>Sélection intelligente</strong><br>
+                            Naviguez facilement parmi les voix :<br><br>
+                            <strong>F1 :</strong> OpenAI (6 voix) ou Azure (600+ voix)<br>
+                            <strong>F2/F3 :</strong> Azure uniquement (600+ voix)<br><br>
+                            <div class="tooltip-example">
+                                F1 → OpenAI → Alloy
+                            </div>
+                        </div>
+                    </div>
+                </label>
+
+                <!-- Étape 0 : Type de voix (F1 uniquement) -->
+                <div class="voice-selection-step" id="voiceTypeStep" style="display: none;">
+                    <div class="step-header">
+                        <span class="step-number">0</span>
+                        <span class="step-title">Type de voix</span>
+                    </div>
+                    <div class="info-box">
+                        <i class="bi bi-info-circle"></i>
+                        OpenAI Voices disponibles uniquement pour les modèles F1 (Realtime)
+                    </div>
+                    <div class="gender-buttons" id="voiceTypeButtons">
+                        <div class="gender-button" data-voice-type="openai">
+                            <span class="gender-button-emoji">🤖</span>
+                            <span class="gender-button-text">OpenAI Voices</span>
+                            <span class="gender-button-count">6 voix</span>
+                        </div>
+                        <div class="gender-button" data-voice-type="azure">
+                            <span class="gender-button-emoji">☁️</span>
+                            <span class="gender-button-text">Azure Voices</span>
+                            <span class="gender-button-count">600+ voix</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grille voix OpenAI (F1 uniquement) -->
+                <div class="voice-selection-step" id="openaiVoicesStep" style="display: none;">
+                    <div class="step-header">
+                        <span class="step-number">1</span>
+                        <span class="step-title">Voix OpenAI</span>
+                    </div>
+                    <div class="voices-grid" id="openaiVoicesGrid">
+                        <div class="voice-card" data-voice="alloy" data-voice-type="openai">
+                            <div class="voice-card-header">
+                                <div class="voice-card-icon">🎙️</div>
+                                <div class="voice-card-title">
+                                    <p class="voice-card-name">Alloy</p>
+                                    <p class="voice-card-local">Voix neutre</p>
+                                </div>
+                            </div>
+                            <div class="voice-card-details">
+                                <div class="voice-card-detail">
+                                    <i class="bi bi-check-circle"></i>
+                                    <span>Voix équilibrée</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="voice-card" data-voice="echo" data-voice-type="openai">
+                            <div class="voice-card-header">
+                                <div class="voice-card-icon">🎙️</div>
+                                <div class="voice-card-title">
+                                    <p class="voice-card-name">Echo</p>
+                                    <p class="voice-card-local">Voix masculine</p>
+                                </div>
+                            </div>
+                            <div class="voice-card-details">
+                                <div class="voice-card-detail">
+                                    <i class="bi bi-check-circle"></i>
+                                    <span>Ton profond</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="voice-card" data-voice="fable" data-voice-type="openai">
+                            <div class="voice-card-header">
+                                <div class="voice-card-icon">🎙️</div>
+                                <div class="voice-card-title">
+                                    <p class="voice-card-name">Fable</p>
+                                    <p class="voice-card-local">Voix britannique</p>
+                                </div>
+                            </div>
+                            <div class="voice-card-details">
+                                <div class="voice-card-detail">
+                                    <i class="bi bi-check-circle"></i>
+                                    <span>Accent British</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="voice-card" data-voice="onyx" data-voice-type="openai">
+                            <div class="voice-card-header">
+                                <div class="voice-card-icon">🎙️</div>
+                                <div class="voice-card-title">
+                                    <p class="voice-card-name">Onyx</p>
+                                    <p class="voice-card-local">Voix grave</p>
+                                </div>
+                            </div>
+                            <div class="voice-card-details">
+                                <div class="voice-card-detail">
+                                    <i class="bi bi-check-circle"></i>
+                                    <span>Ton autoritaire</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="voice-card" data-voice="nova" data-voice-type="openai">
+                            <div class="voice-card-header">
+                                <div class="voice-card-icon">🎙️</div>
+                                <div class="voice-card-title">
+                                    <p class="voice-card-name">Nova</p>
+                                    <p class="voice-card-local">Voix féminine</p>
+                                </div>
+                            </div>
+                            <div class="voice-card-details">
+                                <div class="voice-card-detail">
+                                    <i class="bi bi-check-circle"></i>
+                                    <span>Voix énergique</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="voice-card" data-voice="shimmer" data-voice-type="openai">
+                            <div class="voice-card-header">
+                                <div class="voice-card-icon">🎙️</div>
+                                <div class="voice-card-title">
+                                    <p class="voice-card-name">Shimmer</p>
+                                    <p class="voice-card-local">Voix douce</p>
+                                </div>
+                            </div>
+                            <div class="voice-card-details">
+                                <div class="voice-card-detail">
+                                    <i class="bi bi-check-circle"></i>
+                                    <span>Ton apaisant</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Étape 1 : Langue (Azure uniquement) -->
+                <div class="voice-selection-step">
+                    <div class="step-header">
+                        <span class="step-number">1</span>
+                        <span class="step-title">Langue</span>
+                    </div>
+                    <select class="form-select" id="voiceLocaleSelect" name="voice_locale" required>
+                        <option value="">Chargement des langues...</option>
+                    </select>
+                    <div class="step-info" id="localeInfo"></div>
+                </div>
+
+                <!-- Étape 2 : Genre -->
+                <div class="voice-selection-step" id="genderStep" style="display: none;">
+                    <div class="step-header">
+                        <span class="step-number">2</span>
+                        <span class="step-title">Genre</span>
+                    </div>
+                    <div class="gender-buttons" id="genderButtons">
+                        <!-- Les boutons seront ajoutés dynamiquement -->
+                    </div>
+                </div>
+
+                <!-- Étape 3 : Voix -->
+                <div class="voice-selection-step" id="voiceStep" style="display: none;">
+                    <div class="step-header">
+                        <span class="step-number">3</span>
+                        <span class="step-title">Voix disponibles</span>
+                    </div>
+                    <div class="voices-grid" id="voicesGrid">
+                        <!-- Les cartes de voix seront ajoutées dynamiquement -->
+                    </div>
+                </div>
+
+                <!-- Champ caché pour stocker la voix sélectionnée -->
+                <input type="hidden" id="voiceName" name="voice_name" required>
+                <input type="hidden" id="voiceLocale" name="voice_locale_hidden">
+                <input type="hidden" id="voiceGender" name="voice_gender_hidden">
+            </div>
+
+            <!-- Voice Type - MASQUÉ car toujours Azure Standard -->
+            <div class="form-group" style="display: none;">
+                <select class="form-select" id="voiceType" name="voice_type">
+                    <option value="azure-standard" selected>Azure Standard (Voix préconfigurées)</option>
+                    <option value="openai">OpenAI (alloy, echo, shimmer, etc.)</option>
+                </select>
+            </div>
+
+            <!-- Custom Voice Endpoint (only for azure-custom) -->
+            <div class="form-group" id="customVoiceEndpointGroup" style="display: none;">
+                <label for="customVoiceEndpoint" class="form-label">
+                    Endpoint ID de la voix personnalisée
+                    <span class="required-badge">Requis si Custom</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">🔑</span> <strong>Identifiant de votre voix custom</strong><br>
+                            GUID fourni lors de la création de votre voix personnalisée.<br><br>
+                            <div class="tooltip-example">
+                                12345678-1234-1234-1234-123456789012
+                            </div>
+                            <strong>Où le trouver :</strong> Speech Studio → Custom Voice
+                        </div>
+                    </div>
+                </label>
+                <input type="text" class="form-control" id="customVoiceEndpoint" name="custom_voice_endpoint" 
+                       placeholder="12345678-1234-1234-1234-123456789012">
+                <div class="form-help">
+                    GUID de votre voix personnalisée (format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+                </div>
+            </div>
+
+            <!-- Speaking Rate -->
+            <div class="form-group">
+                <label for="speakingRate" class="form-label">
+                    Vitesse de parole (Rate)
+                    <span class="optional-badge">Optionnel</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">⚡</span> <strong>Rapidité de la voix</strong><br>
+                            Contrôle la vitesse à laquelle l'agent parle.<br><br>
+                            <strong>0.5 :</strong> Très lent (50% plus lent)<br>
+                            <strong>1.0 :</strong> Vitesse normale (défaut)<br>
+                            <strong>1.5 :</strong> Très rapide (50% plus rapide)<br><br>
+                            <div class="tooltip-example">
+                                1.2 = 20% plus rapide (dynamique)
+                            </div>
+                            <strong>Conseil :</strong> 1.0-1.1 pour conversation naturelle
+                        </div>
+                    </div>
+                </label>
+                <input type="number" class="form-control" id="speakingRate" name="speaking_rate" 
+                       min="0.5" max="1.5" step="0.1" value="1.0">
+                <div class="form-help">
+                    Vitesse de parole : 0.5 (lent) à 1.5 (rapide), défaut 1.0
+                </div>
+            </div>
+
+            <!-- Temperature (for HD voices) -->
+            <div class="form-group" id="voiceTemperatureGroup">
+                <label for="voiceTemperature" class="form-label">
+                    Expressivité (Temperature)
+                    <span class="optional-badge">Optionnel</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">🎨</span> <strong>Variabilité émotionnelle</strong><br>
+                            Contrôle l'expressivité de la voix (voix HD uniquement).<br><br>
+                            <strong>0.0 :</strong> Monotone, prévisible<br>
+                            <strong>0.5 :</strong> Équilibré<br>
+                            <strong>1.0 :</strong> Très expressif, varié<br><br>
+                            <div class="tooltip-example">
+                                0.8 = Naturel et engageant
+                            </div>
+                            <strong>Conseil :</strong> 0.7-0.8 pour agents conversationnels<br>
+                            <strong>⚠️ Uniquement pour voix HD</strong>
+                        </div>
+                    </div>
+                </label>
+                <input type="number" class="form-control" id="voiceTemperature" name="voice_temperature" 
+                       min="0" max="1" step="0.1" placeholder="0.8">
+                <div class="form-help">
+                    Niveau d'expressivité : 0 (monotone) à 1 (très expressif) - Uniquement voix HD
+                </div>
+            </div>
+
+            <!-- Locale (Azure uniquement) -->
+            <div class="form-group" id="voiceLocaleGroup" style="display:none;">
+                <label for="voiceLocale" class="form-label">
+                    Locale
+                    <span class="optional-badge">Optionnel</span>
+                    <span class="azure-only-badge">Azure uniquement</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">🌍</span> <strong>Langue et région</strong><br>
+                            Code de langue au format BCP-47.<br><br>
+                            <strong>Locales Africaines :</strong><br>
+                            • fr-BF : Français (Burkina Faso)<br>
+                            • fr-SN : Français (Sénégal)<br>
+                            • fr-CI : Français (Côte d'Ivoire)<br>
+                            • fr-ML : Français (Mali)<br>
+                            • sw-KE : Swahili (Kenya)<br>
+                            • sw-TZ : Swahili (Tanzanie)<br>
+                            • am-ET : Amharique (Éthiopie)<br>
+                            • zu-ZA : Zulu (Afrique du Sud)<br>
+                            • en-NG : Anglais (Nigeria)<br>
+                            • en-KE : Anglais (Kenya)<br><br>
+                            <div class="tooltip-example">
+                                fr-BF pour Français (Burkina Faso)
+                            </div>
+                        </div>
+                    </div>
+                </label>
+                <select class="form-select" id="voiceLocale" name="voice_locale">
+                    <option value="">-- Auto-détection --</option>
+                    <optgroup label="🌍 Afrique Francophone">
+                        <option value="fr-BF">fr-BF - Français (Burkina Faso)</option>
+                        <option value="fr-SN">fr-SN - Français (Sénégal)</option>
+                        <option value="fr-CI">fr-CI - Français (Côte d'Ivoire)</option>
+                        <option value="fr-ML">fr-ML - Français (Mali)</option>
+                        <option value="fr-NE">fr-NE - Français (Niger)</option>
+                        <option value="fr-TG">fr-TG - Français (Togo)</option>
+                        <option value="fr-BJ">fr-BJ - Français (Bénin)</option>
+                        <option value="fr-CM">fr-CM - Français (Cameroun)</option>
+                        <option value="fr-CD">fr-CD - Français (RD Congo)</option>
+                        <option value="fr-GA">fr-GA - Français (Gabon)</option>
+                    </optgroup>
+                    <optgroup label="🌍 Afrique Anglophone">
+                        <option value="en-NG">en-NG - Anglais (Nigeria)</option>
+                        <option value="en-KE">en-KE - Anglais (Kenya)</option>
+                        <option value="en-GH">en-GH - Anglais (Ghana)</option>
+                        <option value="en-ZA">en-ZA - Anglais (Afrique du Sud)</option>
+                        <option value="en-TZ">en-TZ - Anglais (Tanzanie)</option>
+                        <option value="en-UG">en-UG - Anglais (Ouganda)</option>
+                    </optgroup>
+                    <optgroup label="🌍 Langues Africaines">
+                        <option value="sw-KE">sw-KE - Swahili (Kenya)</option>
+                        <option value="sw-TZ">sw-TZ - Swahili (Tanzanie)</option>
+                        <option value="am-ET">am-ET - Amharique (Éthiopie)</option>
+                        <option value="zu-ZA">zu-ZA - Zulu (Afrique du Sud)</option>
+                        <option value="so-SO">so-SO - Somali (Somalie)</option>
+                    </optgroup>
+                    <optgroup label="Autres Régions">
+                        <option value="fr-FR">fr-FR - Français (France)</option>
+                        <option value="fr-CA">fr-CA - Français (Canada)</option>
+                        <option value="en-US">en-US - Anglais (États-Unis)</option>
+                        <option value="en-GB">en-GB - Anglais (Royaume-Uni)</option>
+                    </optgroup>
+                </select>
+                <div class="form-help">
+                    Sélectionnez la locale pour optimiser la prononciation régionale
+                </div>
+            </div>
+
+            <!-- Prefer Locales (Azure uniquement) -->
+            <div class="form-group" id="voicePreferLocalesGroup" style="display:none;">
+                <label for="voicePreferLocales" class="form-label">
+                    Locales préférées (Prefer Locales)
+                    <span class="optional-badge">Optionnel</span>
+                    <span class="azure-only-badge">Azure uniquement</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">🎯</span> <strong>Liste de préférences</strong><br>
+                            Liste de codes de langue par ordre de préférence.<br><br>
+                            <strong>Format :</strong> Codes séparés par des virgules<br>
+                            <strong>Exemple Afrique :</strong> fr-BF, fr-SN, fr-FR<br>
+                            <strong>Exemple Multi-pays :</strong> sw-KE, sw-TZ, en-KE<br><br>
+                            <div class="tooltip-example">
+                                Le système utilisera la première locale disponible
+                            </div>
+                        </div>
+                    </div>
+                </label>
+                <input type="text" class="form-control" id="voicePreferLocales" name="voice_prefer_locales" 
+                       placeholder="ex: fr-BF, fr-SN, fr-FR">
+                <div class="form-help">
+                    Codes de langue séparés par des virgules, par ordre de préférence (ex: fr-BF, fr-SN, fr-FR)
+                </div>
+            </div>
+
+            <!-- Style (Azure uniquement) -->
+            <div class="form-group" id="voiceStyleGroup" style="display:none;">
+                <label for="voiceStyle" class="form-label">
+                    Style
+                    <span class="optional-badge">Optionnel</span>
+                    <span class="azure-only-badge">Azure uniquement</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">🎭</span> <strong>Style de la voix</strong><br>
+                            Définit le ton émotionnel de la voix (selon la voix choisie).<br><br>
+                            <strong>Styles disponibles :</strong><br>
+                            • cheerful : Joyeux, enthousiaste<br>
+                            • empathetic : Empathique, compréhensif<br>
+                            • friendly : Amical, chaleureux<br>
+                            • professional : Professionnel, formel<br>
+                            • calm : Calme, posé<br>
+                            • assistant : Ton assistant virtuel<br>
+                            • newscast : Ton journalistique<br>
+                            • customerservice : Service client<br><br>
+                            <div class="tooltip-example">
+                                Disponible uniquement pour certaines voix Azure HD
+                            </div>
+                        </div>
+                    </div>
+                </label>
+                <select class="form-select" id="voiceStyle" name="voice_style">
+                    <option value="">-- Aucun style --</option>
+                    <option value="cheerful">Cheerful - Joyeux</option>
+                    <option value="empathetic">Empathetic - Empathique</option>
+                    <option value="friendly">Friendly - Amical</option>
+                    <option value="professional">Professional - Professionnel</option>
+                    <option value="calm">Calm - Calme</option>
+                    <option value="assistant">Assistant - Ton assistant</option>
+                    <option value="newscast">Newscast - Journalistique</option>
+                    <option value="customerservice">Customer Service - Service client</option>
+                </select>
+                <div class="form-help">
+                    Style émotionnel (disponible pour certaines voix Azure HD uniquement)
+                </div>
+            </div>
+
+            <!-- Pitch (Azure uniquement) -->
+            <div class="form-group" id="voicePitchGroup" style="display:none;">
+                <label for="voicePitch" class="form-label">
+                    Hauteur de ton (Pitch)
+                    <span class="optional-badge">Optionnel</span>
+                    <span class="azure-only-badge">Azure uniquement</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">🎵</span> <strong>Hauteur de la voix</strong><br>
+                            Contrôle la hauteur tonale (grave/aigu).<br><br>
+                            <strong>Formats acceptés :</strong><br>
+                            • Pourcentage : +20%, -10%<br>
+                            • Valeur absolue : high, low, medium<br>
+                            • Hz relatif : +5Hz, -3Hz<br><br>
+                            <div class="tooltip-example">
+                                +10% = Voix 10% plus aiguë
+                            </div>
+                        </div>
+                    </div>
+                </label>
+                <select class="form-select" id="voicePitch" name="voice_pitch">
+                    <option value="">-- Hauteur normale --</option>
+                    <optgroup label="Valeurs prédéfinies">
+                        <option value="x-low">x-low - Très grave</option>
+                        <option value="low">low - Grave</option>
+                        <option value="medium">medium - Normal</option>
+                        <option value="high">high - Aigu</option>
+                        <option value="x-high">x-high - Très aigu</option>
+                    </optgroup>
+                    <optgroup label="Pourcentages">
+                        <option value="-20%">-20% - Plus grave</option>
+                        <option value="-10%">-10% - Légèrement grave</option>
+                        <option value="+10%">+10% - Légèrement aigu</option>
+                        <option value="+20%">+20% - Plus aigu</option>
+                    </optgroup>
+                </select>
+                <div class="form-help">
+                    Hauteur tonale de la voix (Azure uniquement)
+                </div>
+            </div>
+
+            <!-- Volume (Azure uniquement) -->
+            <div class="form-group" id="voiceVolumeGroup" style="display:none;">
+                <label for="voiceVolume" class="form-label">
+                    Volume
+                    <span class="optional-badge">Optionnel</span>
+                    <span class="azure-only-badge">Azure uniquement</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">🔊</span> <strong>Volume sonore</strong><br>
+                            Contrôle le volume de la voix.<br><br>
+                            <strong>Formats acceptés :</strong><br>
+                            • Pourcentage : +20%, -10%<br>
+                            • Valeur absolue : loud, soft, medium<br>
+                            • Décibels : +3dB, -6dB<br><br>
+                            <div class="tooltip-example">
+                                +20% = Volume augmenté de 20%
+                            </div>
+                        </div>
+                    </div>
+                </label>
+                <select class="form-select" id="voiceVolume" name="voice_volume">
+                    <option value="">-- Volume normal --</option>
+                    <optgroup label="Valeurs prédéfinies">
+                        <option value="silent">silent - Silencieux</option>
+                        <option value="x-soft">x-soft - Très faible</option>
+                        <option value="soft">soft - Faible</option>
+                        <option value="medium">medium - Normal</option>
+                        <option value="loud">loud - Fort</option>
+                        <option value="x-loud">x-loud - Très fort</option>
+                    </optgroup>
+                    <optgroup label="Pourcentages">
+                        <option value="-20%">-20% - Plus faible</option>
+                        <option value="-10%">-10% - Légèrement faible</option>
+                        <option value="+10%">+10% - Légèrement fort</option>
+                        <option value="+20%">+20% - Plus fort</option>
+                    </optgroup>
+                </select>
+                <div class="form-help">
+                    Volume de la voix (Azure uniquement)
+                </div>
+            </div>
+
+            <!-- Custom Lexicon URL -->
+            <div class="form-group">
+                <label for="customLexiconSelect" class="form-label">
+                    Lexique personnalisé (Custom Lexicon)
+                    <span class="optional-badge">Optionnel</span>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">📚</span> <strong>Prononciation personnalisée</strong><br>
+                            Fichier SSML définissant comment prononcer certains mots.<br><br>
+                            <strong>Utilisez pour :</strong><br>
+                            • Acronymes (ex: "W-A-K-A" pour WAKA)<br>
+                            • Noms propres (ex: "Pierre-Jean" vs "Pierjan")<br>
+                            • Termes techniques<br><br>
+                            <div class="tooltip-example">
+                                Sélectionnez un fichier depuis Azure Storage
+                            </div>
+                            <strong>Format :</strong> Fichier XML SSML hébergé publiquement
+                        </div>
+                    </div>
+                </label>
+                <select class="form-control" id="customLexiconSelect" name="custom_lexicon_url">
+                    <option value="">-- Aucun lexique --</option>
+                    <option value="loading" disabled>Chargement des lexiques...</option>
+                </select>
+                <input type="hidden" id="customLexiconUrl" name="custom_lexicon_url_hidden">
+                <div class="form-help">
+                    Sélectionnez un fichier lexique depuis le container Azure Storage
+                </div>
+            </div>
+
+            <!-- Output Audio Timestamps -->
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="enableOutputTimestamps" name="enable_output_timestamps">
+                    <label class="form-check-label" for="enableOutputTimestamps">
+                        Activer les timestamps audio (synchronisation mot par mot)
+                    </label>
+                    <div class="tooltip-wrapper">
+                        <span class="info-icon">
+                            <i class="bi bi-info-lg"></i>
+                        </span>
+                        <div class="tooltip-content">
+                            <span class="tooltip-emoji">⏱️</span> <strong>Synchronisation temps réel</strong><br>
+                            Reçoit le timing exact de chaque mot prononcé.<br><br>
+                            <strong>Utilisez pour :</strong><br>
+                            • Sous-titres en temps réel<br>
+                            • Karaoke / highlighting de texte<br>
+                            • Analytics de latence<br><br>
+                            <div class="tooltip-example">
+                                "Bonjour" : 0ms-387ms
+                            </div>
+                            <strong>Note :</strong> Légère surcharge réseau
+                        </div>
+                    </div>
+                </div>
+                <div class="form-help">
+                    Reçoit le timestamp de début et durée pour chaque mot prononcé
+                </div>
+            </div>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="action-buttons">
+            <a href="{{ url_for('agents_manager.agent_config_step1') }}" class="btn-back">
+                <i class="bi bi-arrow-left"></i>
+                <span>Retour</span>
+            </a>
+            <button type="submit" class="btn-next">
+                <span>Continuer</span>
+                <i class="bi bi-arrow-right"></i>
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Configuration chargée - approche simple et fiable
+    console.log('📋 Chargement de la configuration...');
+    
+    // Charger les valeurs dès que le DOM est prêt
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🔄 DOM prêt - chargement des valeurs');
+        
+        // Fonction helper pour définir une valeur
+        function setValue(id, value) {
+            const field = document.getElementById(id);
+            if (field && value !== null && value !== undefined && value !== '' && value !== 'None') {
+                field.value = value;
+                console.log('✅', id, '=', value);
+            }
+        }
+        
+        function setChecked(id, value) {
+            const field = document.getElementById(id);
+            if (field && value !== null && value !== undefined) {
+                field.checked = !!value;
+                console.log('✅', id, '(checked) =', !!value);
+            }
+        }
+        
+        // Model config
+        setValue('maxTokens', '{{ config.max_tokens if config and config.max_tokens else "" }}');
+        setValue('temperature', '{{ config.temperature if config and config.temperature is not none else "" }}');
+        setValue('topP', '{{ config.top_p if config and config.top_p is not none else "" }}');
+        setValue('frequencyPenalty', '{{ config.frequency_penalty if config and config.frequency_penalty is not none else "" }}');
+        setValue('presencePenalty', '{{ config.presence_penalty if config and config.presence_penalty is not none else "" }}');
+        
+        // Input Audio
+        setValue('inputAudioSamplingRate', '{{ config.input_audio_sampling_rate if config and config.input_audio_sampling_rate else "" }}');
+        setValue('inputAudioFormat', '{{ config.input_audio_format if config and config.input_audio_format else "" }}');
+        setValue('inputLanguage', '{{ config.input_language if config and config.input_language else "" }}');
+        
+        // Input Transcription
+        setValue('inputTranscriptionModel', '{{ config.input_transcription_model if config and config.input_transcription_model else "" }}');
+        setValue('inputTranscriptionLanguage', '{{ config.input_transcription_language if config and config.input_transcription_language else "" }}');
+        setValue('inputTranscriptionPrompt', '{{ config.input_transcription_prompt if config and config.input_transcription_prompt else "" }}');
+        setValue('inputTranscriptionTemperature', '{{ config.input_transcription_temperature if config and config.input_transcription_temperature is not none else "" }}');
+        
+        // VAD
+        setValue('vadType', '{{ config.vad_type if config and config.vad_type else "" }}');
+        setValue('vadThreshold', '{{ config.vad_threshold if config and config.vad_threshold is not none else "" }}');
+        setValue('vadPrefixPaddingMs', '{{ config.vad_prefix_padding_ms if config and config.vad_prefix_padding_ms else "" }}');
+        setValue('vadSilenceDurationMs', '{{ config.vad_silence_duration_ms if config and config.vad_silence_duration_ms else "" }}');
+        setValue('vadEagerness', '{{ config.vad_eagerness if config and config.vad_eagerness else "" }}');
+        
+        // Turn Detection
+        setChecked('enableTurnDetection', {{ 'true' if config and config.enable_turn_detection else 'false' }});
+        setValue('turnDetectionCreateResponseThreshold', '{{ config.turn_detection_create_response_threshold if config and config.turn_detection_create_response_threshold is not none else "" }}');
+        setValue('turnDetectionSilenceThreshold', '{{ config.turn_detection_silence_threshold if config and config.turn_detection_silence_threshold is not none else "" }}');
+        setValue('turnDetectionPrefixPadding', '{{ config.turn_detection_prefix_padding if config and config.turn_detection_prefix_padding else "" }}');
+        
+        // Output Audio
+        setValue('outputAudioFormat', '{{ config.output_audio_format if config and config.output_audio_format else "" }}');
+        setValue('outputAudioSamplingRate', '{{ config.output_audio_sampling_rate if config and config.output_audio_sampling_rate else "" }}');
+        
+        // Voice
+        setValue('voiceName', '{{ config.voice_name if config and config.voice_name else "" }}');
+        setValue('voiceRate', '{{ config.voice_rate if config and config.voice_rate else "" }}');
+        setValue('voicePitch', '{{ config.voice_pitch if config and config.voice_pitch else "" }}');
+        setValue('voiceVolume', '{{ config.voice_volume if config and config.voice_volume else "" }}');
+        setValue('voiceStyle', '{{ config.voice_style if config and config.voice_style else "" }}');
+        setValue('voiceTemperature', '{{ config.voice_temperature if config and config.voice_temperature is not none else "" }}');
+        setValue('customLexiconSelect', '{{ config.custom_lexicon_url if config and config.custom_lexicon_url else "" }}');
+        setChecked('enableOutputTimestamps', {{ 'true' if config and config.enable_output_timestamps else 'false' }});
+        
+        console.log('✅ Valeurs chargées');
+    });
+</script>
+<script src="{{ url_for('static', filename='js/agent_config_step2.js') }}?v={{ range(1, 9999999) | random }}"></script>
+<script src="{{ url_for('static', filename='js/azure_voice_selector.js') }}?v={{ range(1, 9999999) | random }}"></script>
+<script>
+    // Initialiser le sélecteur de voix avec le type approprié
+    const voiceType = '{{ voice_type or "azure" }}';
+    console.log('🎤 Type de voix:', voiceType);
+    
+    // Créer l'instance du sélecteur
+    const voiceSelector = new AzureVoiceSelector('/api/azure-voices', voiceType);
+</script>
+{% endblock %}

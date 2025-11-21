@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>1d60c0ed82a91a6530b2dc540e6303450448ac62</id>
+  <author>nabil</author>
+  <deployer>$waka</deployer>
+  <authorEmail>nabil@galaxyai.digital</authorEmail>
+  <message>Force browser cache refresh with no-cache meta tags
+    
+    - Added {% block head %} in base.html template
+    - Added Cache-Control, Pragma, and Expires meta tags in avatar_voice_session.html
+    - This forces browser to reload JavaScript and fixes caching issues
+    
+    🤖 Generated with [Claude Code](https://claude.com/claude-code)
+    
+    Co-Authored-By: Claude &lt;noreply@anthropic.com&gt;</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-11-19T17:45:28.0548702Z</lastSuccessEndTime>
+  <receivedTime>2025-11-19T17:44:58.1438569Z</receivedTime>
+  <startTime>2025-11-19T17:45:00.0443763Z</startTime>
+  <endTime>2025-11-19T17:45:28.0548702Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>False</is_readonly>
+  <buildSummary />
+</deployment>

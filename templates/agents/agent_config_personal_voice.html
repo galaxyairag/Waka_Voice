@@ -1,0 +1,701 @@
+{% extends "base.html" %}
+
+{% block title %}Configuration Agent - Voix Personnalisée{% endblock %}
+
+{% block extra_css %}
+<style>
+    .config-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .config-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .config-header h1 {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 2.2rem;
+        color: var(--waka-primary);
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+
+    .config-header p {
+        color: var(--waka-text-muted);
+        font-size: 1.1rem;
+    }
+
+    .config-card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 8px 24px rgba(74, 20, 140, 0.1);
+        border: 2px solid var(--waka-border);
+        margin-bottom: 30px;
+    }
+
+    .section-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--waka-primary);
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: linear-gradient(135deg, rgba(74, 20, 140, 0.05), rgba(123, 31, 162, 0.05));
+        border-left: 4px solid var(--waka-primary);
+        border-radius: 8px;
+    }
+
+    .section-title i {
+        font-size: 1.6rem;
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: var(--waka-text);
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .form-label i {
+        color: var(--waka-primary);
+    }
+
+    .form-label .required {
+        color: #dc3545;
+        margin-left: 4px;
+    }
+
+    .form-control, .form-select {
+        border: 2px solid var(--waka-border);
+        border-radius: 10px;
+        padding: 14px 16px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--waka-primary);
+        box-shadow: 0 0 0 3px rgba(74, 20, 140, 0.1);
+        outline: none;
+    }
+
+    .form-help {
+        font-size: 0.85rem;
+        color: var(--waka-text-muted);
+        margin-top: 6px;
+        display: block;
+    }
+
+    /* Personal Voice Selection */
+    .voice-card {
+        border: 2px solid var(--waka-border);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: var(--waka-off-white);
+    }
+
+    .voice-card:hover {
+        border-color: var(--waka-primary-light);
+        background: white;
+        transform: translateX(5px);
+    }
+
+    .voice-card.selected {
+        border-color: var(--waka-primary);
+        background: linear-gradient(135deg, rgba(74, 20, 140, 0.08), rgba(123, 31, 162, 0.08));
+        box-shadow: 0 4px 12px rgba(74, 20, 140, 0.2);
+    }
+
+    .voice-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    .voice-name {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--waka-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .voice-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .voice-badge.ready {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .voice-badge.training {
+        background: #e3f2fd;
+        color: #1565c0;
+    }
+
+    .voice-info {
+        font-size: 0.9rem;
+        color: var(--waka-text-muted);
+        line-height: 1.6;
+    }
+
+    .voice-meta {
+        display: flex;
+        gap: 20px;
+        margin-top: 12px;
+        font-size: 0.85rem;
+    }
+
+    .voice-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--waka-text-muted);
+    }
+
+    .voice-meta-item i {
+        color: var(--waka-primary);
+    }
+
+    .no-voices-message {
+        text-align: center;
+        padding: 40px 20px;
+        background: var(--waka-bg-light);
+        border-radius: 12px;
+        border: 2px dashed var(--waka-border);
+    }
+
+    .no-voices-message i {
+        font-size: 3rem;
+        color: var(--waka-primary-pale);
+        margin-bottom: 16px;
+    }
+
+    .no-voices-message p {
+        color: var(--waka-text-muted);
+        margin-bottom: 20px;
+    }
+
+    /* Buttons */
+    .btn-group-custom {
+        display: flex;
+        gap: 16px;
+        margin-top: 40px;
+        flex-wrap: wrap;
+    }
+
+    .btn-primary-custom {
+        background: var(--gradient-primary);
+        color: white;
+        border: none;
+        padding: 14px 32px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(74, 20, 140, 0.4);
+        color: white;
+    }
+
+    .btn-secondary-custom {
+        background: var(--waka-off-white);
+        color: var(--waka-primary);
+        border: 2px solid var(--waka-border);
+        padding: 14px 32px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-secondary-custom:hover {
+        background: var(--waka-primary-pale);
+        color: var(--waka-primary);
+    }
+
+    .btn-link-custom {
+        background: transparent;
+        color: var(--waka-primary);
+        border: none;
+        padding: 14px 24px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-link-custom:hover {
+        color: var(--waka-primary-light);
+        text-decoration: underline;
+    }
+
+    /* Loading spinner */
+    .spinner-container {
+        text-align: center;
+        padding: 40px;
+    }
+
+    .spinner-custom {
+        width: 50px;
+        height: 50px;
+        border: 4px solid var(--waka-primary-pale);
+        border-top-color: var(--waka-primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .config-card {
+            padding: 24px;
+        }
+
+        .btn-group-custom {
+            flex-direction: column;
+        }
+
+        .btn-group-custom button {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="config-container">
+    <!-- Header -->
+    <div class="config-header">
+        <h1><i class="bi bi-mic-fill"></i> Nouvel Agent avec Voix Personnalisée</h1>
+        <p>Configurez un agent vocal intelligent avec votre voix personnalisée Azure AI</p>
+    </div>
+
+    <form id="agentConfigForm">
+        <!-- Section 1: Informations de base -->
+        <div class="config-card">
+            <div class="section-title">
+                <i class="bi bi-info-circle-fill"></i>
+                <span>Informations de base</span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="bi bi-robot"></i>
+                    Nom de l'agent<span class="required">*</span>
+                </label>
+                <input type="text" class="form-control" id="agentName" 
+                       placeholder="Ex: Assistant Client Waka" required>
+                <small class="form-help">Donnez un nom descriptif à votre agent</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="bi bi-file-text"></i>
+                    Description
+                </label>
+                <textarea class="form-control" id="agentDescription" rows="3"
+                          placeholder="Décrivez le rôle et les fonctions de cet agent..."></textarea>
+                <small class="form-help">Cette description aidera à identifier l'agent</small>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="bi bi-telephone"></i>
+                            Numéro de téléphone<span class="required">*</span>
+                        </label>
+                        <input type="tel" class="form-control" id="phoneNumber" 
+                               placeholder="+226 XX XX XX XX" required>
+                        <small class="form-help">Format international recommandé</small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="bi bi-translate"></i>
+                            Langue principale
+                        </label>
+                        <select class="form-select" id="agentLanguage">
+                            <option value="fr-FR">Français</option>
+                            <option value="en-US">English</option>
+                            <option value="es-ES">Español</option>
+                            <option value="de-DE">Deutsch</option>
+                            <option value="pt-BR">Português</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Sélection de la voix personnalisée -->
+        <div class="config-card">
+            <div class="section-title">
+                <i class="bi bi-mic-fill"></i>
+                <span>Voix personnalisée</span>
+            </div>
+
+            <div id="voicesLoadingContainer" class="spinner-container" style="display: none;">
+                <div class="spinner-custom"></div>
+                <p class="text-muted">Chargement des voix personnalisées...</p>
+            </div>
+
+            <div id="voicesListContainer">
+                <!-- Les voix seront chargées ici dynamiquement -->
+            </div>
+
+            <div class="mt-3">
+                <button type="button" class="btn-link-custom" onclick="window.location.href='/personal-voice'">
+                    <i class="bi bi-plus-circle"></i>
+                    Créer une nouvelle voix personnalisée
+                </button>
+            </div>
+        </div>
+
+        <!-- Section 3: Instructions système -->
+        <div class="config-card">
+            <div class="section-title">
+                <i class="bi bi-chat-quote"></i>
+                <span>Instructions système (Prompt)</span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="bi bi-code-square"></i>
+                    Prompt système<span class="required">*</span>
+                </label>
+                <textarea class="form-control" id="systemPrompt" rows="8" required
+                          placeholder="Exemple: Tu es un assistant vocal pour le service client de Waka Afrique. Tu dois être professionnel, amical et aider les clients avec leurs questions..."></textarea>
+                <small class="form-help">Définissez le comportement et la personnalité de votre agent</small>
+            </div>
+        </div>
+
+        <!-- Section 4: Paramètres avancés -->
+        <div class="config-card">
+            <div class="section-title">
+                <i class="bi bi-sliders"></i>
+                <span>Paramètres avancés</span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="bi bi-thermometer-half"></i>
+                            Température
+                        </label>
+                        <input type="number" class="form-control" id="temperature" 
+                               min="0" max="2" step="0.1" value="0.8">
+                        <small class="form-help">Créativité des réponses (0-2)</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="bi bi-speedometer2"></i>
+                            Max Tokens
+                        </label>
+                        <input type="number" class="form-control" id="maxTokens" 
+                               min="100" max="4000" step="100" value="1000">
+                        <small class="form-help">Longueur max des réponses</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="bi bi-shuffle"></i>
+                            Top P
+                        </label>
+                        <input type="number" class="form-control" id="topP" 
+                               min="0" max="1" step="0.1" value="0.9">
+                        <small class="form-help">Diversité du vocabulaire</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="bi bi-layout-text-sidebar"></i>
+                    Modèle GPT
+                </label>
+                <select class="form-select" id="gptModel">
+                    <option value="gpt-4o-realtime-preview">GPT-4o Realtime (Recommandé)</option>
+                    <option value="gpt-4o-mini-realtime">GPT-4o Mini Realtime</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="btn-group-custom">
+            <button type="button" class="btn-secondary-custom" onclick="window.location.href='/agents'">
+                <i class="bi bi-arrow-left"></i>
+                Annuler
+            </button>
+            <button type="submit" class="btn-primary-custom" id="submitBtn">
+                <i class="bi bi-check-circle"></i>
+                Créer l'agent
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Toast notifications -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="notificationToast" class="toast" role="alert">
+        <div class="toast-header">
+            <i class="bi bi-bell-fill me-2" style="color: var(--waka-primary);"></i>
+            <strong class="me-auto">Notification</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body" id="toastMessage"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedVoiceId = null;
+    let personalVoices = [];
+
+    // Initialisation
+    document.addEventListener('DOMContentLoaded', function() {
+        loadPersonalVoices();
+        
+        // Form submit
+        document.getElementById('agentConfigForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            createAgent();
+        });
+    });
+
+    // Charger les voix personnalisées
+    async function loadPersonalVoices() {
+        const container = document.getElementById('voicesListContainer');
+        const loadingContainer = document.getElementById('voicesLoadingContainer');
+        
+        loadingContainer.style.display = 'block';
+        container.innerHTML = '';
+
+        try {
+            const response = await fetch('/creer-une-voix/api/personal-voices');
+            const data = await response.json();
+
+            loadingContainer.style.display = 'none';
+
+            if (data.success && data.voices && data.voices.length > 0) {
+                personalVoices = data.voices.filter(v => v.status === 'Succeeded');
+                
+                if (personalVoices.length === 0) {
+                    container.innerHTML = `
+                        <div class="no-voices-message">
+                            <i class="bi bi-exclamation-circle"></i>
+                            <p>Aucune voix personnalisée prête à l'emploi</p>
+                            <small class="text-muted">Créez une voix ou attendez que vos voix en cours soient prêtes</small>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = personalVoices.map(voice => {
+                    const createdDate = voice.created_at ? new Date(voice.created_at).toLocaleDateString('fr-FR') : 'N/A';
+                    const usageCount = voice.usage_count || 0;
+                    
+                    return `
+                        <div class="voice-card" onclick="selectVoice('${voice.voice_id}')" data-voice-id="${voice.voice_id}">
+                            <div class="voice-card-header">
+                                <div class="voice-name">
+                                    <i class="bi bi-soundwave"></i>
+                                    ${voice.voice_name || voice.voice_id}
+                                </div>
+                                <span class="voice-badge ready">
+                                    <i class="bi bi-check-circle"></i> Prête
+                                </span>
+                            </div>
+                            <div class="voice-info">
+                                ${voice.description || 'Pas de description'}
+                            </div>
+                            <div class="voice-meta">
+                                <span class="voice-meta-item">
+                                    <i class="bi bi-hash"></i>
+                                    ID: ${voice.speaker_profile_id ? voice.speaker_profile_id.substring(0, 12) + '...' : voice.voice_id.substring(0, 12) + '...'}
+                                </span>
+                                <span class="voice-meta-item">
+                                    <i class="bi bi-calendar"></i>
+                                    ${createdDate}
+                                </span>
+                                <span class="voice-meta-item">
+                                    <i class="bi bi-graph-up"></i>
+                                    ${usageCount} utilisations
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } else {
+                container.innerHTML = `
+                    <div class="no-voices-message">
+                        <i class="bi bi-mic-mute"></i>
+                        <p>Aucune voix personnalisée disponible</p>
+                        <small class="text-muted">Créez votre première voix personnalisée pour commencer</small>
+                    </div>
+                `;
+            }
+
+        } catch (error) {
+            loadingContainer.style.display = 'none';
+            console.error('Erreur chargement voix:', error);
+            container.innerHTML = `
+                <div class="no-voices-message">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <p>Erreur lors du chargement des voix</p>
+                    <small class="text-muted">${error.message}</small>
+                </div>
+            `;
+        }
+    }
+
+    // Sélectionner une voix
+    function selectVoice(voiceId) {
+        selectedVoiceId = voiceId;
+        
+        document.querySelectorAll('.voice-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        
+        const selectedCard = document.querySelector(`[data-voice-id="${voiceId}"]`);
+        if (selectedCard) {
+            selectedCard.classList.add('selected');
+        }
+        
+        showNotification('Voix sélectionnée');
+    }
+
+    // Créer l'agent
+    async function createAgent() {
+        const agentName = document.getElementById('agentName').value.trim();
+        const description = document.getElementById('agentDescription').value.trim();
+        const phoneNumber = document.getElementById('phoneNumber').value.trim();
+        const language = document.getElementById('agentLanguage').value;
+        const systemPrompt = document.getElementById('systemPrompt').value.trim();
+        const temperature = parseFloat(document.getElementById('temperature').value);
+        const maxTokens = parseInt(document.getElementById('maxTokens').value);
+        const topP = parseFloat(document.getElementById('topP').value);
+        const gptModel = document.getElementById('gptModel').value;
+
+        // Validation
+        if (!agentName || !phoneNumber || !systemPrompt) {
+            showNotification('Veuillez remplir tous les champs obligatoires', 'error');
+            return;
+        }
+
+        if (!selectedVoiceId) {
+            showNotification('Veuillez sélectionner une voix personnalisée', 'error');
+            return;
+        }
+
+        const selectedVoice = personalVoices.find(v => v.voice_id === selectedVoiceId);
+        if (!selectedVoice) {
+            showNotification('Voix sélectionnée introuvable', 'error');
+            return;
+        }
+
+        // Désactiver le bouton submit
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Création en cours...';
+
+        try {
+            const response = await fetch('/personal-voice/api/agents', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    agent_name: agentName,
+                    description: description,
+                    phone_number: phoneNumber,
+                    language: language,
+                    system_prompt: systemPrompt,
+                    voice_id: selectedVoiceId,
+                    speaker_profile_id: selectedVoice.speaker_profile_id,
+                    voice_name: selectedVoice.voice_name,
+                    temperature: temperature,
+                    max_tokens: maxTokens,
+                    top_p: topP,
+                    gpt_model: gptModel,
+                    voice_type: 'personal'
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showNotification('✅ Agent créé avec succès!');
+                setTimeout(() => {
+                    window.location.href = '/agents';
+                }, 1500);
+            } else {
+                throw new Error(data.error || 'Erreur lors de la création');
+            }
+
+        } catch (error) {
+            console.error('Erreur création agent:', error);
+            showNotification(`❌ Erreur: ${error.message}`, 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Créer l\'agent';
+        }
+    }
+
+    // Notifications
+    function showNotification(message, type = 'info') {
+        const toast = document.getElementById('notificationToast');
+        const toastMessage = document.getElementById('toastMessage');
+        toastMessage.innerHTML = message;
+        
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+    }
+</script>
+{% endblock %}

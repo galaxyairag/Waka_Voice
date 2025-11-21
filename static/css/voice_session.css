@@ -1,0 +1,848 @@
+/* ============================================
+   TEAMS-INSPIRED VOICE SESSION STYLES
+   Modern, Sophisticated & Fully Responsive
+   Version: 2.0
+   ============================================ */
+
+:root {
+    --teams-primary: #6264A7;
+    --teams-primary-hover: #464775;
+    --teams-bg-dark: #1F1F1F;
+    --teams-bg-medium: #292929;
+    --teams-bg-light: #333333;
+    --teams-surface: #2D2D2D;
+    --teams-border: rgba(255, 255, 255, 0.08);
+    --teams-text-primary: #FFFFFF;
+    --teams-text-secondary: #C4C4C4;
+    --teams-accent-green: #92C353;
+    --teams-accent-red: #CC4A31;
+    --teams-accent-blue: #6264A7;
+    --teams-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --teams-shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background: var(--teams-bg-dark);
+    color: var(--teams-text-primary);
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+.session-container {
+    min-height: 100vh;
+    padding: 0;
+    margin: 0;
+    background: linear-gradient(135deg, #1F1F1F 0%, #2D2D2D 100%);
+    display: flex;
+    flex-direction: column;
+}
+
+/* ============================================
+   HEADER - Teams Style
+   ============================================ */
+.session-header {
+    background: var(--teams-surface);
+    border-bottom: 1px solid var(--teams-border);
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.agent-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.agent-avatar {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--teams-primary) 0%, var(--teams-primary-hover) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+    box-shadow: 0 4px 12px rgba(98, 100, 167, 0.3);
+}
+
+.agent-details h1 {
+    margin: 0 0 4px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--teams-text-primary);
+    letter-spacing: -0.01em;
+}
+
+.agent-details p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--teams-text-secondary);
+}
+
+.session-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--teams-border);
+    color: var(--teams-text-secondary);
+    transition: all 0.2s ease;
+}
+
+.status-badge i {
+    font-size: 10px;
+}
+
+.status-badge.disconnected {
+    background: rgba(204, 74, 49, 0.15);
+    color: #FF6B6B;
+    border-color: rgba(204, 74, 49, 0.3);
+}
+
+.status-badge.connecting {
+    background: rgba(255, 193, 7, 0.15);
+    color: #FFD666;
+    border-color: rgba(255, 193, 7, 0.3);
+}
+
+.status-badge.connected {
+    background: rgba(146, 195, 83, 0.15);
+    color: var(--teams-accent-green);
+    border-color: rgba(146, 195, 83, 0.3);
+}
+
+.status-badge i {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+/* ============================================
+   MAIN LAYOUT - Teams Grid
+   ============================================ */
+.session-main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 0;
+    height: calc(100vh - 81px);
+    overflow: hidden;
+}
+
+/* ============================================
+   VIDEO STAGE - Central Focus
+   ============================================ */
+.video-stage {
+    background: var(--teams-bg-medium);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+.video-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+}
+
+#avatarContainer {
+    width: 100%;
+    max-width: 1200px;
+    aspect-ratio: 16/9;
+    border-radius: 16px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: var(--teams-shadow);
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+#avatarContainer:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--teams-shadow-hover);
+}
+
+#avatarVideo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+#audioControlButton {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+}
+
+#audioControlButton button {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px 24px;
+    border-radius: 24px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+}
+
+#audioControlButton button:hover {
+    background: rgba(0, 0, 0, 0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================
+   CONTROLS BAR - Floating Modern
+   ============================================ */
+.controls-bar {
+    background: rgba(45, 45, 45, 0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--teams-border);
+    padding: 20px 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    z-index: 10;
+}
+
+.voice-button {
+    min-width: 160px;
+    height: 56px;
+    border-radius: 28px;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 32px;
+    position: relative;
+    overflow: hidden;
+}
+
+.voice-button::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.voice-button:hover::before {
+    opacity: 1;
+}
+
+.voice-button i {
+    font-size: 22px;
+    transition: transform 0.3s ease;
+}
+
+.voice-button:hover i {
+    transform: scale(1.1);
+}
+
+.voice-button.start {
+    background: linear-gradient(135deg, var(--teams-accent-green) 0%, #7FAC3E 100%);
+    color: white;
+}
+
+.voice-button.stop {
+    background: linear-gradient(135deg, var(--teams-accent-red) 0%, #A83A25 100%);
+    color: white;
+}
+
+.voice-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.voice-button.recording {
+    animation: recording-pulse 1.5s infinite;
+}
+
+@keyframes recording-pulse {
+    0%, 100% {
+        box-shadow: 0 4px 16px rgba(146, 195, 83, 0.4);
+    }
+    50% {
+        box-shadow: 0 4px 32px rgba(146, 195, 83, 0.8), 0 0 0 8px rgba(146, 195, 83, 0.2);
+    }
+}
+
+/* ============================================
+   AUDIO VISUALIZER - Modern Wave
+   ============================================ */
+.audio-visualizer {
+    height: 64px;
+    background: rgba(98, 100, 167, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 12px 20px;
+    margin: 0 24px 20px 24px;
+    border: 1px solid rgba(98, 100, 167, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.audio-visualizer::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(98, 100, 167, 0.1) 50%, 
+        transparent 100%);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% { transform: translateX(-100%); }
+    50% { transform: translateX(100%); }
+}
+
+.visualizer-bar {
+    width: 4px;
+    height: 16px;
+    background: linear-gradient(180deg, var(--teams-primary) 0%, var(--teams-primary-hover) 100%);
+    border-radius: 999px;
+    transition: height 0.1s ease;
+    box-shadow: 0 0 8px rgba(98, 100, 167, 0.3);
+    position: relative;
+    z-index: 1;
+}
+
+.visualizer-bar.active {
+    animation: audioWave 0.5s infinite alternate;
+    background: linear-gradient(180deg, #A0A2E1 0%, var(--teams-primary) 100%);
+}
+
+@keyframes audioWave {
+    from {
+        height: 12px;
+        opacity: 0.6;
+    }
+    to {
+        height: 42px;
+        opacity: 1;
+    }
+}
+
+/* ============================================
+   SIDEBAR - Teams Panel Style
+   ============================================ */
+.sidebar-panel {
+    background: var(--teams-surface);
+    border-left: 1px solid var(--teams-border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.sidebar-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--teams-border);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-header h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--teams-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+}
+
+.sidebar-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================
+   CONVERSATION DISPLAY - Chat Style
+   ============================================ */
+.conversation-section {
+    padding: 20px;
+    border-bottom: 1px solid var(--teams-border);
+}
+
+.section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--teams-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#conversationDisplay {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    border: 1px solid var(--teams-border);
+}
+
+#conversationDisplay::-webkit-scrollbar {
+    width: 6px;
+}
+
+#conversationDisplay::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+#conversationDisplay::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.message {
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    max-width: 85%;
+    animation: fadeInMessage 0.3s ease;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    font-size: 13px;
+    line-height: 1.5;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes fadeInMessage {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message.user {
+    background: linear-gradient(135deg, var(--teams-primary) 0%, var(--teams-primary-hover) 100%);
+    color: white;
+    margin-left: auto;
+    text-align: right;
+    border-bottom-right-radius: 4px;
+}
+
+.message.agent {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--teams-text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom-left-radius: 4px;
+}
+
+.message.system {
+    background: rgba(255, 193, 7, 0.1);
+    color: #FFD666;
+    text-align: center;
+    margin: 0 auto 12px;
+    font-size: 12px;
+    border: 1px solid rgba(255, 193, 7, 0.2);
+    border-radius: 8px;
+}
+
+.message-meta {
+    font-size: 10px;
+    opacity: 0.6;
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+/* ============================================
+   CONFIG SECTIONS - Collapsible
+   ============================================ */
+.config-section {
+    padding: 20px;
+    border-bottom: 1px solid var(--teams-border);
+}
+
+.config-section h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--teams-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.config-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.config-item:last-child {
+    border-bottom: none;
+}
+
+.config-label {
+    font-size: 13px;
+    color: var(--teams-text-secondary);
+}
+
+.config-value {
+    font-size: 13px;
+    color: var(--teams-text-primary);
+    font-weight: 600;
+}
+
+.tool-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(98, 100, 167, 0.2);
+    color: var(--teams-text-primary);
+    border-radius: 16px;
+    font-size: 11px;
+    margin: 4px;
+    border: 1px solid rgba(98, 100, 167, 0.3);
+    font-weight: 500;
+}
+
+/* ============================================
+   EDITORS - Inline Edit Style
+   ============================================ */
+.edit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.edit-button {
+    background: none;
+    border: none;
+    color: var(--teams-primary);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.edit-button:hover {
+    background: rgba(98, 100, 167, 0.1);
+}
+
+#instructionsDisplay,
+#lexiconDisplay {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--teams-text-secondary);
+    line-height: 1.6;
+    max-height: 120px;
+    overflow-y: auto;
+    border: 1px solid var(--teams-border);
+}
+
+#instructionsEditor,
+#lexiconEditor {
+    margin-top: 12px;
+}
+
+#instructionsTextarea,
+#lexiconUrlInput {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--teams-border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--teams-text-primary);
+    resize: vertical;
+    min-height: 150px;
+}
+
+#lexiconUrlInput {
+    min-height: auto;
+    height: 40px;
+}
+
+.editor-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.editor-actions button {
+    flex: 1;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.editor-actions button:first-child {
+    background: var(--teams-primary);
+    color: white;
+}
+
+.editor-actions button:first-child:hover {
+    background: var(--teams-primary-hover);
+    transform: translateY(-2px);
+}
+
+.editor-actions button:last-child {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--teams-text-secondary);
+}
+
+.editor-actions button:last-child:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-15px);
+    }
+}
+
+/* ============================================
+   RESPONSIVE DESIGN - Mobile First
+   ============================================ */
+@media (max-width: 1200px) {
+    .session-main {
+        grid-template-columns: 1fr 320px;
+    }
+}
+
+@media (max-width: 968px) {
+    .session-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .session-status {
+        width: 100%;
+    }
+
+    .session-main {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+
+    .sidebar-panel {
+        border-left: none;
+        border-top: 1px solid var(--teams-border);
+        max-height: 60vh;
+    }
+
+    .video-container {
+        padding: 16px;
+    }
+
+    #avatarContainer {
+        aspect-ratio: 4/3;
+    }
+
+    .controls-bar {
+        padding: 16px;
+    }
+
+    .voice-button {
+        min-width: 140px;
+        height: 52px;
+        font-size: 14px;
+        padding: 0 24px;
+    }
+
+    .audio-visualizer {
+        margin: 0 16px 16px 16px;
+        height: 56px;
+    }
+}
+
+@media (max-width: 640px) {
+    .session-header {
+        padding: 12px 16px;
+    }
+
+    .agent-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+    }
+
+    .agent-details h1 {
+        font-size: 16px;
+    }
+
+    .agent-details p {
+        font-size: 12px;
+    }
+
+    .status-badge {
+        padding: 5px 10px;
+        font-size: 11px;
+    }
+
+    .video-container {
+        padding: 12px;
+    }
+
+    #avatarContainer {
+        border-radius: 12px;
+    }
+
+    .controls-bar {
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+    }
+
+    .voice-button {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .audio-visualizer {
+        margin: 0 12px 12px 12px;
+        height: 48px;
+    }
+
+    .visualizer-bar {
+        width: 3px;
+    }
+
+    .config-section,
+    .conversation-section {
+        padding: 16px;
+    }
+
+    #conversationDisplay {
+        max-height: 200px;
+    }
+
+    .message {
+        font-size: 12px;
+        padding: 8px 12px;
+    }
+}
+
+/* ============================================
+   ACCESSIBILITY & ANIMATIONS
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+.focus-visible:focus {
+    outline: 2px solid var(--teams-primary);
+    outline-offset: 2px;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+@media print {
+    .controls-bar,
+    .sidebar-panel {
+        display: none;
+    }
+}

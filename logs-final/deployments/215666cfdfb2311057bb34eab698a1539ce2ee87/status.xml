@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>215666cfdfb2311057bb34eab698a1539ce2ee87</id>
+  <author>nabil</author>
+  <deployer>$waka</deployer>
+  <authorEmail>nabil@galaxyai.digital</authorEmail>
+  <message>Fix: Empcher la slection automatique d'avatar et prserver les valeurs
+    
+    Problme rsolu:
+    - L'avatar par dfaut (lisa) tait automatiquement slectionn mme si l'utilisateur ne cliquait pas
+    - Les valeurs avatar_character et avatar_style taient crases lors de la soumission du formulaire
+    
+    Modifications:
+    1. templates/avatar/avatar_step2.html:
+       - Suppression de la slection automatique du premier avatar (ligne 2248)
+       - Ajout de validation pour forcer la slection manuelle d'un avatar (ligne 2036-2040)
+       - Message d'alerte si aucun avatar n'est slectionn avant soumission
+    
+    2. Blueprints/avatar_routes.py:
+       - Prservation des valeurs avatar_character et avatar_style existantes dans Cosmos DB
+       - Si le formulaire ne contient pas ces valeurs mais qu'elles existent dans la DB, elles sont conserves
+       - Logging amlior pour tracer la prservation des valeurs (ligne 177)
+    
+    Impact:
+    - L'utilisateur DOIT maintenant cliquer sur un avatar pour le slectionner
+    - Les valeurs sont correctement sauvegardes dans Cosmos DB
+    - Pas de valeurs par dfaut non souhaites
+    
+    🤖 Generated with [Claude Code](https://claude.com/claude-code)
+    
+    Co-Authored-By: Claude &lt;noreply@anthropic.com&gt;</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-11-19T18:31:51.8995516Z</lastSuccessEndTime>
+  <receivedTime>2025-11-19T18:31:21.7220123Z</receivedTime>
+  <startTime>2025-11-19T18:31:23.5653295Z</startTime>
+  <endTime>2025-11-19T18:31:51.8995516Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>False</is_readonly>
+  <buildSummary />
+</deployment>

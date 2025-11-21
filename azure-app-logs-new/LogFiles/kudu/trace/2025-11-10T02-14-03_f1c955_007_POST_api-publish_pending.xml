@@ -1,0 +1,48 @@
+<step title="Incoming Request" date="2025-11-10T02:14:03.265" instance="f1c955" url="/api/publish?type=zip" method="POST" type="request" pid="851,1,28" Accept="*/*" Host="waka.scm.azurewebsites.net" User-Agent="AZURECLI/2.77.0 (MSI)" Accept-Encoding="gzip, deflate" Authorization="Bea..." Cache-Control="no-cache" Content-Type="application/octet-stream" Cookie="ARRAffinity=f1c95587fdc6f942a20e5a5078e78322a753dff56e2f30cc9c09a2b930fa89ac; ARRAffinitySameSite=f1c95587fdc6f942a20e5a5078e78322a753dff56e2f30cc9c09a2b930fa89ac" Content-Length="36206829" x-ms-client-request-id="e03e9931-bdda-11f0-a712-94bb43509061" x-ms-artifact-checksum="0ece01979a5463cf8439e36e3d764f19010b8a19fceb822b6855678f17d6b81e" X-ARR-LOG-ID="e03e9931-bdda-11f0-a712-94bb43509061" CLIENT-IP="129.222.109.50:61100" X-SITE-DEPLOYMENT-ID="waka" WAS-DEFAULT-HOSTNAME="waka.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/publish?type=zip" X-Client-IP="129.222.109.50" X-Client-Port="61100" >
+  <step title="OneDeploy" date="2025-11-10T02:14:03.307" >
+    <step title="None repository commit" date="2025-11-10T02:14:03.323" >
+      <step title="Commit id: 67bbfb4d-36ad-4188-afc0-ade009d9ea6c" date="2025-11-10T02:14:03.332" Message="N/A" AuthorName="N/A" AuthorEmail="N/A" /><!-- duration: 7ms -->
+    </step><!-- duration: 23ms -->
+    <step title="Starting PushDeployAsync" date="2025-11-10T02:14:03.353" /><!-- duration: 7ms -->
+    <step title="Writing artifact to /tmp/zipdeploy/0060144b-bbe6-481d-9b33-37d78e45b990.zip" date="2025-11-10T02:14:03.389" >
+      <step title="Writing multipart request body to /tmp/zipdeploy/0060144b-bbe6-481d-9b33-37d78e45b990.zip" date="2025-11-10T02:14:03.396" /><!-- duration: 12ms -->
+    </step><!-- duration: 116524ms -->
+    <step title="Removing previous build artifact&apos;s manifest file" date="2025-11-10T02:15:59.934" >
+      <step title="Attempting to fetch target branch HEAD" date="2025-11-10T02:15:59.960" /><!-- duration: 7ms -->
+      <step title="Acquiring Deployment Lock" date="2025-11-10T02:15:59.975" /><!-- duration: 7ms -->
+      <step title="Acquired Deployment Lock" date="2025-11-10T02:16:00.034" /><!-- duration: 8ms -->
+      <step title="Performing fetch based deployment" date="2025-11-10T02:16:00.060" >
+        <step title="Creating temporary deployment" date="2025-11-10T02:16:00.067" /><!-- duration: 75ms -->
+        <step title="Releasing Deployment Lock" date="2025-11-10T02:16:01.442" /><!-- duration: 16ms -->
+        <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file /tmp/zipdeploy/0060144b-bbe6-481d-9b33-37d78e45b990.zip (34.53 MB) to /tmp/zipdeploy/extracted" date="2025-11-10T02:16:01.525" >
+          <step title="ChmodRecursive Process exited with total time taken in ms: 70" date="2025-11-10T02:16:03.027" /><!-- duration: 11ms -->
+        </step><!-- duration: 1520ms -->
+        <step title="None repository commit" date="2025-11-10T02:16:03.052" >
+          <step title="Commit id: 67bbfb4d-36ad-4188-afc0-ade009d9ea6c" date="2025-11-10T02:16:03.058" Message="OneDeploy" AuthorName="N/A" AuthorEmail="N/A" /><!-- duration: 7ms -->
+        </step><!-- duration: 21ms -->
+        <step title="Deployment timer started" date="2025-11-10T02:16:05.082" >
+          <step title="DeploymentManager.Deploy(id:67bbfb4d-36ad-4188-afc0-ade009d9ea6c)" date="2025-11-10T02:16:05.092" >
+            <step title="Collecting changeset information" date="2025-11-10T02:16:05.116" /><!-- duration: 113ms -->
+            <step title="Updating submodules" date="2025-11-10T02:16:05.242" /><!-- duration: 1189ms -->
+            <step title="Determining deployment builder" date="2025-11-10T02:16:06.781" >
+              <step title="Builder is OryxBuilder" date="2025-11-10T02:16:06.799" /><!-- duration: 6ms -->
+            </step><!-- duration: 32ms -->
+            <step title="PreDeployment: context.CleanOutputPath False" date="2025-11-10T02:16:06.886" >
+              <step title="PreDeployment: context.OutputPath /home/site/wwwroot" date="2025-11-10T02:16:07.044" >
+                <step title="Building" date="2025-11-10T02:16:07.247" >
+                  <step title="Executing external process" date="2025-11-10T02:16:07.773" type="process" path="bash" arguments="-c &quot;oryx build /tmp/zipdeploy/extracted -o /home/site/wwwroot --platform python --platform-version 3.14 -p virtualenv_name=antenv --log-file /tmp/build-debug.log  -i /tmp/8de1fff1b4aba45 --compress-destination-dir | tee /tmp/oryx-build.log ; exit $PIPESTATUS &quot;" /><!-- duration: 46820ms -->
+                  <step title="Using PythonDeploymentLogParser" date="2025-11-10T02:16:55.257" /><!-- duration: 7ms -->
+                  <step title="Modified file to trigger a restart of the app container." date="2025-11-10T02:16:57.344" /><!-- duration: 10ms -->
+                  <step title="Skip function trigger and logicapp sync because function is not enabled." date="2025-11-10T02:16:57.362" /><!-- duration: 7ms -->
+                </step><!-- duration: 51389ms -->
+              </step><!-- duration: 51607ms -->
+              <step title="Cleaning up temp files" date="2025-11-10T02:16:58.659" /><!-- duration: 370ms -->
+              <step title="Cleaning up temp files" date="2025-11-10T02:16:59.037" /><!-- duration: 508ms -->
+              <step title="Reloading status file with latest updates" date="2025-11-10T02:16:59.596" >
+                <step title="WebHooksManager.PublishEventAsync: PostDeployment" date="2025-11-10T02:16:59.605" /><!-- duration: 49ms -->
+              </step><!-- duration: 71ms -->
+              <step title="Cleaning up temporary deployment - fetch deployment was successful" date="2025-11-10T02:16:59.685" /><!-- duration: 7ms -->
+            </step><!-- duration: 52902ms -->
+          </step><!-- duration: 54707ms -->
+          <step title="Outgoing response" date="2025-11-10T02:16:59.811" type="response" statusCode="200" statusText="OK" /><!-- duration: 9ms -->
+        </step><!-- duration: 54744ms -->

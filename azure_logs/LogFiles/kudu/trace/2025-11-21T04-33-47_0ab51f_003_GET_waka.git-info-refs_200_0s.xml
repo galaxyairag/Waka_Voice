@@ -1,0 +1,16 @@
+<step title="Incoming Request" date="2025-11-21T04:33:47.260" instance="0ab51f" url="/waka.git/info/refs?service=git-receive-pack" method="GET" type="request" pid="851,1,14" Accept="*/*" Host="waka.scm.azurewebsites.net" User-Agent="git/2.51.0.windows.2" Accept-Encoding="deflate, gzip, br, zstd" Authorization="Bas..." Pragma="no-cache" X-ARR-LOG-ID="a6f8beda-8c65-44eb-9475-033fc0d1f2d1" CLIENT-IP="129.222.109.197:37415" X-SITE-DEPLOYMENT-ID="waka" WAS-DEFAULT-HOSTNAME="waka.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/waka.git/info/refs?service=git-receive-pack" X-Client-IP="129.222.109.197" X-Client-Port="37415" >
+  <step title="Cleanup Xml Logs" date="2025-11-21T04:33:47.264" /><!-- duration: 9ms -->
+  <step title="InfoRefsService.Execute" date="2025-11-21T04:33:47.287" >
+    <step title="Executing external process" date="2025-11-21T04:33:47.295" type="process" path="git" arguments="rev-parse --git-dir" /><!-- duration: 15ms -->
+    <step title="Assuming git repository at /home/site/repository" date="2025-11-21T04:33:47.313" /><!-- duration: 3ms -->
+    <step title="InfoRefsService.SmartInfoRefs" date="2025-11-21T04:33:47.320" >
+      <step title="Executing external process" date="2025-11-21T04:33:47.327" type="process" path="git" arguments="rev-parse --git-dir" /><!-- duration: 7ms -->
+      <step title="Assuming git repository at /home/site/repository" date="2025-11-21T04:33:47.336" /><!-- duration: 3ms -->
+      <step title="GitExeServer.AdvertiseReceivePack" date="2025-11-21T04:33:47.343" >
+        <step title="Executing external process" date="2025-11-21T04:33:47.346" type="process" path="git" arguments="receive-pack --stateless-rpc --advertise-refs &quot;/home/site/repository&quot;" /><!-- duration: 16ms -->
+      </step><!-- duration: 22ms -->
+      <step title="Writing 218 bytes" date="2025-11-21T04:33:47.366" /><!-- duration: 2ms -->
+    </step><!-- duration: 52ms -->
+  </step><!-- duration: 87ms -->
+  <step title="Outgoing response" date="2025-11-21T04:33:47.381" type="response" statusCode="200" statusText="OK" /><!-- duration: 4ms -->
+</step><!-- duration: 127ms -->

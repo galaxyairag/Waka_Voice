@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>f54ba4b1094ea846db8c597a3f6da611b0473b28</id>
+  <author>nabil</author>
+  <deployer>$waka</deployer>
+  <authorEmail>nabil@galaxyai.digital</authorEmail>
+  <message>Add .deployment file to force .pyc cache cleanup</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-11-21T04:44:01.5168584Z</lastSuccessEndTime>
+  <receivedTime>2025-11-21T04:43:26.2156468Z</receivedTime>
+  <startTime>2025-11-21T04:43:28.965554Z</startTime>
+  <endTime>2025-11-21T04:44:01.5168584Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>False</is_readonly>
+  <buildSummary />
+</deployment>

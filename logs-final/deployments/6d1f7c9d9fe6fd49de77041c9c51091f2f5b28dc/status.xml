@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>6d1f7c9d9fe6fd49de77041c9c51091f2f5b28dc</id>
+  <author>nabil</author>
+  <deployer>$waka</deployer>
+  <authorEmail>nabil@galaxyai.digital</authorEmail>
+  <message>Fix: Enregistrer agents_config_bp directement au lieu d'utiliser init_app</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-11-21T04:14:51.7759731Z</lastSuccessEndTime>
+  <receivedTime>2025-11-21T04:14:20.3837636Z</receivedTime>
+  <startTime>2025-11-21T04:14:22.2743982Z</startTime>
+  <endTime>2025-11-21T04:14:51.7759731Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>False</is_readonly>
+  <buildSummary />
+</deployment>

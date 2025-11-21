@@ -1,0 +1,1301 @@
+{% extends "base.html" %}
+
+{% block title %}Étape 3 : Sélection des Tools - Avatar Agent{% endblock %}
+
+{% block extra_css %}
+<style>
+    .step-indicator {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 40px;
+        padding: 30px 0;
+    }
+
+    .step {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .step-number {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--waka-border);
+        color: var(--waka-text-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+    }
+
+    .step.completed .step-number {
+        background: var(--gradient-primary);
+        color: white;
+    }
+
+    .step.active .step-number {
+        background: var(--gradient-accent);
+        color: var(--waka-text);
+        box-shadow: 0 4px 12px rgba(255, 111, 0, 0.4);
+        transform: scale(1.1);
+    }
+
+    .step-label {
+        font-weight: 600;
+        color: var(--waka-text-muted);
+        font-size: 0.9rem;
+    }
+
+    .step.completed .step-label,
+    .step.active .step-label {
+        color: var(--waka-primary);
+    }
+
+    .step-arrow {
+        color: var(--waka-border);
+        font-size: 1.2rem;
+    }
+
+    /* Card principale */
+    .config-card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 8px 24px rgba(74, 20, 140, 0.1);
+        border: 2px solid var(--waka-border);
+    }
+
+    .card-header-custom {
+        border-bottom: 2px solid var(--waka-primary-pale);
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+    }
+
+    .card-title {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 1.8rem;
+        color: var(--waka-primary);
+        font-weight: 700;
+        margin: 0 0 8px 0;
+    }
+
+    .card-subtitle {
+        color: var(--waka-text-muted);
+        font-size: 1rem;
+        margin: 0;
+        line-height: 1.6;
+    }
+
+    /* Section Tools */
+    .tools-section {
+        margin-bottom: 40px;
+    }
+
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--waka-primary);
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: linear-gradient(135deg, rgba(74, 20, 140, 0.05), rgba(123, 31, 162, 0.05));
+        border-left: 4px solid var(--waka-primary);
+        border-radius: 8px;
+    }
+
+    .section-title i {
+        font-size: 1.5rem;
+    }
+
+    /* Grille de tools - PLUS GRANDE */
+    .tools-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    /* Tool Card - ÉLABORÉE */
+    .tool-card {
+        background: var(--waka-white);
+        border: 2px solid var(--waka-border);
+        border-radius: 16px;
+        padding: 24px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        min-height: 260px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Effet de brillance au survol */
+    .tool-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transform: rotate(45deg);
+        transition: all 0.5s ease;
+        opacity: 0;
+    }
+
+    .tool-card:hover::before {
+        opacity: 1;
+        animation: shine 1.5s ease-in-out infinite;
+    }
+
+    @keyframes shine {
+        0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+        100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    }
+
+    .tool-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 12px 32px rgba(74, 20, 140, 0.2);
+        border-color: var(--waka-primary-light);
+    }
+
+    .tool-card.selected {
+        background: linear-gradient(135deg, rgba(74, 20, 140, 0.08), rgba(123, 31, 162, 0.08));
+        border-color: var(--waka-primary);
+        box-shadow: 0 8px 24px rgba(74, 20, 140, 0.25);
+    }
+
+    .tool-checkbox {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        width: 28px;
+        height: 28px;
+        cursor: pointer;
+        z-index: 10;
+        accent-color: var(--waka-primary);
+    }
+
+    /* Header de la carte */
+    .tool-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .tool-icon {
+        width: 60px;
+        height: 60px;
+        min-width: 60px;
+        border-radius: 14px;
+        background: var(--gradient-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.8rem;
+        box-shadow: 0 4px 12px rgba(74, 20, 140, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .tool-card.selected .tool-icon {
+        background: var(--gradient-accent);
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .tool-card:hover .tool-icon {
+        transform: scale(1.1);
+        box-shadow: 0 6px 16px rgba(74, 20, 140, 0.4);
+    }
+
+    .tool-header-content {
+        flex: 1;
+    }
+
+    .tool-name {
+        font-weight: 700;
+        color: var(--waka-primary);
+        font-size: 1.1rem;
+        margin-bottom: 6px;
+        line-height: 1.3;
+    }
+
+    .tool-api {
+        font-size: 0.75rem;
+        color: #666;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    /* Description élaborée */
+    .tool-description {
+        font-size: 0.9rem;
+        color: #555;
+        line-height: 1.7;
+        margin-bottom: 16px;
+        flex: 1;
+    }
+
+    .tool-description strong {
+        color: var(--waka-primary);
+        font-weight: 600;
+    }
+
+    /* Tags de fonctionnalités */
+    .tool-features {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 12px;
+    }
+
+    .feature-tag {
+        background: var(--waka-primary-pale);
+        color: var(--waka-primary);
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .feature-tag.api {
+        background: #e3f2fd;
+        color: #1976d2;
+    }
+
+    .feature-tag.free {
+        background: #e8f5e9;
+        color: #388e3c;
+    }
+
+    .feature-tag.premium {
+        background: #fff3e0;
+        color: #f57c00;
+    }
+
+    /* Badges */
+    .tool-badges {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: auto;
+    }
+
+    .tool-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: var(--waka-primary-pale);
+        color: var(--waka-primary);
+        padding: 6px 12px;
+        border-radius: 14px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .tool-badge.recommended {
+        background: var(--gradient-accent);
+        color: white;
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    .tool-badge.new {
+        background: #e3f2fd;
+        color: #1976d2;
+    }
+
+    .tool-badge.coming-soon {
+        background: #f5f5f5;
+        color: #999;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    .tool-badge i {
+        font-size: 0.85rem;
+    }
+
+    /* Compteur de sélection */
+    .selection-counter {
+        background: var(--gradient-accent);
+        color: var(--waka-text);
+        padding: 16px 28px;
+        border-radius: 16px;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 16px rgba(255, 111, 0, 0.3);
+        font-size: 1.1rem;
+    }
+
+    .selection-counter i {
+        margin-right: 10px;
+        font-size: 1.3rem;
+    }
+
+    /* Boutons d'action */
+    .action-buttons {
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+        margin-top: 40px;
+        padding-top: 30px;
+        border-top: 2px solid var(--waka-primary-pale);
+    }
+
+    .btn-custom {
+        padding: 14px 32px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-back {
+        background: var(--waka-off-white);
+        color: var(--waka-primary);
+        border: 2px solid var(--waka-border);
+    }
+
+    .btn-back:hover {
+        background: white;
+        transform: translateX(-4px);
+        box-shadow: 0 4px 12px rgba(74, 20, 140, 0.2);
+    }
+
+    .btn-next {
+        background: var(--gradient-accent);
+        color: var(--waka-text);
+        box-shadow: 0 4px 12px rgba(255, 111, 0, 0.3);
+    }
+
+    .btn-next:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(255, 111, 0, 0.5);
+    }
+
+    .btn-next:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Boutons de sélection rapide */
+    .quick-actions {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+
+    .btn-quick {
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border: 2px solid var(--waka-border);
+        background: white;
+        color: var(--waka-primary);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-quick:hover {
+        background: var(--waka-primary);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(74, 20, 140, 0.3);
+    }
+
+    .btn-quick i {
+        font-size: 1rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .tools-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .step-label {
+            display: none;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .config-card {
+            padding: 24px;
+        }
+
+        .quick-actions {
+            flex-direction: column;
+        }
+
+        .btn-quick {
+            width: 100%;
+        }
+
+        .tool-card {
+            min-height: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Indicateur d'étapes -->
+    <div class="step-indicator">
+        <div class="step completed">
+            <div class="step-number">1</div>
+            <div class="step-label">Modèle</div>
+        </div>
+        <div class="step-arrow">
+            <i class="bi bi-chevron-right"></i>
+        </div>
+        <div class="step completed">
+            <div class="step-number">2</div>
+            <div class="step-label">Voix</div>
+        </div>
+        <div class="step-arrow">
+            <i class="bi bi-chevron-right"></i>
+        </div>
+        <div class="step active">
+            <div class="step-number">3</div>
+            <div class="step-label">Tools</div>
+        </div>
+        <div class="step-arrow">
+            <i class="bi bi-chevron-right"></i>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-label">Instructions</div>
+        </div>
+    </div>
+
+    <!-- Card principale -->
+    <div class="config-card">
+        <div class="card-header-custom">
+            <h2 class="card-title">
+                <i class="bi bi-tools"></i>
+                Sélection des Tools
+            </h2>
+            <p class="card-subtitle">
+                Équipez votre avatar agent des outils nécessaires pour aider vos utilisateurs de manière proactive et intelligente.<br>
+                <strong>Des avatar agents qui agissent, comprennent et résolvent</strong> - Chaque interaction compte.
+            </p>
+        </div>
+
+                        <form id="toolsForm" method="POST" action="{{ url_for('avatar.avatar_config_step3', agent_id=agent_id) }}">
+            <!-- Compteur de sélection -->
+            <div class="selection-counter" id="selectionCounter">
+                <i class="bi bi-check-circle-fill"></i>
+                <span id="selectedCount">0</span> tool(s) sélectionné(s)
+            </div>
+
+            <!-- Boutons de sélection rapide -->
+            <div class="quick-actions">
+                <button type="button" class="btn-quick" onclick="selectAll()">
+                    <i class="bi bi-check-all"></i> Tout sélectionner
+                </button>
+                <button type="button" class="btn-quick" onclick="deselectAll()">
+                    <i class="bi bi-x-circle"></i> Tout désélectionner
+                </button>
+                <button type="button" class="btn-quick" onclick="selectRecommended()">
+                    <i class="bi bi-star-fill"></i> Sélection recommandée
+                </button>
+            </div>
+
+            <!-- Section: Tools de Recherche -->
+            <div class="tools-section">
+                <h3 class="section-title">
+                    <i class="bi bi-search"></i>
+                    Recherche & Information
+                </h3>
+                <div class="tools-grid">
+                    <!-- Web Search -->
+                    <div class="tool-card" onclick="toggleTool(this, 'search_web')">
+                        <input type="checkbox" name="tools" value="search_web" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-globe"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Recherche Web</div>
+                                <div class="tool-api">API: Tavily AI</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Effectue des <strong>recherches intelligentes</strong> sur Internet avec extraction automatique du contenu des pages web. Retourne jusqu'à 10 résultats avec contenu complet extrait et réponse AI générée.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">Extraction contenu</span>
+                            <span class="feature-tag">Réponse IA</span>
+                            <span class="feature-tag">Temps réel</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge recommended">
+                                <i class="bi bi-star-fill"></i> Recommandé
+                            </span>
+                            <span class="tool-badge api">
+                                <i class="bi bi-key"></i> Clé API
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Weather -->
+                    <div class="tool-card" onclick="toggleTool(this, 'weather')">
+                        <input type="checkbox" name="tools" value="weather" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-cloud-sun"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Météo</div>
+                                <div class="tool-api">API: WeatherAPI.com</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Fournit les <strong>prévisions météorologiques détaillées</strong> pour n'importe quelle ville du monde. Inclut météo actuelle et prévisions sur 1 à 5 jours avec températures, précipitations, vent, UV.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">Prévisions 5 jours</span>
+                            <span class="feature-tag">Mondial</span>
+                            <span class="feature-tag">Détaillé</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge recommended">
+                                <i class="bi bi-star-fill"></i> Recommandé
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- News -->
+                    <div class="tool-card" onclick="toggleTool(this, 'news')">
+                        <input type="checkbox" name="tools" value="news" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-newspaper"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Actualités</div>
+                                <div class="tool-api">API: NewsAPI</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Recherche d'<strong>actualités récentes</strong> par pays, catégorie ou mots-clés. Retourne les derniers articles de presse avec titre, description, source et date de publication.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">Presse mondiale</span>
+                            <span class="feature-tag">Catégories</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge coming-soon">
+                                <i class="bi bi-clock"></i> À développer
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Places -->
+                    <div class="tool-card" onclick="toggleTool(this, 'places')">
+                        <input type="checkbox" name="tools" value="places" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-geo-alt"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Lieux & POI</div>
+                                <div class="tool-api">API: Google Places</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Recherche de <strong>points d'intérêt</strong> (restaurants, hôtels, attractions, services) avec notes, avis, horaires d'ouverture, coordonnées GPS et photos.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">Notes & avis</span>
+                            <span class="feature-tag">Photos</span>
+                            <span class="feature-tag">GPS</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge coming-soon">
+                                <i class="bi bi-clock"></i> À développer
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Prayer Times -->
+                    <div class="tool-card" onclick="toggleTool(this, 'prayer_times')">
+                        <input type="checkbox" name="tools" value="get_prayer_times" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-moon-stars"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Horaires de Prière</div>
+                                <div class="tool-api">API: Aladhan</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Obtenez les <strong>horaires des 5 prières quotidiennes</strong> pour toutes les villes du Burkina Faso. Inclut Fajr, Dhuhr, Asr, Maghrib, Isha avec calendrier Hijri, lever et coucher du soleil.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">10 villes BF</span>
+                            <span class="feature-tag">Calendrier Hijri</span>
+                            <span class="feature-tag">Temps réel</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge free">
+                                <i class="bi bi-check-circle"></i> Gratuit
+                            </span>
+                            <span class="tool-badge recommended">
+                                <i class="bi bi-star-fill"></i> Burkina Faso
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Pharmacy Locator -->
+                    <div class="tool-card" onclick="toggleTool(this, 'pharmacy_locator')">
+                        <input type="checkbox" name="tools" value="find_pharmacy" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-hospital"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Pharmacies de Garde</div>
+                                <div class="tool-api">API: Azure Maps + Base locale</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Trouvez les <strong>pharmacies ouvertes 24h/24</strong> dans 6 villes du Burkina Faso. Inclut adresses, téléphones et numéros d'urgence (Police, SAMU, Pompiers, Croix-Rouge).
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">6 villes</span>
+                            <span class="feature-tag">Urgences médicales</span>
+                            <span class="feature-tag">GPS</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge recommended">
+                                <i class="bi bi-star-fill"></i> Burkina Faso
+                            </span>
+                            <span class="tool-badge premium">
+                                <i class="bi bi-microsoft"></i> Azure
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section: Voyage & Réservations -->
+            <div class="tools-section">
+                <h3 class="section-title">
+                    <i class="bi bi-airplane"></i>
+                    Voyage & Réservations
+                </h3>
+                <div class="tools-grid">
+                    <!-- Flight Search -->
+                    <div class="tool-card" onclick="toggleTool(this, 'flight_search')">
+                        <input type="checkbox" name="tools" value="flight_search" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-airplane-fill"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Recherche de Vols</div>
+                                <div class="tool-api">API: Amadeus</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Recherche des vols disponibles entre deux aéroports avec <strong>prix en temps réel</strong>, horaires, compagnies aériennes, durée et nombre d'escales. Supporte aller simple et aller-retour.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">Prix temps réel</span>
+                            <span class="feature-tag">Codes IATA</span>
+                            <span class="feature-tag">Multi-classes</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge recommended">
+                                <i class="bi bi-star-fill"></i> Recommandé
+                            </span>
+                            <span class="tool-badge premium">
+                                <i class="bi bi-gem"></i> Premium
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Flight Booking -->
+                    <div class="tool-card" onclick="toggleTool(this, 'flight_booking')">
+                        <input type="checkbox" name="tools" value="flight_booking" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-ticket-perforated"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Réservation de Vols</div>
+                                <div class="tool-api">API: Amadeus + Affiliation</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Génère un <strong>lien de réservation</strong> pour finaliser l'achat d'un vol. Redirige vers des plateformes partenaires (Kayak, Skyscanner) avec commission d'affiliation.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">Affiliation</span>
+                            <span class="feature-tag">Kayak</span>
+                            <span class="feature-tag">Skyscanner</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge premium">
+                                <i class="bi bi-cash-coin"></i> Commission
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Hotel Search -->
+                    <div class="tool-card" onclick="toggleTool(this, 'hotel_search')">
+                        <input type="checkbox" name="tools" value="hotel_search" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-building"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Recherche d'Hôtels</div>
+                                <div class="tool-api">API: Amadeus</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Recherche d'hôtels disponibles dans une ville avec <strong>prix en temps réel</strong>, notes, type de chambre, équipements et disponibilité. Recherche par code IATA de ville.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">Prix temps réel</span>
+                            <span class="feature-tag">Notes</span>
+                            <span class="feature-tag">Équipements</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge recommended">
+                                <i class="bi bi-star-fill"></i> Recommandé
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Hotel Booking -->
+                    <div class="tool-card" onclick="toggleTool(this, 'hotel_booking')">
+                        <input type="checkbox" name="tools" value="hotel_booking" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-door-open"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Réservation d'Hôtels</div>
+                                <div class="tool-api">API: Amadeus + Affiliation</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Génère un lien de réservation pour finaliser l'achat d'une chambre d'hôtel. Redirige vers <strong>Booking.com</strong> ou <strong>Hotels.com</strong> avec commission d'affiliation.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">Booking.com</span>
+                            <span class="feature-tag">Hotels.com</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge premium">
+                                <i class="bi bi-cash-coin"></i> Commission
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Taxi Estimate -->
+                    <div class="tool-card" onclick="toggleTool(this, 'taxi_estimate')">
+                        <input type="checkbox" name="tools" value="estimate_taxi_fare" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-taxi-front"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Estimation Taxi</div>
+                                <div class="tool-api">API: Azure Maps Routing</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Calculez le <strong>prix estimé d'une course de taxi</strong> à Ouagadougou et Bobo-Dioulasso avec itinéraire réel. Inclut suppléments nuit (22h-6h) et aéroport.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">Itinéraires réels</span>
+                            <span class="feature-tag">Tarifs BF</span>
+                            <span class="feature-tag">Suppléments</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge recommended">
+                                <i class="bi bi-star-fill"></i> Burkina Faso
+                            </span>
+                            <span class="tool-badge premium">
+                                <i class="bi bi-microsoft"></i> Azure
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Bus Schedule -->
+                    <div class="tool-card" onclick="toggleTool(this, 'bus_schedule')">
+                        <input type="checkbox" name="tools" value="get_bus_schedule" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-bus-front"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Horaires Bus SOTRACO</div>
+                                <div class="tool-api">Base de données locale</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Consultez les <strong>horaires des bus SOTRACO</strong> (5 lignes urbaines Ouagadougou) et lignes inter-urbaines (Bobo, Koudougou, Banfora). Calcul du prochain départ en temps réel.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">5 lignes urbaines</span>
+                            <span class="feature-tag">Inter-urbain</span>
+                            <span class="feature-tag">Prochain bus</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge free">
+                                <i class="bi bi-check-circle"></i> Gratuit
+                            </span>
+                            <span class="tool-badge recommended">
+                                <i class="bi bi-star-fill"></i> Burkina Faso
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section: Productivité -->
+            <div class="tools-section">
+                <h3 class="section-title">
+                    <i class="bi bi-briefcase"></i>
+                    Productivité & Business
+                </h3>
+                <div class="tools-grid">
+                    <!-- Email -->
+                    <div class="tool-card" onclick="toggleTool(this, 'email')">
+                        <input type="checkbox" name="tools" value="email" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-envelope-fill"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Email</div>
+                                <div class="tool-api">API: Azure Communication</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Envoie des <strong>emails professionnels</strong> avec mise en forme HTML élégante, logo Waka et design responsive. Supporte texte, HTML et boutons d'action personnalisables.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">HTML élégant</span>
+                            <span class="feature-tag">Logo Waka</span>
+                            <span class="feature-tag">Responsive</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge recommended">
+                                <i class="bi bi-star-fill"></i> Recommandé
+                            </span>
+                            <span class="tool-badge premium">
+                                <i class="bi bi-microsoft"></i> Azure
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- CV -->
+                    <div class="tool-card" onclick="toggleTool(this, 'cv')">
+                        <input type="checkbox" name="tools" value="cv" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-file-earmark-person"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">CV & Candidatures</div>
+                                <div class="tool-api">API: Azure OpenAI</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Génère un <strong>CV professionnel</strong> au format Markdown à partir de l'historique de conversation. L'IA analyse les messages et rédige un CV complet avec 3 styles et 4 couleurs au choix.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">Génération IA</span>
+                            <span class="feature-tag">3 styles</span>
+                            <span class="feature-tag">4 couleurs</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge premium">
+                                <i class="bi bi-microsoft"></i> Azure OpenAI
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Knowledge Base -->
+                    <div class="tool-card" onclick="toggleTool(this, 'knowledge_base')">
+                        <input type="checkbox" name="tools" value="knowledge_base" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-book-fill"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Base de Connaissances RAG</div>
+                                <div class="tool-api">API: Waka Custom</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            <strong>RAG (Retrieval-Augmented Generation)</strong> - Recherche vectorielle sémantique dans la base Waka Moov BK. Retourne les 7 chunks les plus pertinents avec embedding vectoriel et similarité cosinus.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">Recherche vectorielle</span>
+                            <span class="feature-tag">Sémantique</span>
+                            <span class="feature-tag">Top 7 chunks</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge recommended">
+                                <i class="bi bi-star-fill"></i> Recommandé
+                            </span>
+                            <span class="tool-badge free">
+                                <i class="bi bi-check-circle"></i> Gratuit
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Translator -->
+                    <div class="tool-card" onclick="toggleTool(this, 'translator')">
+                        <input type="checkbox" name="tools" value="translator" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-translate"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Traducteur</div>
+                                <div class="tool-api">API: Azure Translator</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Traduction <strong>multilingue en temps réel</strong>. Supporte 100+ langues dont français, anglais, moore, dioula, arabe, chinois pour une communication internationale fluide.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">100+ langues</span>
+                            <span class="feature-tag">Temps réel</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge coming-soon">
+                                <i class="bi bi-clock"></i> À développer
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Currency -->
+                    <div class="tool-card" onclick="toggleTool(this, 'currency')">
+                        <input type="checkbox" name="tools" value="currency" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-currency-exchange"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Conversion de Devises</div>
+                                <div class="tool-api">API: ExchangeRate-API</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Convertit un montant d'une devise à une autre avec <strong>taux de change en temps réel</strong>. Supporte toutes les devises majeures (USD, EUR, XOF, GBP) avec symboles locaux.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">Temps réel</span>
+                            <span class="feature-tag">Toutes devises</span>
+                            <span class="feature-tag">XOF ⇄ EUR</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge free">
+                                <i class="bi bi-check-circle"></i> Gratuit
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- School Info -->
+                    <div class="tool-card" onclick="toggleTool(this, 'school_info')">
+                        <input type="checkbox" name="tools" value="get_school_info" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-mortarboard"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Infos Écoles & Universités</div>
+                                <div class="tool-api">Base de données locale</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Informations sur les <strong>universités, grandes écoles et système éducatif</strong> burkinabè. Couvre 5 universités, 3 grandes écoles (2iE, ENAM, ENEP) avec programmes et contacts.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">5 universités</span>
+                            <span class="feature-tag">Grandes écoles</span>
+                            <span class="feature-tag">Système éducatif</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge free">
+                                <i class="bi bi-check-circle"></i> Gratuit
+                            </span>
+                            <span class="tool-badge recommended">
+                                <i class="bi bi-star-fill"></i> Burkina Faso
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Government Services -->
+                    <div class="tool-card" onclick="toggleTool(this, 'government_services')">
+                        <input type="checkbox" name="tools" value="get_government_service_info" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-building"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Démarches Administratives</div>
+                                <div class="tool-api">Base de données locale</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Guide complet pour les <strong>procédures administratives</strong> : passeport, CNIB, permis de conduire, acte de naissance, certificat de nationalité. Inclut coûts, délais et documents requis.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">7 services</span>
+                            <span class="feature-tag">Procédures détaillées</span>
+                            <span class="feature-tag">Contacts officiels</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge free">
+                                <i class="bi bi-check-circle"></i> Gratuit
+                            </span>
+                            <span class="tool-badge recommended">
+                                <i class="bi bi-star-fill"></i> Burkina Faso
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Tax Calculator -->
+                    <div class="tool-card" onclick="toggleTool(this, 'tax_calculator')">
+                        <input type="checkbox" name="tools" value="calculate_tax" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-calculator"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Calcul Impôts & Taxes</div>
+                                <div class="tool-api">Barèmes officiels 2025</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Calculez <strong>ITS, CNSS et TVA</strong> selon les barèmes burkinabè 2025. Inclut déductions familiales (conjoint, enfants), tranches progressives et coûts employeur.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">ITS 7 tranches</span>
+                            <span class="feature-tag">CNSS 13.25%</span>
+                            <span class="feature-tag">TVA 18%</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge free">
+                                <i class="bi bi-check-circle"></i> Gratuit
+                            </span>
+                            <span class="tool-badge recommended">
+                                <i class="bi bi-star-fill"></i> Burkina Faso
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section: Santé & Bien-être -->
+            <div class="tools-section">
+                <h3 class="section-title">
+                    <i class="bi bi-heart-pulse"></i>
+                    Santé & Bien-être
+                </h3>
+                <div class="tools-grid">
+                    <!-- Health Advice -->
+                    <div class="tool-card" onclick="toggleTool(this, 'health_advice')">
+                        <input type="checkbox" name="tools" value="health_advice" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-hospital"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Conseils Santé</div>
+                                <div class="tool-api">API: Infermedica + Base locale</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Analyse les symptômes et fournit des <strong>conseils santé</strong>, remèdes naturels et recommandations médicales. Diagnostic probabiliste des conditions et indication quand consulter un médecin.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">Diagnostic IA</span>
+                            <span class="feature-tag">Remèdes naturels</span>
+                            <span class="feature-tag">Urgences</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge api">
+                                <i class="bi bi-info-circle"></i> Informatif
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Exercises -->
+                    <div class="tool-card" onclick="toggleTool(this, 'exercises')">
+                        <input type="checkbox" name="tools" value="exercises" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-activity"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Exercices & Fitness</div>
+                                <div class="tool-api">API: API Ninja</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Recherche d'<strong>exercices de fitness</strong> avec filtres avancés (muscle, type, difficulté). Base complète avec instructions détaillées, équipement et niveau pour tous les groupes musculaires.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">Tous muscles</span>
+                            <span class="feature-tag">Instructions</span>
+                            <span class="feature-tag">3 niveaux</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge free">
+                                <i class="bi bi-check-circle"></i> 50k req/mois
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section: Autres -->
+            <div class="tools-section">
+                <h3 class="section-title">
+                    <i class="bi bi-grid-3x3-gap"></i>
+                    Autres Outils
+                </h3>
+                <div class="tools-grid">
+                    <!-- End Conversation -->
+                    <div class="tool-card" onclick="toggleTool(this, 'end_conversation')">
+                        <input type="checkbox" name="tools" value="end_conversation" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-telephone-x"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Clôture de Conversation</div>
+                                <div class="tool-api">API: Waka Native</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Permet à l'assistant de <strong>terminer proprement la conversation</strong> lorsque l'utilisateur souhaite mettre fin à l'échange. Signal de fin avec message de courtoisie et raccrocher l'appel.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">Fin propre</span>
+                            <span class="feature-tag">Message courtois</span>
+                            <span class="feature-tag">Raccrocher</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge recommended">
+                                <i class="bi bi-star-fill"></i> Recommandé
+                            </span>
+                            <span class="tool-badge free">
+                                <i class="bi bi-check-circle"></i> Gratuit
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Calculator -->
+                    <div class="tool-card" onclick="toggleTool(this, 'calculator')">
+                        <input type="checkbox" name="tools" value="calculator" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-calculator-fill"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Calculatrice</div>
+                                <div class="tool-api">Native Python</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Effectue des <strong>calculs mathématiques</strong> simples et avancés : addition, soustraction, multiplication, division, puissances, racines carrées et expressions complexes.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">4 opérations</span>
+                            <span class="feature-tag">Puissances</span>
+                            <span class="feature-tag">Racines</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge free">
+                                <i class="bi bi-check-circle"></i> Gratuit
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Dogs -->
+                    <div class="tool-card" onclick="toggleTool(this, 'dogs')">
+                        <input type="checkbox" name="tools" value="dogs" class="tool-checkbox">
+                        <div class="tool-header">
+                            <div class="tool-icon">
+                                <i class="bi bi-balloon-heart"></i>
+                            </div>
+                            <div class="tool-header-content">
+                                <div class="tool-name">Informations Chiens</div>
+                                <div class="tool-api">API: API Ninja</div>
+                            </div>
+                        </div>
+                        <div class="tool-description">
+                            Recherche détaillée d'informations sur les <strong>races de chiens</strong> avec filtres avancés (taille, poids, tempérament, compatibilité). Caractéristiques complètes pour choisir le bon compagnon.
+                        </div>
+                        <div class="tool-features">
+                            <span class="feature-tag">Toutes races</span>
+                            <span class="feature-tag">Compatibilité</span>
+                            <span class="feature-tag">Tempérament</span>
+                        </div>
+                        <div class="tool-badges">
+                            <span class="tool-badge free">
+                                <i class="bi bi-check-circle"></i> 50k req/mois
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Boutons de navigation -->
+            <div class="action-buttons">
+                                <button type="button" class="btn-custom btn-back" onclick="window.location.href='{{ url_for('avatar.avatar_config_step2', agent_id=agent_id) }}'">
+                    <i class="bi bi-arrow-left"></i>
+                    Étape précédente
+                </button>
+                <button type="submit" class="btn-custom btn-next" id="btnNext">
+                    📝 Ajuster Instructions
+                    <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- JavaScript externe -->
+<script src="{{ url_for('static', filename='js/agent_config_step3.js') }}"></script>
+{% endblock %}

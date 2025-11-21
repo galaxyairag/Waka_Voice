@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>25166b37fe3a49e84dcb63ff05640f16b088897b</id>
+  <author>nabil</author>
+  <deployer>$waka</deployer>
+  <authorEmail>nabil@galaxyai.digital</authorEmail>
+  <message>Supprimer fichiers de dmarrage qui cassent Azure</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-11-21T05:18:39.9583579Z</lastSuccessEndTime>
+  <receivedTime>2025-11-21T05:17:50.3467345Z</receivedTime>
+  <startTime>2025-11-21T05:17:57.8091758Z</startTime>
+  <endTime>2025-11-21T05:18:39.9583579Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>False</is_readonly>
+  <buildSummary />
+</deployment>

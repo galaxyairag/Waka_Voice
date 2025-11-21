@@ -1,0 +1,733 @@
+{% extends "base.html" %}
+
+{% block title %}Session Vocale - {{ agent.agent_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================
+       SMARTPHONE/PC MODERN INTERFACE - v2.0
+       Ultra-responsive, glassmorphism, animations
+       ============================================ */
+    
+    :root {
+        --device-bg: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+        --screen-bg: #f8fafc;
+        --primary: #667eea;
+        --primary-dark: #5568d3;
+        --success: #10b981;
+        --danger: #ef4444;
+    }
+
+    body {
+        background: var(--device-bg);
+        background-attachment: fixed;
+        overflow-x: hidden;
+        margin: 0;
+        padding: 0;
+    }
+    
+    /* Container responsive: smartphone sur mobile, grand écran sur desktop */
+    .session-container {
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 0;
+        min-height: 100vh;
+    }
+
+    /* Cadre du dispositif avec effet 3D */
+    .device-frame {
+        background: linear-gradient(145deg, #2d3748, #1a202c);
+        border-radius: 0;
+        padding: 0;
+        box-shadow: 0 50px 100px rgba(0, 0, 0, 0.5);
+        position: relative;
+        overflow: hidden;
+        min-height: 100vh;
+    }
+
+    /* Écran du dispositif */
+    .device-screen {
+        background: var(--screen-bg);
+        overflow: hidden;
+        position: relative;
+        min-height: 100vh;
+    }
+
+    /* Barre de statut style smartphone */
+    .status-bar {
+        height: 44px;
+        background: linear-gradient(135deg, var(--primary) 0%, #764ba2 100%);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 20px;
+        color: white;
+        font-size: 13px;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .status-time {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .status-icons {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    /* En-tête de l'agent */
+    .session-header {
+        background: white;
+        padding: 20px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .agent-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .agent-avatar {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--primary) 0%, #764ba2 100%);
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        color: white;
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .agent-avatar::after {
+        content: '';
+        position: absolute;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        animation: shine 3s infinite;
+    }
+
+    @keyframes shine {
+        0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+        100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    }
+
+    .agent-details h1 {
+        margin: 0 0 4px 0;
+        color: #1f2937;
+        font-size: 18px;
+        font-weight: 700;
+    }
+
+    .agent-details p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    .session-status {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+    }
+
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1.5px solid;
+    }
+
+    .status-badge.disconnected {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .status-badge.connecting {
+        background: rgba(251, 191, 36, 0.1);
+        color: #d97706;
+        border-color: rgba(251, 191, 36, 0.3);
+    }
+
+    .status-badge.connected {
+        background: rgba(34, 197, 94, 0.1);
+        color: #059669;
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .status-badge i {
+        animation: pulse-glow 2s infinite;
+        font-size: 10px;
+    }
+
+    @keyframes pulse-glow {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    /* Zone de conversation */
+    .conversation-area {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    /* Bouton vocal ultra-moderne */
+    .voice-controls {
+        display: flex;
+        justify-content: center;
+        padding: 20px 0;
+        position: sticky;
+        bottom: 0;
+        background: linear-gradient(to top, var(--screen-bg) 80%, transparent);
+        z-index: 50;
+    }
+
+    .voice-button {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        border: none;
+        font-size: 36px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+
+    .voice-button.start {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+
+    .voice-button.stop {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+
+    .voice-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .voice-button:active {
+        transform: scale(0.95);
+    }
+
+    .voice-button.recording {
+        animation: recording-pulse 1.5s infinite;
+    }
+
+    @keyframes recording-pulse {
+        0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7), 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        50% {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 20px rgba(16, 185, 129, 0), 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+    }
+
+    /* Affichage conversation */
+    .conversation-display {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        min-height: 400px;
+        max-height: 500px;
+        overflow-y: auto;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .conversation-display::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .conversation-display::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+    }
+
+    .conversation-display::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 10px;
+    }
+
+    .message {
+        margin-bottom: 14px;
+        padding: 12px 16px;
+        border-radius: 16px;
+        max-width: 85%;
+        animation: messageSlide 0.3s ease-out;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    @keyframes messageSlide {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .message.user {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        margin-left: auto;
+        text-align: right;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .message.agent {
+        background: #f1f5f9;
+        color: #1e293b;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .message.system {
+        background: rgba(251, 191, 36, 0.1);
+        color: #92400e;
+        text-align: center;
+        margin: 0 auto 14px;
+        font-size: 13px;
+        border: 1px dashed rgba(251, 191, 36, 0.4);
+    }
+
+    /* Visualiseur audio */
+    .audio-visualizer {
+        height: 60px;
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        padding: 10px;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    }
+
+    .visualizer-bar {
+        width: 4px;
+        height: 15px;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 10px;
+        transition: height 0.1s ease;
+    }
+
+    .visualizer-bar.active {
+        animation: audioWave 0.4s infinite alternate;
+        background: white;
+    }
+
+    @keyframes audioWave {
+        from { height: 10px; opacity: 0.6; }
+        to { height: 40px; opacity: 1; }
+    }
+
+    /* Config Panel (collapsible sur mobile) */
+    .config-toggle {
+        background: white;
+        padding: 12px 20px;
+        border-top: 1px solid #e5e7eb;
+        border-bottom: 1px solid #e5e7eb;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+        color: var(--primary);
+    }
+
+    .config-panel {
+        background: white;
+        padding: 20px;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease, padding 0.3s ease;
+    }
+
+    .config-panel.expanded {
+        max-height: 1000px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .config-section {
+        margin-bottom: 20px;
+    }
+
+    .config-section h3 {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .config-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 13px;
+    }
+
+    .config-label {
+        color: #6b7280;
+    }
+
+    .config-value {
+        color: #1f2937;
+        font-weight: 600;
+    }
+
+    .tool-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        background: linear-gradient(135deg, var(--primary) 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        font-size: 11px;
+        margin: 2px;
+        font-weight: 600;
+    }
+
+    /* Responsive: Mode desktop */
+    @media (min-width: 768px) {
+        .session-container {
+            max-width: 480px;
+            margin: 20px auto;
+        }
+
+        .device-frame {
+            border-radius: 42px;
+            padding: 12px;
+            min-height: auto;
+        }
+
+        .device-screen {
+            border-radius: 32px;
+            min-height: 800px;
+        }
+
+        /* Notch style iPhone sur desktop */
+        .device-screen::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 180px;
+            height: 30px;
+            background: linear-gradient(135deg, var(--primary) 0%, #764ba2 100%);
+            border-radius: 0 0 20px 20px;
+            z-index: 101;
+        }
+
+        /* Petit indicateur caméra */
+        .device-screen::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-30px);
+            width: 8px;
+            height: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 50%;
+            z-index: 102;
+        }
+    }
+
+    /* Mode PC grand écran */
+    @media (min-width: 1024px) {
+        .session-container {
+            max-width: 1200px;
+        }
+
+        .device-frame {
+            border-radius: 24px;
+            padding: 20px;
+        }
+
+        .device-screen {
+            border-radius: 16px;
+            min-height: 90vh;
+        }
+
+        .conversation-area {
+            padding: 30px;
+        }
+
+        .session-header {
+            padding: 30px;
+        }
+
+        .conversation-display {
+            min-height: 500px;
+            max-height: 600px;
+        }
+
+        .device-screen::before,
+        .device-screen::after {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="session-container">
+    <div class="device-frame">
+        <div class="device-screen">
+            <!-- Barre de statut -->
+            <div class="status-bar">
+                <div class="status-time">
+                    <i class="bi bi-clock"></i>
+                    <span id="currentTime">--:--</span>
+                </div>
+                <div class="status-icons">
+                    <i class="bi bi-wifi status-icon"></i>
+                    <i class="bi bi-battery-full status-icon"></i>
+                </div>
+            </div>
+
+            <!-- En-tête Agent -->
+            <div class="session-header">
+                <div class="agent-info">
+                    <div class="agent-avatar">
+                        <i class="bi bi-robot"></i>
+                    </div>
+                    <div class="agent-details">
+                        <h1>{{ agent.agent_name }}</h1>
+                        <p>{{ agent.role or 'Assistant vocal intelligent' }}</p>
+                        <div class="session-status">
+                            <span class="status-badge disconnected" id="connectionStatus">
+                                <i class="bi bi-circle-fill"></i>
+                                <span>Déconnecté</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Zone de conversation -->
+            <div class="conversation-area">
+                <!-- Visualiseur audio -->
+                <div class="audio-visualizer" id="audioVisualizer">
+                    {% for i in range(1, 21) %}
+                    <div class="visualizer-bar"></div>
+                    {% endfor %}
+                </div>
+
+                <!-- Affichage conversation -->
+                <div class="conversation-display" id="conversationDisplay">
+                    <div class="message system">
+                        <i class="bi bi-info-circle-fill"></i>
+                        Session prête. Appuyez sur le bouton pour commencer.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Boutons de contrôle vocal -->
+            <div class="voice-controls">
+                <button class="voice-button start" id="startButton" onclick="startConversation()">
+                    <i class="bi bi-mic-fill"></i>
+                </button>
+                <button class="voice-button stop" id="stopButton" onclick="stopConversation()" style="display: none;">
+                    <i class="bi bi-stop-fill"></i>
+                </button>
+            </div>
+
+            <!-- Configuration (collapsible) -->
+            <div class="config-toggle" onclick="toggleConfig()">
+                <span><i class="bi bi-gear-fill"></i> Configuration</span>
+                <i class="bi bi-chevron-down" id="configChevron"></i>
+            </div>
+            <div class="config-panel" id="configPanel">
+                <div class="config-section">
+                    <h3><i class="bi bi-cpu-fill"></i> Modèle</h3>
+                    <div class="config-item">
+                        <span class="config-label">ID</span>
+                        <span class="config-value">{{ agent.model_id }}</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Température</span>
+                        <span class="config-value">{{ agent.temperature }}</span>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <h3><i class="bi bi-mic-fill"></i> Voix</h3>
+                    <div class="config-item">
+                        <span class="config-label">Nom</span>
+                        <span class="config-value">{{ agent.voice.name.split(':')[0] if ':' in agent.voice.name else agent.voice.name }}</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Vitesse</span>
+                        <span class="config-value">{{ agent.voice.rate }}x</span>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <h3><i class="bi bi-tools"></i> Outils ({{ agent.tools|length }})</h3>
+                    <div style="margin-top: 8px;">
+                        {% if agent.tools %}
+                            {% for tool in agent.tools %}
+                            <span class="tool-badge">
+                                <i class="bi bi-wrench-adjustable"></i> {{ tool.name }}
+                            </span>
+                            {% endfor %}
+                        {% else %}
+                            <p style="color: #9ca3af; font-size: 12px; margin: 0;">Aucun outil</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Mise à jour de l'heure
+    function updateTime() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        document.getElementById('currentTime').textContent = `${hours}:${minutes}`;
+    }
+    updateTime();
+    setInterval(updateTime, 60000);
+
+    // Toggle configuration
+    function toggleConfig() {
+        const panel = document.getElementById('configPanel');
+        const chevron = document.getElementById('configChevron');
+        panel.classList.toggle('expanded');
+        chevron.style.transform = panel.classList.contains('expanded') ? 'rotate(180deg)' : 'rotate(0)';
+    }
+
+    // Réutilisation du code JavaScript existant
+    let websocket = null;
+    let isRecording = false;
+    let mediaRecorder = null;
+    let audioContext = null;
+    window.callId = null;
+    let sessionTokens = null;
+
+    function generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    const existingCallId = sessionStorage.getItem('current_call_id');
+    if (existingCallId) {
+        window.callId = existingCallId;
+    } else {
+        window.callId = generateUUID();
+        sessionStorage.setItem('current_call_id', window.callId);
+    }
+
+    const agentConfig = {
+        agentId: '{{ agent.agent_id }}',
+        agentName: '{{ agent.agent_name }}',
+        modelId: '{{ agent.model_id }}',
+        websocketUrl: '{{ agent.websocket_url | safe }}',
+        modalities: {{ agent.modalities | tojson | safe }},
+        voice: {
+            name: '{{ agent.voice.name }}',
+            rate: parseFloat('{{ agent.voice.rate }}'),
+            temperature: parseFloat('{{ agent.voice.temperature }}')
+        },
+        instructions: `{{ agent.instructions | replace('\n', '\\n') | replace('"', '\\"') }}`,
+        tools: {{ agent.tools | tojson | safe }},
+        temperature: parseFloat('{{ agent.temperature }}'),
+        maxTokens: parseInt('{{ agent.max_tokens }}')
+    };
+
+    function updateConnectionStatus(status, text) {
+        const badge = document.getElementById('connectionStatus');
+        badge.className = `status-badge ${status}`;
+        badge.querySelector('span').textContent = text;
+    }
+
+    function addMessage(type, content) {
+        const display = document.getElementById('conversationDisplay');
+        const msg = document.createElement('div');
+        msg.className = `message ${type}`;
+        msg.textContent = content;
+        display.appendChild(msg);
+        display.scrollTop = display.scrollHeight;
+    }
+
+    function startAudioVisualizer() {
+        const bars = document.querySelectorAll('.visualizer-bar');
+        bars.forEach(bar => bar.classList.add('active'));
+    }
+
+    function stopAudioVisualizer() {
+        const bars = document.querySelectorAll('.visualizer-bar');
+        bars.forEach(bar => bar.classList.remove('active'));
+    }
+
+    async function startConversation() {
+        console.log('🎙️ Starting conversation...');
+        updateConnectionStatus('connecting', 'Connexion...');
+        document.getElementById('startButton').style.display = 'none';
+        document.getElementById('stopButton').style.display = 'flex';
+        startAudioVisualizer();
+        addMessage('system', 'Connexion en cours...');
+        
+        // TODO: Implémenter la connexion WebSocket et l'enregistrement audio
+        setTimeout(() => {
+            updateConnectionStatus('connected', 'Connecté');
+            addMessage('system', 'Connexion établie. Parlez maintenant...');
+        }, 1000);
+    }
+
+    function stopConversation() {
+        console.log('🛑 Stopping conversation...');
+        document.getElementById('stopButton').style.display = 'none';
+        document.getElementById('startButton').style.display = 'flex';
+        stopAudioVisualizer();
+        updateConnectionStatus('disconnected', 'Déconnecté');
+        addMessage('system', 'Conversation terminée.');
+        sessionStorage.removeItem('current_call_id');
+    }
+
+    console.log('🤖 Modern Voice Session Loaded', agentConfig);
+</script>
+{% endblock %}

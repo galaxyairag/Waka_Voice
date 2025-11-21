@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}{{ agent.agent_name }} - Session Vocale{% endblock %}
+
+{% block head %}
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Agent Voice Session CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/agent_voice_session.css') }}?v={{ range(1, 9999) | random }}">
+{% endblock %}
+
+{% block content %}
+    <div class="agent-voice-container">
+        <!-- Header -->
+        <div class="agent-voice-header">
+            <div class="agent-info">
+                <div class="agent-avatar">
+                    🤖
+                </div>
+                <div class="agent-details">
+                    <h1>{{ agent.agent_name }}</h1>
+                    <p>{{ agent.description }}</p>
+                </div>
+            </div>
+            <div class="agent-voice-status">
+                <div id="connectionStatus" class="status-indicator disconnected">
+                    <i class="bi bi-circle-fill"></i>
+                    <span class="status-text">Déconnecté</span>
+                </div>
+                <span id="statusTime" class="status-time">00:00</span>
+            </div>
+        </div>
+
+        <!-- Conversation Display -->
+        <div class="agent-voice-conversation">
+            <div class="conversation-card">
+                <div id="conversationDisplay">
+                    <div class="welcome-message">
+                        <i class="fas fa-microphone-alt"></i>
+                        <p>Appuyez sur le micro pour commencer</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Voice Controls -->
+        <div class="agent-voice-controls">
+            <!-- Voice Button -->
+            <div class="voice-controls">
+                <div class="recording-indicator" style="display: none;"></div>
+                <div class="recording-indicator" style="display: none;"></div>
+                <div class="recording-indicator" style="display: none;"></div>
+                
+                <button class="mic-button" id="startButton" onclick="startConversation()">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                
+                <button class="mic-button" id="stopButton" style="display: none;" onclick="stopConversation()">
+                    <i class="fas fa-stop"></i>
+                </button>
+                
+                <div class="recording-indicator" style="display: none;"></div>
+                <div class="recording-indicator" style="display: none;"></div>
+                <div class="recording-indicator" style="display: none;"></div>
+            </div>
+
+            <div class="control-info">
+                <p id="controlStatus">Prêt à démarrer</p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="toggleConfig()" title="Configuration">
+                    <i class="fas fa-cog"></i> Config
+                </button>
+                <button class="btn btn-secondary" onclick="startNewConversation()" title="Nouvelle conversation">
+                    <i class="fas fa-plus"></i> Nouveau
+                </button>
+                <button class="btn btn-secondary" onclick="window.location.href='/agents'" title="Retour">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </button>
+            </div>
+        </div>
+
+        <!-- Configuration Panel (Collapsible) -->
+        <div class="config-panel" id="configPanel">
+            <div class="config-header">
+                <h3><i class="fas fa-cog"></i> Configuration</h3>
+                <button class="close-btn" onclick="toggleConfig()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="config-content">
+                <!-- Agent Information -->
+                <div class="config-section">
+                    <h4><i class="fas fa-robot"></i> Informations Agent</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Modèle:</span>
+                            <span class="info-value">{{ agent.model_id }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Voix:</span>
+                            <span class="info-value">{{ agent.voice }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Temperature:</span>
+                            <span class="info-value">{{ agent.temperature }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Max Tokens:</span>
+                            <span class="info-value">{{ agent.max_tokens }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tools -->
+                {% if agent.tools and agent.tools|length > 0 %}
+                <div class="config-section">
+                    <h4><i class="fas fa-tools"></i> Outils Disponibles ({{ agent.tools|length }})</h4>
+                    <div class="tools-list">
+                        {% for tool in agent.tools %}
+                        <div class="tool-item">
+                            <i class="fas fa-wrench"></i>
+                            <span>{{ tool.name }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Instructions -->
+                <div class="config-section">
+                    <h4><i class="fas fa-file-alt"></i> Instructions</h4>
+                    <div class="editor-container">
+                        <div class="display-content" id="instructionsDisplay">
+                            {{ agent.instructions[:200] }}{% if agent.instructions|length > 200 %}...{% endif %}
+                        </div>
+                        <div class="editor-content" id="instructionsEditor" style="display: none;">
+                            <textarea id="instructionsTextarea" class="config-textarea">{{ agent.instructions }}</textarea>
+                            <div class="editor-actions">
+                                <button class="btn-save" onclick="saveInstructions()">
+                                    <i class="fas fa-check"></i> Sauvegarder
+                                </button>
+                                <button class="btn-cancel" onclick="cancelInstructionsEdit()">
+                                    <i class="fas fa-times"></i> Annuler
+                                </button>
+                            </div>
+                        </div>
+                        <button class="btn-edit" onclick="toggleInstructionsEditor()">
+                            <i class="fas fa-edit"></i> Modifier
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Custom Lexicon -->
+                <div class="config-section">
+                    <h4><i class="fas fa-book"></i> Lexique Personnalisé</h4>
+                    <div class="editor-container">
+                        <div class="display-content" id="lexiconDisplay">
+                            <span id="lexiconUrlText">{{ agent.custom_lexicon_url if agent.custom_lexicon_url else 'Aucun lexique configuré' }}</span>
+                        </div>
+                        <div class="editor-content" id="lexiconEditor" style="display: none;">
+                            <input type="text" id="lexiconUrlInput" class="config-input" 
+                                   value="{{ agent.custom_lexicon_url if agent.custom_lexicon_url else '' }}"
+                                   placeholder="https://...">
+                            <div class="editor-actions">
+                                <button class="btn-save" onclick="saveLexiconUrl()">
+                                    <i class="fas fa-check"></i> Sauvegarder
+                                </button>
+                                <button class="btn-cancel" onclick="cancelLexiconEdit()">
+                                    <i class="fas fa-times"></i> Annuler
+                                </button>
+                            </div>
+                        </div>
+                        <button class="btn-edit" onclick="toggleLexiconEditor()">
+                            <i class="fas fa-edit"></i> Modifier
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Conversation Info -->
+                <div class="config-section">
+                    <h4><i class="fas fa-info-circle"></i> Session Actuelle</h4>
+                    <div class="info-item">
+                        <span class="info-label">ID Conversation:</span>
+                        <span class="info-value" id="callIdDisplay">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/agent_voice_session.js') }}?v={{ range(1, 9999) | random }}"></script>
+    <script>
+        // Initialize with agent configuration from Flask template
+        window.agentConfig = {
+            agentId: '{{ agent.agent_id }}',
+            agentName: '{{ agent.agent_name }}',
+            modelId: '{{ agent.model_id }}',
+            websocketUrl: '{{ agent.websocket_url | safe }}',
+            voice: {
+                name: '{{ agent.voice.name if agent.voice and agent.voice.name else "en-US-AndrewMultilingualNeural" }}',
+                type: '{{ agent.voice.type if agent.voice and agent.voice.type else "azure-standard" }}',
+                rate: '{{ agent.voice.rate if agent.voice and agent.voice.rate else "1.0" }}',
+                temperature: {{ agent.voice.temperature if agent.voice and agent.voice.temperature is not none else 'null' }}
+            },
+            modalities: {{ agent.modalities | tojson if agent.modalities else '["text", "audio"]' | safe }},
+            temperature: {{ agent.temperature }},
+            maxTokens: {{ agent.max_tokens }},
+            instructions: {{ agent.instructions | tojson }},
+            tools: {{ agent.tools | tojson }},
+            customLexiconUrl: {{ agent.custom_lexicon_url | tojson if agent.custom_lexicon_url else 'null' }}
+        };
+    </script>
+{% endblock %}

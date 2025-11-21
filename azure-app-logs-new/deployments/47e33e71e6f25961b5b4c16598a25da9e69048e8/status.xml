@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>47e33e71e6f25961b5b4c16598a25da9e69048e8</id>
+  <author>nabil</author>
+  <deployer>$waka</deployer>
+  <authorEmail>nabil@galaxyai.digital</authorEmail>
+  <message>Add debug logs for avatar character update and handle avatars without styles
+    
+    - Added extensive logging in update_avatar_character API endpoint
+    - Added verification after DB update (verified_character in response)
+    - Handle avatars without styles: auto-update with default 'casual-sitting'
+    - Enhanced client-side console logs to debug DB update issues
+    
+    🤖 Generated with [Claude Code](https://claude.com/claude-code)
+    
+    Co-Authored-By: Claude &lt;noreply@anthropic.com&gt;</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-11-19T17:25:36.6648607Z</lastSuccessEndTime>
+  <receivedTime>2025-11-19T17:25:05.0640974Z</receivedTime>
+  <startTime>2025-11-19T17:25:06.9913376Z</startTime>
+  <endTime>2025-11-19T17:25:36.6648607Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>False</is_readonly>
+  <buildSummary />
+</deployment>

@@ -1,0 +1,14 @@
+<step title="Incoming Request" date="2025-11-21T05:17:49.142" instance="0ab51f" url="/waka.git/git-receive-pack" method="POST" type="request" pid="851,1,14" Accept="application/x-git-receive-pack-result" Host="waka.scm.azurewebsites.net" User-Agent="git/2.51.0.windows.2" Accept-Encoding="deflate, gzip, br, zstd" Authorization="Bas..." Content-Type="application/x-git-receive-pack-request" Content-Length="454" X-ARR-LOG-ID="c928d2eb-c48a-4441-9421-8326d5800904" CLIENT-IP="129.222.109.197:9037" X-SITE-DEPLOYMENT-ID="waka" WAS-DEFAULT-HOSTNAME="waka.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/waka.git/git-receive-pack" X-Client-IP="129.222.109.197" X-Client-Port="9037" >
+  <step title="RpcService.ReceivePack" date="2025-11-21T05:17:49.155" >
+    <step title="Executing external process" date="2025-11-21T05:17:49.160" type="process" path="git" arguments="rev-parse --git-dir" /><!-- duration: 10ms -->
+    <step title="Assuming git repository at /home/site/repository" date="2025-11-21T05:17:49.173" /><!-- duration: 3ms -->
+    <step title="Acquiring Deployment Lock" date="2025-11-21T05:17:49.180" /><!-- duration: 3ms -->
+    <step title="Acquired Deployment Lock" date="2025-11-21T05:17:49.220" /><!-- duration: 3ms -->
+    <step title="Creating temporary deployment" date="2025-11-21T05:17:49.227" /><!-- duration: 61ms -->
+    <step title="GitExeServer.Receive" date="2025-11-21T05:17:49.292" >
+      <step title="Executing external process" date="2025-11-21T05:17:49.295" type="process" path="git" arguments="receive-pack --stateless-rpc &quot;/home/site/repository&quot;" /><!-- duration: 52888ms -->
+    </step><!-- duration: 52894ms -->
+    <step title="Releasing Deployment Lock" date="2025-11-21T05:18:42.258" /><!-- duration: 3ms -->
+  </step><!-- duration: 53113ms -->
+  <step title="Outgoing response" date="2025-11-21T05:18:42.272" type="response" statusCode="200" statusText="OK" /><!-- duration: 3ms -->
+</step><!-- duration: 53141ms -->

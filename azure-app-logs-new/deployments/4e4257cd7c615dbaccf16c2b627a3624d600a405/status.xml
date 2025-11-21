@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>4e4257cd7c615dbaccf16c2b627a3624d600a405</id>
+  <author>nabil</author>
+  <deployer>$waka</deployer>
+  <authorEmail>nabil@galaxyai.digital</authorEmail>
+  <message>Fix JavaScript errors and add technical documentation
+    
+    - Fixed tojson filter: Added | safe to tools serialization (avatar_voice_session.html:642)
+    - Updated script version to 1.9.2
+    - Added comprehensive 30-page technical documentation (MD + PDF)
+    - Documentation covers architecture, implementation, and 140h development breakdown
+    
+    🤖 Generated with [Claude Code](https://claude.com/claude-code)
+    
+    Co-Authored-By: Claude &lt;noreply@anthropic.com&gt;</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-11-19T17:13:00.5618468Z</lastSuccessEndTime>
+  <receivedTime>2025-11-19T17:12:30.311599Z</receivedTime>
+  <startTime>2025-11-19T17:12:32.2791118Z</startTime>
+  <endTime>2025-11-19T17:13:00.5618468Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>False</is_readonly>
+  <buildSummary />
+</deployment>

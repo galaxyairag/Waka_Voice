@@ -1,0 +1,1492 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Qualité - Waka Burkiné Voix{% endblock %}
+
+{% block extra_css %}
+<style>
+    .quality-dashboard-page {
+        min-height: calc(100vh - 80px);
+        background: radial-gradient(circle at 0% 0%, rgba(168, 85, 247, 0.08), transparent 55%),
+                    radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.08), transparent 55%),
+                    linear-gradient(135deg, #f5f7fb 0%, #ffffff 60%, #faf5fb 100%);
+        padding: 2.5rem 0 3rem;
+    }
+
+    .quality-shell {
+        background: var(--waka-off-white, #f5f6fa);
+        border-radius: 28px;
+        border: 1px solid var(--waka-border, rgba(15, 23, 42, 0.08));
+        box-shadow:
+            0 18px 45px rgba(15, 23, 42, 0.08),
+            0 0 0 1px rgba(255, 255, 255, 0.8);
+        padding: 1.75rem 1.75rem 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .quality-shell::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+            linear-gradient(120deg,
+                rgba(168, 85, 247, 0.06) 0%,
+                rgba(59, 130, 246, 0.06) 30%,
+                transparent 55%,
+                rgba(139, 92, 246, 0.06) 80%,
+                transparent 100%);
+        mix-blend-mode: soft-light;
+    }
+
+    .quality-header {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .quality-title-block {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .quality-logo-chip {
+        width: 56px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%);
+        color: white;
+        font-weight: 700;
+        font-size: 1.2rem;
+        border-radius: 14px;
+        box-shadow: 0 8px 20px rgba(168, 85, 247, 0.25);
+    }
+
+    .quality-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--waka-primary-dark, #111827);
+        margin: 0;
+    }
+
+    .quality-subtitle {
+        font-size: 0.9rem;
+        color: var(--waka-muted, #9ca3af);
+        margin: 0.25rem 0 0 0;
+    }
+
+    .quality-controls {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .period-selector {
+        display: flex;
+        gap: 0.5rem;
+        padding: 0.35rem;
+        background: rgba(168, 85, 247, 0.08);
+        border-radius: 12px;
+        border: 1px solid rgba(168, 85, 247, 0.2);
+    }
+
+    .period-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border: none;
+        background: transparent;
+        color: var(--waka-muted);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .period-btn:hover {
+        background: rgba(168, 85, 247, 0.1);
+        color: #8b5cf6;
+    }
+
+    .period-btn.active {
+        background: linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+    }
+
+    .chart-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        margin-bottom: 1.5rem;
+    }
+
+    .chart-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid rgba(168, 85, 247, 0.1);
+    }
+
+    .chart-card-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--waka-primary-dark);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .chart-card-title i {
+        color: #a855f7;
+    }
+
+    .chart-card-info {
+        font-size: 0.75rem;
+        color: var(--waka-muted);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 400px;
+        width: 100%;
+    }
+
+    .chart-container-small {
+        position: relative;
+        height: 300px;
+        width: 100%;
+    }
+
+    .correlation-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .correlation-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.25rem;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .correlation-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .correlation-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--waka-primary-dark);
+    }
+
+    .correlation-coefficient {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.5rem 0.75rem;
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(168, 85, 247, 0.05));
+        border-radius: 8px;
+        border: 1px solid rgba(168, 85, 247, 0.2);
+    }
+
+    .correlation-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--waka-muted);
+    }
+
+    .correlation-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .correlation-value.strong-positive {
+        color: #16a34a;
+    }
+
+    .correlation-value.moderate-positive {
+        color: #3b82f6;
+    }
+
+    .correlation-value.weak {
+        color: #9ca3af;
+    }
+
+    .correlation-value.negative {
+        color: #dc2626;
+    }
+
+    .loading-spinner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 300px;
+        color: #a855f7;
+    }
+
+    .loading-spinner p {
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    @media (max-width: 991px) {
+        .correlation-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="quality-dashboard-page">
+    <div class="container">
+        <div class="quality-shell">
+            <div class="quality-header">
+                <div class="quality-title-block">
+                    <div class="quality-logo-chip">
+                        <i class="bi bi-award"></i>
+                    </div>
+                    <div>
+                        <h1 class="quality-title">Dashboard Qualité</h1>
+                        <p class="quality-subtitle">Analyse approfondie des performances et tendances</p>
+                    </div>
+                </div>
+                <div class="quality-controls">
+                    <div class="period-selector">
+                        <button class="period-btn" data-period="7">7 jours</button>
+                        <button class="period-btn active" data-period="30">30 jours</button>
+                        <button class="period-btn" data-period="90">90 jours</button>
+                    </div>
+                    <button class="btn btn-primary" id="generate-report-btn" style="margin-left: 1rem;" onclick="window.location.href='/quality/report?period=' + currentPeriod">
+                        <i class="bi bi-file-earmark-text"></i> Générer Rapport
+                    </button>
+                </div>
+            </div>
+
+            <!-- Section 1: Histogrammes cumulés -->
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <div class="chart-card-title">
+                        <i class="bi bi-bar-chart-fill"></i>
+                        Résultats cumulés par famille
+                    </div>
+                    <div class="chart-card-info">
+                        <i class="bi bi-info-circle"></i>
+                        <span>Conversations groupées par type d'agent</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="chart-by-family-container">
+                    <div class="loading-spinner" id="loading-by-family">
+                        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Chargement des données par famille...</p>
+                    </div>
+                    <canvas id="chart-by-family" style="display: none;"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <div class="chart-card-title">
+                        <i class="bi bi-calendar3"></i>
+                        Résultats cumulés par jour
+                    </div>
+                    <div class="chart-card-info">
+                        <i class="bi bi-info-circle"></i>
+                        <span>Évolution quotidienne des métriques</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="chart-by-day-container">
+                    <div class="loading-spinner" id="loading-by-day">
+                        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Chargement des données par jour...</p>
+                    </div>
+                    <canvas id="chart-by-day" style="display: none;"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <div class="chart-card-title">
+                        <i class="bi bi-cpu"></i>
+                        Résultats cumulés par modèle
+                    </div>
+                    <div class="chart-card-info">
+                        <i class="bi bi-info-circle"></i>
+                        <span>Performance par modèle d'IA utilisé</span>
+                    </div>
+                </div>
+                <div class="chart-container" id="chart-by-model-container">
+                    <div class="loading-spinner" id="loading-by-model">
+                        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Chargement des données par modèle...</p>
+                    </div>
+                    <canvas id="chart-by-model" style="display: none;"></canvas>
+                </div>
+            </div>
+
+            <!-- Section 2: Tendance d'évolution des sentiments -->
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <div class="chart-card-title">
+                        <i class="bi bi-graph-up-arrow"></i>
+                        Tendance d'évolution des sentiments
+                    </div>
+                    <div class="chart-card-info">
+                        <i class="bi bi-info-circle"></i>
+                        <span>Évolution temporelle avec indices de progression</span>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <h6 class="text-center mb-3" style="color: var(--waka-text-primary); font-weight: 600;">Tendance User</h6>
+                        <div class="chart-container" id="chart-sentiment-trend-user-container">
+                            <div class="loading-spinner" id="loading-sentiment-trend-user">
+                                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                    <span class="visually-hidden">Chargement...</span>
+                                </div>
+                                <p class="mt-3 text-muted">Chargement de la tendance user...</p>
+                            </div>
+                            <canvas id="chart-sentiment-trend-user" style="display: none;"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-center mb-3" style="color: var(--waka-text-primary); font-weight: 600;">Tendance Assistant</h6>
+                        <div class="chart-container" id="chart-sentiment-trend-agent-container">
+                            <div class="loading-spinner" id="loading-sentiment-trend-agent">
+                                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                    <span class="visually-hidden">Chargement...</span>
+                                </div>
+                                <p class="mt-3 text-muted">Chargement de la tendance assistant...</p>
+                            </div>
+                            <canvas id="chart-sentiment-trend-agent" style="display: none;"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-3 mt-3">
+                    <div class="col-4">
+                        <div style="text-align: center; padding: 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05)); border-radius: 12px;">
+                            <div style="font-size: 0.7rem; text-transform: uppercase; color: #16a34a; margin-bottom: 0.5rem;">Évolution Positif</div>
+                            <div style="font-size: 2rem; font-weight: 700; color: #15803d;" id="trend-positive-index">-</div>
+                            <div style="font-size: 0.75rem; color: var(--waka-muted); margin-top: 0.25rem;" id="trend-positive-label">-</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div style="text-align: center; padding: 1rem; background: linear-gradient(135deg, rgba(148, 163, 184, 0.1), rgba(148, 163, 184, 0.05)); border-radius: 12px;">
+                            <div style="font-size: 0.7rem; text-transform: uppercase; color: #64748b; margin-bottom: 0.5rem;">Évolution Neutre</div>
+                            <div style="font-size: 2rem; font-weight: 700; color: #475569;" id="trend-neutral-index">-</div>
+                            <div style="font-size: 0.75rem; color: var(--waka-muted); margin-top: 0.25rem;" id="trend-neutral-label">-</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div style="text-align: center; padding: 1rem; background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05)); border-radius: 12px;">
+                            <div style="font-size: 0.7rem; text-transform: uppercase; color: #dc2626; margin-bottom: 0.5rem;">Évolution Négatif</div>
+                            <div style="font-size: 2rem; font-weight: 700; color: #b91c1c;" id="trend-negative-index">-</div>
+                            <div style="font-size: 0.75rem; color: var(--waka-muted); margin-top: 0.25rem;" id="trend-negative-label">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Corrélations sentiments Agent vs User -->
+            <div style="margin-top: 2rem;">
+                <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--waka-primary-dark); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="bi bi-diagram-3" style="color: #a855f7;"></i>
+                    Corrélations Sentiment Agent ↔ Sentiment Utilisateur
+                </h2>
+                <div class="correlation-grid">
+                    <!-- Positif Agent vs Positif User -->
+                    <div class="correlation-card">
+                        <div class="correlation-header">
+                            <div class="correlation-title" id="corr-pos-pos-title">
+                                Positif Agent ↔ Positif User
+                            </div>
+                        </div>
+                        <div class="chart-container-small">
+                            <div class="loading-spinner" id="loading-corr-pos-pos" style="min-height: 250px;">
+                                <div class="spinner-border text-success" role="status" style="width: 2.5rem; height: 2.5rem;">
+                                    <span class="visually-hidden">Chargement...</span>
+                                </div>
+                                <p class="mt-2 text-muted" style="font-size: 0.85rem;">Analyse de corrélation...</p>
+                            </div>
+                            <canvas id="chart-corr-pos-pos" style="display: none;"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Neutre Agent vs Positif User -->
+                    <div class="correlation-card">
+                        <div class="correlation-header">
+                            <div class="correlation-title" id="corr-neut-pos-title">
+                                Neutre Agent ↔ Positif User
+                            </div>
+                        </div>
+                        <div class="chart-container-small">
+                            <div class="loading-spinner" id="loading-corr-neut-pos" style="min-height: 250px;">
+                                <div class="spinner-border text-secondary" role="status" style="width: 2.5rem; height: 2.5rem;">
+                                    <span class="visually-hidden">Chargement...</span>
+                                </div>
+                                <p class="mt-2 text-muted" style="font-size: 0.85rem;">Analyse de corrélation...</p>
+                            </div>
+                            <canvas id="chart-corr-neut-pos" style="display: none;"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Négatif Agent vs Positif User -->
+                    <div class="correlation-card">
+                        <div class="correlation-header">
+                            <div class="correlation-title" id="corr-neg-pos-title">
+                                Négatif Agent ↔ Positif User
+                            </div>
+                        </div>
+                        <div class="chart-container-small">
+                            <div class="loading-spinner" id="loading-corr-neg-pos" style="min-height: 250px;">
+                                <div class="spinner-border text-danger" role="status" style="width: 2.5rem; height: 2.5rem;">
+                                    <span class="visually-hidden">Chargement...</span>
+                                </div>
+                                <p class="mt-2 text-muted" style="font-size: 0.85rem;">Analyse de corrélation...</p>
+                            </div>
+                            <canvas id="chart-corr-neg-pos" style="display: none;"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- Modal Rapport -->
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reportModalLabel">
+                    <i class="bi bi-file-earmark-text"></i> Rapport d'Analyse Qualité
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="report-content">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Génération du rapport...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Analyse des données en cours...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-success" id="download-word-btn" disabled>
+                    <i class="bi bi-file-word"></i> Télécharger Word
+                </button>
+                <button type="button" class="btn btn-danger" id="download-pdf-btn" disabled>
+                    <i class="bi bi-file-pdf"></i> Télécharger PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    let currentPeriod = 30;
+    let chartInstances = {};
+
+    // Period selector
+    document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentPeriod = parseInt(this.dataset.period);
+            loadAllData();
+        });
+    });
+
+    function formatNumber(num) {
+        return new Intl.NumberFormat('fr-FR').format(num);
+    }
+
+    function calculateCorrelation(x, y) {
+        if (x.length !== y.length || x.length === 0) return 0;
+        
+        const n = x.length;
+        const sumX = x.reduce((a, b) => a + b, 0);
+        const sumY = y.reduce((a, b) => a + b, 0);
+        const sumXY = x.reduce((acc, xi, i) => acc + xi * y[i], 0);
+        const sumX2 = x.reduce((acc, xi) => acc + xi * xi, 0);
+        const sumY2 = y.reduce((acc, yi) => acc + yi * yi, 0);
+        
+        const numerator = n * sumXY - sumX * sumY;
+        const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+        
+        return denominator === 0 ? 0 : numerator / denominator;
+    }
+
+    function getCorrelationClass(r) {
+        if (r >= 0.7) return 'strong-positive';
+        if (r <= -0.7) return 'negative';
+        return 'weak';
+    }
+
+    function interpretCorrelation(r) {
+        if (r >= 0.7) return 'Corrélation parfaite';
+        if (r <= -0.7) return 'Corrélation inversée';
+        return 'Pas de corrélation';
+    }
+
+    function calculateTrendLine(labels, data) {
+        if (!data || data.length === 0) return [];
+        
+        const n = data.length;
+        const indices = Array.from({length: n}, (_, i) => i);
+        
+        const sumX = indices.reduce((a, b) => a + b, 0);
+        const sumY = data.reduce((a, b) => a + b, 0);
+        const sumXY = indices.reduce((sum, x, i) => sum + x * data[i], 0);
+        const sumX2 = indices.reduce((sum, x) => sum + x * x, 0);
+        
+        const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+        const intercept = (sumY - slope * sumX) / n;
+        
+        return indices.map(x => slope * x + intercept);
+    }
+
+    function updateTrendIndicators(positiveData, neutralData, negativeData) {
+        function calculateTrend(data) {
+            if (data.length < 2) {
+                return { index: '-', label: 'Données insuffisantes' };
+            }
+            
+            // Moyenne des 3 premiers jours vs moyenne des 3 derniers jours
+            const firstAvg = data.slice(0, Math.min(3, data.length)).reduce((a, b) => a + b, 0) / Math.min(3, data.length);
+            const lastAvg = data.slice(-Math.min(3, data.length)).reduce((a, b) => a + b, 0) / Math.min(3, data.length);
+            
+            const change = lastAvg - firstAvg;
+            const changePct = firstAvg > 0 ? (change / firstAvg * 100) : 0;
+            
+            let label;
+            if (changePct > 5) {
+                label = `↑ ${changePct.toFixed(1)}% (en hausse)`;
+            } else if (changePct < -5) {
+                label = `↓ ${Math.abs(changePct).toFixed(1)}% (en baisse)`;
+            } else {
+                label = `→ ${Math.abs(changePct).toFixed(1)}% (stable)`;
+            }
+            
+            return { 
+                index: `${changePct >= 0 ? '+' : ''}${changePct.toFixed(1)}%`, 
+                label 
+            };
+        }
+        
+        const posTrend = calculateTrend(positiveData);
+        const neutTrend = calculateTrend(neutralData);
+        const negTrend = calculateTrend(negativeData);
+        
+        document.getElementById('trend-positive-index').textContent = posTrend.index;
+        document.getElementById('trend-neutral-index').textContent = neutTrend.index;
+        document.getElementById('trend-negative-index').textContent = negTrend.index;
+        
+        document.getElementById('trend-positive-label').textContent = posTrend.label;
+        document.getElementById('trend-neutral-label').textContent = neutTrend.label;
+        document.getElementById('trend-negative-label').textContent = negTrend.label;
+    }
+
+    function createOrUpdateChart(chartId, config) {
+        if (chartInstances[chartId]) {
+            chartInstances[chartId].destroy();
+        }
+        const ctx = document.getElementById(chartId);
+        if (ctx) {
+            // Cacher le spinner et afficher le canvas
+            const loadingId = 'loading-' + chartId.replace('chart-', '');
+            const loadingEl = document.getElementById(loadingId);
+            if (loadingEl) {
+                loadingEl.style.display = 'none';
+            }
+            ctx.style.display = 'block';
+            
+            chartInstances[chartId] = new Chart(ctx, config);
+        }
+    }
+
+    function loadByFamily() {
+        fetch(`/api/quality/by-family?period=${currentPeriod}`)
+            .then(res => res.json())
+            .then(data => {
+                // Créer labels enrichis avec nombre de conversations
+                const enrichedLabels = (data.labels || []).map((label, index) => {
+                    const count = data.conversation_counts ? data.conversation_counts[index] : 0;
+                    return `${label} (${count} conv)`;
+                });
+
+                const config = {
+                    type: 'bar',
+                    data: {
+                        labels: enrichedLabels,
+                        datasets: [
+                            // User datasets (vert/orange/rouge)
+                            {
+                                label: 'User - Positif',
+                                data: data.user_positive || [],
+                                backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                                borderColor: 'rgba(34, 197, 94, 1)',
+                                borderWidth: 1,
+                                stack: 'user'
+                            },
+                            {
+                                label: 'User - Neutre',
+                                data: data.user_neutral || [],
+                                backgroundColor: 'rgba(251, 146, 60, 0.8)',
+                                borderColor: 'rgba(251, 146, 60, 1)',
+                                borderWidth: 1,
+                                stack: 'user'
+                            },
+                            {
+                                label: 'User - Négatif',
+                                data: data.user_negative || [],
+                                backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                                borderColor: 'rgba(239, 68, 68, 1)',
+                                borderWidth: 1,
+                                stack: 'user'
+                            },
+                            // Agent datasets (mauve/gris/bleu)
+                            {
+                                label: 'Assistant - Positif',
+                                data: data.agent_positive || [],
+                                backgroundColor: 'rgba(168, 85, 247, 0.8)',
+                                borderColor: 'rgba(168, 85, 247, 1)',
+                                borderWidth: 1,
+                                stack: 'agent'
+                            },
+                            {
+                                label: 'Assistant - Neutre',
+                                data: data.agent_neutral || [],
+                                backgroundColor: 'rgba(148, 163, 184, 0.8)',
+                                borderColor: 'rgba(148, 163, 184, 1)',
+                                borderWidth: 1,
+                                stack: 'agent'
+                            },
+                            {
+                                label: 'Assistant - Négatif',
+                                data: data.agent_negative || [],
+                                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                                borderColor: 'rgba(59, 130, 246, 1)',
+                                borderWidth: 1,
+                                stack: 'agent'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            title: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                stacked: true
+                            },
+                            y: {
+                                stacked: true,
+                                beginAtZero: true,
+                                max: 100,
+                                title: {
+                                    display: true,
+                                    text: 'Sentiment (%)'
+                                }
+                            }
+                        }
+                    }
+                };
+                createOrUpdateChart('chart-by-family', config);
+            })
+            .catch(err => console.error('Error loading by family:', err));
+    }
+
+    function loadByDay() {
+        fetch(`/api/quality/by-day?period=${currentPeriod}`)
+            .then(res => res.json())
+            .then(data => {
+                const config = {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels || [],
+                        datasets: [
+                            // User datasets (vert/orange/rouge)
+                            {
+                                label: 'User - Positif',
+                                data: data.user_positive || [],
+                                backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                                borderColor: 'rgba(34, 197, 94, 1)',
+                                borderWidth: 1,
+                                stack: 'user'
+                            },
+                            {
+                                label: 'User - Neutre',
+                                data: data.user_neutral || [],
+                                backgroundColor: 'rgba(251, 146, 60, 0.8)',
+                                borderColor: 'rgba(251, 146, 60, 1)',
+                                borderWidth: 1,
+                                stack: 'user'
+                            },
+                            {
+                                label: 'User - Négatif',
+                                data: data.user_negative || [],
+                                backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                                borderColor: 'rgba(239, 68, 68, 1)',
+                                borderWidth: 1,
+                                stack: 'user'
+                            },
+                            // Agent datasets (mauve/gris/bleu)
+                            {
+                                label: 'Assistant - Positif',
+                                data: data.agent_positive || [],
+                                backgroundColor: 'rgba(168, 85, 247, 0.8)',
+                                borderColor: 'rgba(168, 85, 247, 1)',
+                                borderWidth: 1,
+                                stack: 'agent'
+                            },
+                            {
+                                label: 'Assistant - Neutre',
+                                data: data.agent_neutral || [],
+                                backgroundColor: 'rgba(148, 163, 184, 0.8)',
+                                borderColor: 'rgba(148, 163, 184, 1)',
+                                borderWidth: 1,
+                                stack: 'agent'
+                            },
+                            {
+                                label: 'Assistant - Négatif',
+                                data: data.agent_negative || [],
+                                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                                borderColor: 'rgba(59, 130, 246, 1)',
+                                borderWidth: 1,
+                                stack: 'agent'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            x: {
+                                stacked: true
+                            },
+                            y: {
+                                stacked: true,
+                                beginAtZero: true,
+                                max: 100,
+                                title: {
+                                    display: true,
+                                    text: 'Sentiment (%)'
+                                }
+                            }
+                        }
+                    }
+                };
+                createOrUpdateChart('chart-by-day', config);
+            })
+            .catch(err => console.error('Error loading by day:', err));
+    }
+
+    function loadByModel() {
+        fetch(`/api/quality/by-model?period=${currentPeriod}`)
+            .then(res => res.json())
+            .then(data => {
+                const config = {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels || [],
+                        datasets: [
+                            // User datasets (vert/orange/rouge)
+                            {
+                                label: 'User - Positif',
+                                data: data.user_positive || [],
+                                backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                                borderColor: 'rgba(34, 197, 94, 1)',
+                                borderWidth: 1,
+                                stack: 'user'
+                            },
+                            {
+                                label: 'User - Neutre',
+                                data: data.user_neutral || [],
+                                backgroundColor: 'rgba(251, 146, 60, 0.8)',
+                                borderColor: 'rgba(251, 146, 60, 1)',
+                                borderWidth: 1,
+                                stack: 'user'
+                            },
+                            {
+                                label: 'User - Négatif',
+                                data: data.user_negative || [],
+                                backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                                borderColor: 'rgba(239, 68, 68, 1)',
+                                borderWidth: 1,
+                                stack: 'user'
+                            },
+                            // Agent datasets (mauve/gris/bleu)
+                            {
+                                label: 'Assistant - Positif',
+                                data: data.agent_positive || [],
+                                backgroundColor: 'rgba(168, 85, 247, 0.8)',
+                                borderColor: 'rgba(168, 85, 247, 1)',
+                                borderWidth: 1,
+                                stack: 'agent'
+                            },
+                            {
+                                label: 'Assistant - Neutre',
+                                data: data.agent_neutral || [],
+                                backgroundColor: 'rgba(148, 163, 184, 0.8)',
+                                borderColor: 'rgba(148, 163, 184, 1)',
+                                borderWidth: 1,
+                                stack: 'agent'
+                            },
+                            {
+                                label: 'Assistant - Négatif',
+                                data: data.agent_negative || [],
+                                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                                borderColor: 'rgba(59, 130, 246, 1)',
+                                borderWidth: 1,
+                                stack: 'agent'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            x: {
+                                stacked: true
+                            },
+                            y: {
+                                stacked: true,
+                                beginAtZero: true,
+                                max: 100,
+                                title: {
+                                    display: true,
+                                    text: 'Sentiment (%)'
+                                }
+                            }
+                        }
+                    }
+                };
+                createOrUpdateChart('chart-by-model', config);
+            })
+            .catch(err => console.error('Error loading by model:', err));
+    }
+
+    function loadSentimentTrend() {
+        fetch(`/api/quality/sentiment-trend?period=${currentPeriod}`)
+            .then(res => res.json())
+            .then(data => {
+                // Calculer les lignes de tendance pour user
+                const userPosLine = calculateTrendLine(data.labels, data.user_positive);
+                const userNeutLine = calculateTrendLine(data.labels, data.user_neutral);
+                const userNegLine = calculateTrendLine(data.labels, data.user_negative);
+
+                // Graphique User (tons bleus)
+                const configUser = {
+                    type: 'line',
+                    data: {
+                        labels: data.labels || [],
+                        datasets: [
+                            {
+                                label: 'Positif',
+                                data: data.user_positive || [],
+                                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                                borderColor: 'rgba(59, 130, 246, 1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Neutre',
+                                data: data.user_neutral || [],
+                                backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                                borderColor: 'rgba(99, 102, 241, 1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Négatif',
+                                data: data.user_negative || [],
+                                backgroundColor: 'rgba(147, 197, 253, 0.2)',
+                                borderColor: 'rgba(147, 197, 253, 1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Tendance Positif',
+                                data: userPosLine,
+                                borderColor: 'rgba(59, 130, 246, 1)',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                fill: false,
+                                pointRadius: 0
+                            },
+                            {
+                                label: 'Tendance Neutre',
+                                data: userNeutLine,
+                                borderColor: 'rgba(99, 102, 241, 1)',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                fill: false,
+                                pointRadius: 0
+                            },
+                            {
+                                label: 'Tendance Négatif',
+                                data: userNegLine,
+                                borderColor: 'rgba(147, 197, 253, 1)',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                fill: false,
+                                pointRadius: 0
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Date'
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                title: {
+                                    display: true,
+                                    text: 'Sentiment (%)'
+                                }
+                            }
+                        }
+                    }
+                };
+                createOrUpdateChart('chart-sentiment-trend-user', configUser);
+
+                // Calculer les lignes de tendance pour assistant
+                const agentPosLine = calculateTrendLine(data.labels, data.agent_positive);
+                const agentNeutLine = calculateTrendLine(data.labels, data.agent_neutral);
+                const agentNegLine = calculateTrendLine(data.labels, data.agent_negative);
+
+                // Graphique Assistant (tons oranges/violets)
+                const configAgent = {
+                    type: 'line',
+                    data: {
+                        labels: data.labels || [],
+                        datasets: [
+                            {
+                                label: 'Positif',
+                                data: data.agent_positive || [],
+                                backgroundColor: 'rgba(251, 146, 60, 0.2)',
+                                borderColor: 'rgba(251, 146, 60, 1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Neutre',
+                                data: data.agent_neutral || [],
+                                backgroundColor: 'rgba(168, 85, 247, 0.2)',
+                                borderColor: 'rgba(168, 85, 247, 1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Négatif',
+                                data: data.agent_negative || [],
+                                backgroundColor: 'rgba(244, 114, 182, 0.2)',
+                                borderColor: 'rgba(244, 114, 182, 1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Tendance Positif',
+                                data: agentPosLine,
+                                borderColor: 'rgba(251, 146, 60, 1)',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                fill: false,
+                                pointRadius: 0
+                            },
+                            {
+                                label: 'Tendance Neutre',
+                                data: agentNeutLine,
+                                borderColor: 'rgba(168, 85, 247, 1)',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                fill: false,
+                                pointRadius: 0
+                            },
+                            {
+                                label: 'Tendance Négatif',
+                                data: agentNegLine,
+                                borderColor: 'rgba(244, 114, 182, 1)',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                fill: false,
+                                pointRadius: 0
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Date'
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                title: {
+                                    display: true,
+                                    text: 'Sentiment (%)'
+                                }
+                            }
+                        }
+                    }
+                };
+                createOrUpdateChart('chart-sentiment-trend-agent', configAgent);
+
+                // Update trend indicators (basé sur les moyennes combinées)
+                const combinedPos = data.user_positive.map((v, i) => (v + data.agent_positive[i]) / 2);
+                const combinedNeut = data.user_neutral.map((v, i) => (v + data.agent_neutral[i]) / 2);
+                const combinedNeg = data.user_negative.map((v, i) => (v + data.agent_negative[i]) / 2);
+                updateTrendIndicators(combinedPos, combinedNeut, combinedNeg);
+            })
+            .catch(err => console.error('Error loading sentiment trend:', err));
+    }
+
+    function loadCorrelations() {
+        fetch(`/api/quality/correlations?period=${currentPeriod}`)
+            .then(res => res.json())
+            .then(data => {
+                // Positif Agent vs Positif User
+                const corrPosPos = data.correlations?.pos_pos || 0;
+                document.getElementById('corr-pos-pos-title').textContent = 
+                    `Positif Agent ↔ Positif User | R=${corrPosPos.toFixed(2)} - ${interpretCorrelation(corrPosPos)}`;
+
+                // Calculer ligne de tendance
+                const posScatterData = data.scatter_data?.pos_pos || [];
+                let posTrendData = [];
+                if (posScatterData.length > 0) {
+                    const xVals = posScatterData.map(p => p.x);
+                    const yVals = posScatterData.map(p => p.y);
+                    const minX = Math.min(...xVals);
+                    const maxX = Math.max(...xVals);
+                    const avgX = xVals.reduce((a,b) => a+b, 0) / xVals.length;
+                    const avgY = yVals.reduce((a,b) => a+b, 0) / yVals.length;
+                    const slope = corrPosPos * (Math.sqrt(yVals.reduce((s,y) => s + Math.pow(y-avgY,2), 0) / yVals.length) / Math.sqrt(xVals.reduce((s,x) => s + Math.pow(x-avgX,2), 0) / xVals.length));
+                    const intercept = avgY - slope * avgX;
+                    posTrendData = [{x: minX, y: slope * minX + intercept}, {x: maxX, y: slope * maxX + intercept}];
+                }
+
+                const configPosPos = {
+                    type: 'scatter',
+                    data: {
+                        datasets: [{
+                            label: 'Corrélation',
+                            data: posScatterData,
+                            backgroundColor: 'rgba(34, 197, 94, 0.6)',
+                            borderColor: 'rgba(34, 197, 94, 1)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: `Tendance (R=${corrPosPos.toFixed(2)})`,
+                            data: posTrendData,
+                            type: 'line',
+                            borderColor: 'rgba(34, 197, 94, 0.8)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { 
+                                display: true,
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: { display: true, text: 'Positif Agent (%)' },
+                                beginAtZero: true,
+                                max: 100
+                            },
+                            y: {
+                                title: { display: true, text: 'Positif User (%)' },
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                };
+                createOrUpdateChart('chart-corr-pos-pos', configPosPos);
+
+                // Neutre Agent vs Positif User
+                const corrNeutPos = data.correlations?.neut_pos || 0;
+                document.getElementById('corr-neut-pos-title').textContent = 
+                    `Neutre Agent ↔ Positif User | R=${corrNeutPos.toFixed(2)} - ${interpretCorrelation(corrNeutPos)}`;
+
+                // Calculer ligne de tendance
+                const neutScatterData = data.scatter_data?.neut_pos || [];
+                let neutTrendData = [];
+                if (neutScatterData.length > 0) {
+                    const xVals = neutScatterData.map(p => p.x);
+                    const yVals = neutScatterData.map(p => p.y);
+                    const minX = Math.min(...xVals);
+                    const maxX = Math.max(...xVals);
+                    const avgX = xVals.reduce((a,b) => a+b, 0) / xVals.length;
+                    const avgY = yVals.reduce((a,b) => a+b, 0) / yVals.length;
+                    const slope = corrNeutPos * (Math.sqrt(yVals.reduce((s,y) => s + Math.pow(y-avgY,2), 0) / yVals.length) / Math.sqrt(xVals.reduce((s,x) => s + Math.pow(x-avgX,2), 0) / xVals.length));
+                    const intercept = avgY - slope * avgX;
+                    neutTrendData = [{x: minX, y: slope * minX + intercept}, {x: maxX, y: slope * maxX + intercept}];
+                }
+
+                const configNeutPos = {
+                    type: 'scatter',
+                    data: {
+                        datasets: [{
+                            label: 'Corrélation',
+                            data: neutScatterData,
+                            backgroundColor: 'rgba(148, 163, 184, 0.6)',
+                            borderColor: 'rgba(148, 163, 184, 1)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: `Tendance (R=${corrNeutPos.toFixed(2)})`,
+                            data: neutTrendData,
+                            type: 'line',
+                            borderColor: 'rgba(148, 163, 184, 0.8)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { 
+                                display: true,
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: { display: true, text: 'Neutre Agent (%)' },
+                                beginAtZero: true,
+                                max: 100
+                            },
+                            y: {
+                                title: { display: true, text: 'Positif User (%)' },
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                };
+                createOrUpdateChart('chart-corr-neut-pos', configNeutPos);
+
+                // Négatif Agent vs Positif User
+                const corrNegPos = data.correlations?.neg_pos || 0;
+                document.getElementById('corr-neg-pos-title').textContent = 
+                    `Négatif Agent ↔ Positif User | R=${corrNegPos.toFixed(2)} - ${interpretCorrelation(corrNegPos)}`;
+
+                // Calculer ligne de tendance
+                const negScatterData = data.scatter_data?.neg_pos || [];
+                let negTrendData = [];
+                if (negScatterData.length > 0) {
+                    const xVals = negScatterData.map(p => p.x);
+                    const yVals = negScatterData.map(p => p.y);
+                    const minX = Math.min(...xVals);
+                    const maxX = Math.max(...xVals);
+                    const avgX = xVals.reduce((a,b) => a+b, 0) / xVals.length;
+                    const avgY = yVals.reduce((a,b) => a+b, 0) / yVals.length;
+                    const slope = corrNegPos * (Math.sqrt(yVals.reduce((s,y) => s + Math.pow(y-avgY,2), 0) / yVals.length) / Math.sqrt(xVals.reduce((s,x) => s + Math.pow(x-avgX,2), 0) / xVals.length));
+                    const intercept = avgY - slope * avgX;
+                    negTrendData = [{x: minX, y: slope * minX + intercept}, {x: maxX, y: slope * maxX + intercept}];
+                }
+
+                const configNegPos = {
+                    type: 'scatter',
+                    data: {
+                        datasets: [{
+                            label: 'Corrélation',
+                            data: negScatterData,
+                            backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                            borderColor: 'rgba(239, 68, 68, 1)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: `Tendance (R=${corrNegPos.toFixed(2)})`,
+                            data: negTrendData,
+                            type: 'line',
+                            borderColor: 'rgba(239, 68, 68, 0.8)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { 
+                                display: true,
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: { display: true, text: 'Négatif Agent (%)' },
+                                beginAtZero: true,
+                                max: 100
+                            },
+                            y: {
+                                title: { display: true, text: 'Positif User (%)' },
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                };
+                createOrUpdateChart('chart-corr-neg-pos', configNegPos);
+            })
+            .catch(err => console.error('Error loading correlations:', err));
+    }
+
+    function loadAllData() {
+        loadByFamily();
+        loadByDay();
+        loadByModel();
+        loadSentimentTrend();
+        loadCorrelations();
+    }
+
+    // Génération de rapport
+    document.getElementById('generate-report-btn').addEventListener('click', function() {
+        const reportModal = new bootstrap.Modal(document.getElementById('reportModal'));
+        reportModal.show();
+        
+        // Réinitialiser le contenu
+        document.getElementById('report-content').innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Génération du rapport...</span>
+                </div>
+                <h5 class="mt-4 text-primary">🤖 Analyse par IA en cours...</h5>
+                <p class="mt-3 text-muted">Le modèle GPT analyse ${currentPeriod} jours de données</p>
+                <div class="mt-4">
+                    <div class="progress" style="height: 5px; max-width: 400px; margin: 0 auto;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                    </div>
+                </div>
+                <p class="mt-3 text-muted small">
+                    <i class="bi bi-lightbulb"></i> Le modèle de raisonnement analyse les corrélations, tendances et anomalies...<br>
+                    <i class="bi bi-clock"></i> Cela peut prendre 10-30 secondes
+                </p>
+            </div>
+        `;
+        document.getElementById('download-word-btn').disabled = true;
+        document.getElementById('download-pdf-btn').disabled = true;
+        
+        // Appeler l'API pour générer le rapport
+        fetch(`/api/quality/generate-report?period=${currentPeriod}`)
+            .then(res => {
+                console.log('Response status:', res.status);
+                return res.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (data.success) {
+                    console.log('Report received:', data.report.substring(0, 200) + '...');
+                    // Convertir le markdown en HTML
+                    const htmlContent = convertMarkdownToHTML(data.report);
+                    console.log('HTML content:', htmlContent.substring(0, 200) + '...');
+                    
+                    const reportContent = document.getElementById('report-content');
+                    reportContent.innerHTML = htmlContent;
+                    reportContent.style.display = 'block';
+                    reportContent.style.visibility = 'visible';
+                    reportContent.style.opacity = '1';
+                    reportContent.style.position = 'relative';
+                    reportContent.style.zIndex = '9999';
+                    reportContent.style.backgroundColor = '#ffffff';
+                    
+                    console.log('Content updated, innerHTML length:', reportContent.innerHTML.length);
+                    
+                    // Stocker le markdown pour les téléchargements
+                    window.currentReport = data.report;
+                    
+                    // Activer les boutons de téléchargement
+                    document.getElementById('download-word-btn').disabled = false;
+                    document.getElementById('download-pdf-btn').disabled = false;
+                } else {
+                    console.error('Error in response:', data.error);
+                    document.getElementById('report-content').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle"></i> Erreur lors de la génération du rapport: ${data.error}
+                        </div>
+                    `;
+                }
+            })
+            .catch(err => {
+                console.error('Error generating report:', err);
+                document.getElementById('report-content').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i> Erreur lors de la génération du rapport.
+                    </div>
+                `;
+            });
+    });
+
+    // Télécharger en Word
+    document.getElementById('download-word-btn').addEventListener('click', function() {
+        if (window.currentReport) {
+            fetch('/api/quality/export-report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ report: window.currentReport, format: 'docx' })
+            })
+            .then(res => res.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `rapport_qualite_${currentPeriod}j.docx`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            });
+        }
+    });
+
+    // Télécharger en PDF
+    document.getElementById('download-pdf-btn').addEventListener('click', function() {
+        if (window.currentReport) {
+            fetch('/api/quality/export-report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ report: window.currentReport, format: 'pdf' })
+            })
+            .then(res => res.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `rapport_qualite_${currentPeriod}j.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            });
+        }
+    });
+
+    // Convertir Markdown en HTML simple
+    function convertMarkdownToHTML(markdown) {
+        if (!markdown) return '';
+        
+        let html = markdown;
+        
+        // Titres
+        html = html.replace(/^### (.+)$/gim, '<h3 class="mt-3 mb-2">$1</h3>');
+        html = html.replace(/^## (.+)$/gim, '<h2 class="mt-4 mb-3">$1</h2>');
+        html = html.replace(/^# (.+)$/gim, '<h1 class="mt-4 mb-3">$1</h1>');
+        
+        // Gras et italique
+        html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+        
+        // Listes
+        html = html.replace(/^[\-\*] (.+)$/gim, '<li>$1</li>');
+        html = html.replace(/(<li>.*<\/li>)/s, '<ul class="mb-3">$1</ul>');
+        
+        // Paragraphes
+        html = html.split('\n\n').map(para => {
+            para = para.trim();
+            if (!para) return '';
+            if (para.startsWith('<h') || para.startsWith('<ul') || para.startsWith('<ol')) {
+                return para;
+            }
+            return '<p class="mb-2">' + para + '</p>';
+        }).join('\n');
+        
+        return '<div style="line-height: 1.8;">' + html + '</div>';
+    }
+
+    // Load on page ready
+    document.addEventListener('DOMContentLoaded', loadAllData);
+</script>
+{% endblock %}

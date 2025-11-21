@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}À propos - Waka AI Voice Live{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h1 class="mb-4">À propos de Waka AI - Voice Live</h1>
+            
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Application de Configuration Voice Live</h5>
+                    <p class="card-text">
+                        Cette application vous permet de créer et configurer des agents Voice Live 
+                        pour Azure AI Services. Configurez facilement les paramètres audio, 
+                        la détection de voix, et sélectionnez parmi une large gamme de voix Azure.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Fonctionnalités</h5>
+                    <ul>
+                        <li>Sélection de modèles AI pour vos agents</li>
+                        <li>Configuration avancée des paramètres audio</li>
+                        <li>Détection de tour de parole (VAD)</li>
+                        <li>Sélection hiérarchique de voix Azure</li>
+                        <li>Configuration de transcription et de sortie audio</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Version</h5>
+                    <p class="card-text">
+                        <strong>Version:</strong> {{ app_version }}<br>
+                        <strong>Azure configuré:</strong> {{ '✅ Oui' if azure_configured else '❌ Non' }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">
+                    <i class="bi bi-arrow-left"></i> Retour à l'accueil
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

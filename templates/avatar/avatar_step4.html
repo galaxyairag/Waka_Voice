@@ -1,0 +1,568 @@
+{% extends "base.html" %}
+
+{% block title %}Étape 4 : Instructions IA - Avatar Agent{% endblock %}
+
+{% block extra_css %}
+<style>
+.page-header {
+    background: var(--waka-white);
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 16px rgba(74, 20, 140, 0.1);
+    border: 2px solid var(--waka-border);
+    margin-bottom: 40px;
+}
+
+.page-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--waka-primary);
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.page-title i {
+    font-size: 2rem;
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 16px;
+}
+
+.progress-step {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #6B7280;
+    transition: all 0.3s ease;
+}
+
+.progress-step.active {
+    font-weight: 700;
+    color: var(--waka-primary);
+}
+
+.config-form {
+    background: var(--waka-white);
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(74, 20, 140, 0.1);
+    border: 2px solid var(--waka-border);
+    padding: 32px;
+    margin-bottom: 30px;
+}
+
+.form-section-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--waka-primary);
+    margin-bottom: 8px;
+}
+
+.form-section-subtitle {
+    font-size: 0.95rem;
+    color: #6B7280;
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    font-weight: 600;
+}
+
+.field-hint {
+    display: block;
+    font-size: 0.85rem;
+    color: #6B7280;
+    margin-bottom: 6px;
+}
+
+.char-counter {
+    text-align: right;
+    font-size: 0.85rem;
+    color: #999;
+    margin-top: 5px;
+}
+
+.char-counter span {
+    font-weight: 700;
+    color: var(--waka-primary);
+}
+
+.alert-info {
+    background: linear-gradient(135deg, rgba(74, 20, 140, 0.05), rgba(225, 190, 231, 0.12));
+    border: 2px solid var(--waka-primary-pale);
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.prompt-textarea {
+    min-height: 280px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+}
+
+/* Streaming display */
+#prompt-preview-container {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    border: 2px solid #e9ecef;
+    display: none;
+}
+
+#prompt-preview-container.active {
+    display: block;
+}
+
+#prompt-preview {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: #2d3748;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+#prompt-preview h2,
+#prompt-preview h3,
+#prompt-preview h4 {
+    color: var(--waka-primary);
+    margin-top: 20px;
+    margin-bottom: 12px;
+    font-weight: 700;
+}
+
+#prompt-preview h2 {
+    font-size: 1.4rem;
+    border-bottom: 2px solid var(--waka-primary);
+    padding-bottom: 8px;
+}
+
+#prompt-preview h3 {
+    font-size: 1.2rem;
+}
+
+#prompt-preview h4 {
+    font-size: 1.05rem;
+}
+
+#prompt-preview p {
+    margin-bottom: 12px;
+}
+
+#prompt-preview strong {
+    color: #1a202c;
+    font-weight: 600;
+}
+
+#prompt-preview ul,
+#prompt-preview ol {
+    margin-left: 20px;
+    margin-bottom: 12px;
+}
+
+#prompt-preview li {
+    margin-bottom: 8px;
+}
+
+#prompt-preview code {
+    background: #e2e8f0;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: #e53e3e;
+}
+
+#prompt-preview pre {
+    background: #2d3748;
+    color: #f7fafc;
+    padding: 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin-bottom: 16px;
+}
+
+.streaming-cursor {
+    display: inline-block;
+    width: 8px;
+    height: 18px;
+    background: var(--waka-primary);
+    animation: blink 1s infinite;
+    margin-left: 2px;
+    vertical-align: middle;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+.copy-prompt-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+}
+
+.copy-prompt-btn:hover {
+    opacity: 1;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- En-tête avec progression -->
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="page-title mb-0">
+                <i class="bi bi-robot"></i> 
+                <span>Créer un agent avatar</span>
+            </h2>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> Annuler
+            </a>
+        </div>
+        
+        <!-- Barre de progression -->
+        <div class="progress mb-3" style="height: 10px;">
+            <div class="progress-bar" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        
+        <div class="progress-steps">
+            <span class="progress-step">
+                <i class="bi bi-check-circle-fill"></i> Étape 1 : Modèle
+            </span>
+            <span class="progress-step">
+                <i class="bi bi-check-circle-fill"></i> Étape 2 : Voix
+            </span>
+            <span class="progress-step">
+                <i class="bi bi-check-circle-fill"></i> Étape 3 : Tools
+            </span>
+            <span class="progress-step active">
+                <i class="bi bi-play-circle-fill"></i> Étape 4 : Instructions
+            </span>
+        </div>
+    </div>
+        
+    <form
+        class="config-form"
+        method="POST"
+        action="{{ url_for('avatar.avatar_config_step4', agent_id=agent_id) }}">
+
+        <div class="row g-4">
+            <!-- Colonne gauche : consigne IA -->
+            <div class="col-lg-5">
+                <div class="mb-3">
+                    <h3 class="form-section-title">1. Décris ton agent avatar</h3>
+                    <p class="form-section-subtitle">
+                        Explique en français le rôle, le contexte et le style de ton agent avatar.
+                        L'IA <strong>gpt-5-mini</strong> générera un prompt système complet à partir de cette consigne.
+                    </p>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="prompt_instruction">Consigne pour l'IA</label>
+                    <span class="field-hint">Exemple : "Crée un prompt pour un assistant de service client bancaire au Burkina Faso, ton professionnel mais chaleureux, langage simple et respectueux."</span>
+                    <textarea
+                        id="prompt_instruction"
+                        class="form-control"
+                        rows="8"
+                        placeholder="Décris ce que tu attends de l'assistant, le type d'utilisateurs, le ton, les tâches principales, les contraintes..."></textarea>
+                </div>
+
+                <div class="alert alert-info mb-3">
+                    <i class="bi bi-tools me-2"></i>
+                    <strong>Tools sélectionnés :</strong>
+                    <span class="d-block mt-1" style="font-size: 0.9rem;">
+                        {% if config and config.selected_tools %}
+                            {{ config.selected_tools|length }} tools seront pris en compte de façon générique dans le prompt.
+                        {% else %}
+                            Aucun tool sélectionné pour l'instant.
+                        {% endif %}
+                    </span>
+                    <small class="text-muted d-block mt-2">Les instructions détaillées d'utilisation des tools seront ajoutées automatiquement côté système, tu n'as pas besoin de les écrire ici.</small>
+                </div>
+
+                <button
+                    type="button"
+                    id="btn-generate-prompt-ai"
+                    class="btn btn-primary w-100 mb-2">
+                    <span id="btn-generate-label">
+                        <i class="bi bi-magic me-2"></i>
+                        Générer le prompt avec l'IA (gpt-5-mini)
+                    </span>
+                    <span id="btn-generate-loading" class="d-none">
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        Génération en cours...
+                    </span>
+                </button>
+
+                <div id="generate-error" class="alert alert-danger d-none" role="alert"></div>
+            </div>
+
+            <!-- Colonne droite : résultat modifiable + sauvegarde -->
+            <div class="col-lg-7">
+                <div class="mb-3">
+                    <h3 class="form-section-title">2. Prompt système proposé</h3>
+                    <p class="form-section-subtitle">
+                        Le texte ci-dessous est le prompt système qui sera envoyé au modèle.
+                        Tu peux le modifier librement avant de le sauvegarder.
+                    </p>
+                </div>
+
+                <!-- Preview zone avec streaming -->
+                <div id="prompt-preview-container" class="position-relative">
+                    <button type="button" class="btn btn-sm btn-outline-secondary copy-prompt-btn" id="copy-preview-btn" title="Copier dans la zone d'édition">
+                        <i class="bi bi-arrow-down-circle"></i> Copier
+                    </button>
+                    <div id="prompt-preview"></div>
+                </div>
+
+                <div class="form-group mb-2">
+                    <label for="system_prompt">Prompt système de l'agent</label>
+                    <span class="field-hint">Ce texte définit le rôle, le ton, les règles et les limites de ton agent. Les instructions tools détaillées seront ajoutées automatiquement en plus de ce texte.</span>
+                    <textarea
+                        id="system_prompt"
+                        name="system_prompt"
+                        class="form-control prompt-textarea"
+                        maxlength="6000"
+                        required>{{ config.system_prompt if config and config.system_prompt else (config.instructions if config and config.instructions else '') }}</textarea>
+                    <div class="char-counter">
+                        <span id="system_prompt_count">0</span> / 6000 caractères
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{{ url_for('avatar.avatar_config_step3', agent_id=agent_id) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Retour aux tools
+                    </a>
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Valider ce prompt et tester
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    const AGENT_ID = "{{ agent_id }}";
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const btn = document.getElementById('btn-generate-prompt-ai');
+        const label = document.getElementById('btn-generate-label');
+        const loading = document.getElementById('btn-generate-loading');
+        const instructionEl = document.getElementById('prompt_instruction');
+        const errorBox = document.getElementById('generate-error');
+        const promptEl = document.getElementById('system_prompt');
+        const countEl = document.getElementById('system_prompt_count');
+        const previewContainer = document.getElementById('prompt-preview-container');
+        const previewEl = document.getElementById('prompt-preview');
+        const copyPreviewBtn = document.getElementById('copy-preview-btn');
+
+        function setLoading(isLoading) {
+            if (!btn || !label || !loading) return;
+            if (isLoading) {
+                btn.setAttribute('disabled', 'disabled');
+                label.classList.add('d-none');
+                loading.classList.remove('d-none');
+            } else {
+                btn.removeAttribute('disabled');
+                label.classList.remove('d-none');
+                loading.classList.add('d-none');
+            }
+        }
+
+        function formatPromptHTML(text) {
+            // Convertir Markdown simple en HTML pour meilleur affichage
+            let html = text;
+            
+            // Titres
+            html = html.replace(/^## (.*?)$/gm, '<h2>$1</h2>');
+            html = html.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
+            html = html.replace(/^#### (.*?)$/gm, '<h4>$1</h4>');
+            
+            // Bold
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Code inline
+            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+            
+            // Listes à puces
+            html = html.replace(/^[*-] (.*?)$/gm, '<li>$1</li>');
+            html = html.replace(/(<li>.*?<\/li>\n?)+/gs, '<ul>$&</ul>');
+            
+            // Paragraphes
+            html = html.split('\n\n').map(para => {
+                if (para.startsWith('<h') || para.startsWith('<ul') || para.startsWith('<pre')) {
+                    return para;
+                }
+                return '<p>' + para + '</p>';
+            }).join('\n');
+            
+            return html;
+        }
+
+        async function handleGenerateStreaming() {
+            if (!instructionEl || !promptEl || !errorBox) return;
+            const instruction = (instructionEl.value || '').trim();
+            errorBox.classList.add('d-none');
+            errorBox.textContent = '';
+
+            if (!instruction) {
+                errorBox.textContent = "Merci de saisir une consigne pour l'IA.";
+                errorBox.classList.remove('d-none');
+                return;
+            }
+
+            try {
+                setLoading(true);
+                
+                // Afficher le conteneur de preview
+                if (previewContainer) {
+                    previewContainer.classList.add('active');
+                    previewEl.innerHTML = '<span class="streaming-cursor"></span>';
+                }
+
+                const response = await fetch(`/avatar/api/${AGENT_ID}/generate_prompt_stream`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_instruction: instruction })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP ${response.status}`);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let accumulatedText = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6);
+                            
+                            if (data === '[DONE]') {
+                                // Streaming terminé
+                                if (previewEl) {
+                                    previewEl.innerHTML = formatPromptHTML(accumulatedText);
+                                }
+                                if (promptEl) {
+                                    promptEl.value = accumulatedText;
+                                    if (countEl) {
+                                        countEl.textContent = accumulatedText.length;
+                                    }
+                                }
+                                break;
+                            }
+
+                            try {
+                                const json = JSON.parse(data);
+                                if (json.content) {
+                                    accumulatedText += json.content;
+                                    // Afficher avec curseur de streaming
+                                    if (previewEl) {
+                                        previewEl.innerHTML = formatPromptHTML(accumulatedText) + '<span class="streaming-cursor"></span>';
+                                    }
+                                }
+                                if (json.error) {
+                                    throw new Error(json.error);
+                                }
+                            } catch (e) {
+                                if (!data.includes('[DONE]')) {
+                                    console.warn('Erreur parsing JSON:', e, data);
+                                }
+                            }
+                        }
+                    }
+                }
+
+            } catch (err) {
+                console.error('Erreur génération streaming:', err);
+                errorBox.textContent = err.message || 'Erreur lors de la génération.';
+                errorBox.classList.remove('d-none');
+                
+                // Fallback vers non-streaming
+                await handleGenerateFallback();
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        async function handleGenerateFallback() {
+            if (!instructionEl || !promptEl) return;
+            const instruction = instructionEl.value.trim();
+
+            try {
+                const resp = await fetch(`/avatar/api/${AGENT_ID}/generate_prompt`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_instruction: instruction })
+                });
+                const data = await resp.json();
+                if (!data.success) {
+                    throw new Error(data.error || 'Erreur');
+                }
+                const promptText = data.prompt || '';
+                if (previewContainer && previewEl) {
+                    previewContainer.classList.add('active');
+                    previewEl.innerHTML = formatPromptHTML(promptText);
+                }
+                promptEl.value = promptText;
+                if (countEl) {
+                    countEl.textContent = promptText.length;
+                }
+            } catch (err) {
+                console.error('Fallback error:', err);
+            }
+        }
+
+        if (btn) {
+            btn.addEventListener('click', handleGenerateStreaming);
+        }
+
+        if (copyPreviewBtn) {
+            copyPreviewBtn.addEventListener('click', function() {
+                if (previewEl && promptEl) {
+                    // Copier le contenu du preview dans le textarea
+                    const textContent = previewEl.innerText || previewEl.textContent || '';
+                    promptEl.value = textContent;
+                    if (countEl) {
+                        countEl.textContent = textContent.length;
+                    }
+                    // Feedback visuel
+                    const originalHTML = copyPreviewBtn.innerHTML;
+                    copyPreviewBtn.innerHTML = '<i class="bi bi-check-circle"></i> Copié!';
+                    setTimeout(() => {
+                        copyPreviewBtn.innerHTML = originalHTML;
+                    }, 2000);
+                }
+            });
+        }
+
+        if (promptEl && countEl) {
+            countEl.textContent = promptEl.value.length;
+            promptEl.addEventListener('input', function () {
+                countEl.textContent = this.value.length;
+            });
+        }
+    });
+</script>
+{% endblock %}

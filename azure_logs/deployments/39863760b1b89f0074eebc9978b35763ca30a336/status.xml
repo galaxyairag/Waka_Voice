@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>39863760b1b89f0074eebc9978b35763ca30a336</id>
+  <author>nabil</author>
+  <deployer>$waka</deployer>
+  <authorEmail>nabil@galaxyai.digital</authorEmail>
+  <message>Add startup.sh to force cache cleanup on Azure</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-11-21T04:45:54.8281382Z</lastSuccessEndTime>
+  <receivedTime>2025-11-21T04:45:19.767831Z</receivedTime>
+  <startTime>2025-11-21T04:45:22.1632549Z</startTime>
+  <endTime>2025-11-21T04:45:54.8281382Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>False</is_readonly>
+  <buildSummary />
+</deployment>

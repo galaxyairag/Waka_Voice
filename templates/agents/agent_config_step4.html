@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block title %}Étape 4 : Prompt IA - Waka AI{% endblock %}
+
+{% block extra_css %}
+<style>
+.page-header {
+    background: var(--waka-white);
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 16px rgba(74, 20, 140, 0.1);
+    border: 2px solid var(--waka-border);
+    margin-bottom: 40px;
+}
+
+.page-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--waka-primary);
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.page-title i {
+    font-size: 2rem;
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 16px;
+}
+
+.progress-step {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #6B7280;
+    transition: all 0.3s ease;
+}
+
+.progress-step.active {
+    font-weight: 700;
+    color: var(--waka-primary);
+}
+
+.config-form {
+    background: var(--waka-white);
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(74, 20, 140, 0.1);
+    border: 2px solid var(--waka-border);
+    padding: 32px;
+    margin-bottom: 30px;
+}
+
+.form-section-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--waka-primary);
+    margin-bottom: 8px;
+}
+
+.form-section-subtitle {
+    font-size: 0.95rem;
+    color: #6B7280;
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    font-weight: 600;
+}
+
+.field-hint {
+    display: block;
+    font-size: 0.85rem;
+    color: #6B7280;
+    margin-bottom: 6px;
+}
+
+.char-counter {
+    text-align: right;
+    font-size: 0.85rem;
+    color: #999;
+    margin-top: 5px;
+}
+
+.char-counter span {
+    font-weight: 700;
+    color: var(--waka-primary);
+}
+
+.alert-info {
+    background: linear-gradient(135deg, rgba(74, 20, 140, 0.05), rgba(225, 190, 231, 0.12));
+    border: 2px solid var(--waka-primary-pale);
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.prompt-textarea {
+    min-height: 280px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- En-tête avec progression -->
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="page-title mb-0">
+                <i class="bi bi-robot"></i> 
+                <span>Créer un agent</span>
+            </h2>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> Annuler
+            </a>
+        </div>
+        
+        <!-- Barre de progression -->
+        <div class="progress mb-3" style="height: 10px;">
+            <div class="progress-bar" role="progressbar" style="width: 80%;" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        
+        <div class="progress-steps">
+            <span class="progress-step">
+                <i class="bi bi-check-circle-fill"></i> Étape 1 : Configuration
+            </span>
+            <span class="progress-step">
+                <i class="bi bi-check-circle-fill"></i> Étape 2 : Voix
+            </span>
+            <span class="progress-step">
+                <i class="bi bi-check-circle-fill"></i> Étape 3 : Outils
+            </span>
+            <span class="progress-step active">
+                <i class="bi bi-play-circle-fill"></i> Étape 4 : Prompt
+            </span>
+        </div>
+        
+    <form
+        class="config-form"
+        method="POST"
+        action="{{ url_for('agents_manager.agent_config_step4', agent_id=agent_id) }}">
+
+        <div class="row g-4">
+            <!-- Colonne gauche : consigne IA -->
+            <div class="col-lg-5">
+                <div class="mb-3">
+                    <h3 class="form-section-title">1. Décris ton agent</h3>
+                    <p class="form-section-subtitle">
+                        Explique en français le rôle, le contexte et le style de ton agent.
+                        L'IA <strong>gpt-5-mini</strong> générera un prompt système complet à partir de cette consigne.
+                    </p>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="prompt_instruction">Consigne pour l'IA</label>
+                    <span class="field-hint">Exemple : "Crée un prompt pour un assistant de service client bancaire au Burkina Faso, ton professionnel mais chaleureux, langage simple et respectueux."</span>
+                    <textarea
+                        id="prompt_instruction"
+                        class="form-control"
+                        rows="8"
+                        placeholder="Décris ce que tu attends de l'assistant, le type d'utilisateurs, le ton, les tâches principales, les contraintes..."></textarea>
+                </div>
+
+                <div class="alert alert-info mb-3">
+                    <i class="bi bi-tools me-2"></i>
+                    <strong>Tools sélectionnés :</strong>
+                    <span class="d-block mt-1" style="font-size: 0.9rem;">
+                        {% if config and config.selected_tools %}
+                            {{ config.selected_tools|length }} tools seront pris en compte de façon générique dans le prompt.
+                        {% else %}
+                            Aucun tool sélectionné pour l'instant.
+                        {% endif %}
+                    </span>
+                    <small class="text-muted d-block mt-2">Les instructions détaillées d'utilisation des tools seront ajoutées automatiquement côté système, tu n'as pas besoin de les écrire ici.</small>
+                </div>
+
+                <button
+                    type="button"
+                    id="btn-generate-prompt-ai"
+                    class="btn btn-primary w-100 mb-2">
+                    <span id="btn-generate-label">
+                        <i class="bi bi-magic me-2"></i>
+                        Générer le prompt avec l'IA (gpt-5-mini)
+                    </span>
+                    <span id="btn-generate-loading" class="d-none">
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        Génération en cours...
+                    </span>
+                </button>
+
+                <div id="generate-error" class="alert alert-danger d-none" role="alert"></div>
+            </div>
+
+            <!-- Colonne droite : résultat modifiable + sauvegarde -->
+            <div class="col-lg-7">
+                <div class="mb-3">
+                    <h3 class="form-section-title">2. Prompt système proposé</h3>
+                    <p class="form-section-subtitle">
+                        Le texte ci-dessous est le prompt système qui sera envoyé au modèle.
+                        Tu peux le modifier librement avant de le sauvegarder.
+                    </p>
+                </div>
+
+                <div class="form-group mb-2">
+                    <label for="system_prompt">Prompt système de l'agent</label>
+                    <span class="field-hint">Ce texte définit le rôle, le ton, les règles et les limites de ton agent. Les instructions tools détaillées seront ajoutées automatiquement en plus de ce texte.</span>
+                    <textarea
+                        id="system_prompt"
+                        name="system_prompt"
+                        class="form-control prompt-textarea"
+                        maxlength="6000"
+                        required>{{ config.system_prompt if config and config.system_prompt else (config.instructions if config and config.instructions else '') }}</textarea>
+                    <div class="char-counter">
+                        <span id="system_prompt_count">0</span> / 6000 caractères
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{{ url_for('agents_manager.agent_config_step3', agent_id=agent_id) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Retour aux tools
+                    </a>
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Valider ce prompt et tester
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    const AGENT_ID = "{{ agent_id }}";
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const btn = document.getElementById('btn-generate-prompt-ai');
+        const label = document.getElementById('btn-generate-label');
+        const loading = document.getElementById('btn-generate-loading');
+        const instructionEl = document.getElementById('prompt_instruction');
+        const errorBox = document.getElementById('generate-error');
+        const promptEl = document.getElementById('system_prompt');
+        const countEl = document.getElementById('system_prompt_count');
+
+        function setLoading(isLoading) {
+            if (!btn || !label || !loading) return;
+            if (isLoading) {
+                btn.setAttribute('disabled', 'disabled');
+                label.classList.add('d-none');
+                loading.classList.remove('d-none');
+            } else {
+                btn.removeAttribute('disabled');
+                label.classList.remove('d-none');
+                loading.classList.add('d-none');
+            }
+        }
+
+        async function handleGenerate() {
+            if (!instructionEl || !promptEl || !errorBox) return;
+            const instruction = (instructionEl.value || '').trim();
+            errorBox.classList.add('d-none');
+            errorBox.textContent = '';
+
+            if (!instruction) {
+                errorBox.textContent = "Merci de saisir une consigne pour l'IA.";
+                errorBox.classList.remove('d-none');
+                return;
+            }
+
+            try {
+                setLoading(true);
+                const resp = await fetch(`/agents/api/${AGENT_ID}/generate_prompt`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_instruction: instruction })
+                });
+                const data = await resp.json();
+                if (!data.success) {
+                    throw new Error(data.error || 'Erreur lors de la génération du prompt');
+                }
+                promptEl.value = data.prompt || '';
+                if (countEl) {
+                    countEl.textContent = promptEl.value.length;
+                }
+            } catch (err) {
+                console.error('Erreur génération prompt IA:', err);
+                errorBox.textContent = err.message || 'Erreur inattendue lors de la génération.';
+                errorBox.classList.remove('d-none');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        if (btn) {
+            btn.addEventListener('click', handleGenerate);
+        }
+
+        if (promptEl && countEl) {
+            countEl.textContent = promptEl.value.length;
+            promptEl.addEventListener('input', function () {
+                countEl.textContent = this.value.length;
+            });
+        }
+    });
+</script>
+{% endblock %}

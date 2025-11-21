@@ -1,0 +1,841 @@
+/* ============================================
+   TEAMS-INSPIRED AGENT VOICE SESSION
+   Modern, Sophisticated & Fully Responsive
+   Version: 3.1 (Intégré dans base.html)
+   ============================================ */
+
+/* Container Styles */
+.agent-voice-container {
+    --teams-primary: #6264A7;
+    --teams-primary-hover: #464775;
+    --teams-bg-dark: #1F1F1F;
+    --teams-bg-medium: #292929;
+    --teams-bg-light: #333333;
+    --teams-surface: #2D2D2D;
+    --teams-border: rgba(255, 255, 255, 0.08);
+    --teams-text-primary: #FFFFFF;
+    --teams-text-secondary: #C4C4C4;
+    --teams-accent-green: #92C353;
+    --teams-accent-red: #CC4A31;
+    --teams-accent-blue: #6264A7;
+    --teams-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --teams-shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.5);
+    
+    background: linear-gradient(135deg, #1F1F1F 0%, #2D2D2D 100%);
+    color: var(--teams-text-primary);
+    min-height: calc(100vh - 120px); /* Ajusté pour header/footer base.html */
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--teams-shadow);
+}
+
+/* ============================================
+   HEADER - Teams Style
+   ============================================ */
+.agent-voice-header {
+    background: var(--teams-surface);
+    border-bottom: 1px solid var(--teams-border);
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.agent-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.agent-avatar {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--teams-primary) 0%, var(--teams-primary-hover) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+    box-shadow: 0 4px 12px rgba(98, 100, 167, 0.3);
+}
+
+.agent-details h1 {
+    margin: 0 0 4px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--teams-text-primary);
+    letter-spacing: -0.01em;
+}
+
+.agent-details p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--teams-text-secondary);
+}
+
+.agent-voice-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.status-badge,
+.status-indicator {
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--teams-border);
+    color: var(--teams-text-secondary);
+    transition: all 0.2s ease;
+}
+
+.status-badge i,
+.status-indicator i {
+    font-size: 10px;
+}
+
+.status-badge.disconnected,
+.status-indicator.disconnected {
+    background: rgba(204, 74, 49, 0.15);
+    color: #FF6B6B;
+    border-color: rgba(204, 74, 49, 0.3);
+}
+
+.status-badge.connecting,
+.status-indicator.connecting {
+    background: rgba(255, 193, 7, 0.15);
+    color: #FFD666;
+    border-color: rgba(255, 193, 7, 0.3);
+}
+
+.status-badge.connected,
+.status-indicator.connected {
+    background: rgba(146, 195, 83, 0.15);
+    color: var(--teams-accent-green);
+    border-color: rgba(146, 195, 83, 0.3);
+}
+
+.status-badge i,
+.status-indicator i {
+    animation: pulse 2s infinite;
+}
+
+.status-time {
+    font-size: 12px;
+    color: var(--teams-text-secondary);
+    margin-left: 8px;
+    font-family: 'Courier New', monospace;
+}
+
+
+/* ============================================
+   CONVERSATION SECTION
+   ============================================ */
+.agent-voice-conversation,
+.conversation-area {
+    flex: 1;
+    padding: 24px;
+    background: var(--teams-bg-dark);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.conversation-card {
+    background: var(--teams-surface);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--teams-shadow);
+    margin-bottom: 16px;
+    border: 1px solid var(--teams-border);
+    transition: all 0.3s ease;
+}
+
+.conversation-card:hover {
+    box-shadow: var(--teams-shadow-hover);
+    transform: translateY(-2px);
+}
+
+.conversation-display,
+#conversationDisplay {
+    min-height: 300px;
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 16px;
+    background: var(--teams-bg-medium);
+    border-radius: 8px;
+}
+
+#conversationDisplay::-webkit-scrollbar,
+.conversation-display::-webkit-scrollbar {
+    width: 6px;
+}
+
+#conversationDisplay::-webkit-scrollbar-thumb,
+.conversation-display::-webkit-scrollbar-thumb {
+    background: var(--teams-primary);
+    border-radius: 10px;
+}
+
+#conversationDisplay::-webkit-scrollbar-track,
+.conversation-display::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.message {
+    margin-bottom: 14px;
+    animation: slideIn 0.3s ease;
+    max-width: 85%;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message-content {
+    padding: 12px 16px;
+    border-radius: 12px;
+    line-height: 1.5;
+    font-size: 14px;
+    word-wrap: break-word;
+}
+
+.message.user {
+    margin-left: auto;
+    text-align: right;
+}
+
+.message.user .message-content,
+.message.user {
+    background: var(--teams-primary);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.message.assistant .message-content,
+.message.agent {
+    background: var(--teams-bg-light);
+    color: var(--teams-text-primary);
+    border-bottom-left-radius: 4px;
+}
+
+.message.system {
+    background: rgba(255, 193, 7, 0.15);
+    color: var(--teams-text-secondary);
+    text-align: center;
+    margin: 0 auto 14px;
+    max-width: 100%;
+}
+
+.message-meta {
+    font-size: 11px;
+    color: var(--teams-text-secondary);
+    margin-top: 4px;
+    opacity: 0.7;
+}
+
+
+/* ============================================
+   CONTROLS SECTION
+   ============================================ */
+.agent-voice-controls,
+.controls-container {
+    background: var(--teams-surface);
+    border-top: 1px solid var(--teams-border);
+    padding: 20px 24px;
+    position: sticky;
+    bottom: 0;
+    z-index: 50;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.voice-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.recording-indicator,
+.visualizer-bar {
+    width: 4px;
+    height: 15px;
+    background: var(--teams-accent-green);
+    border-radius: 10px;
+    animation: voiceWave 0.8s ease-in-out infinite;
+}
+
+.recording-indicator:nth-child(2),
+.visualizer-bar:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.recording-indicator:nth-child(3),
+.visualizer-bar:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes voiceWave {
+    0%, 100% {
+        height: 15px;
+        opacity: 0.5;
+    }
+    50% {
+        height: 30px;
+        opacity: 1;
+    }
+}
+
+.mic-button,
+.voice-button {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--teams-primary) 0%, var(--teams-primary-hover) 100%);
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(98, 100, 167, 0.4);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.mic-button:hover,
+.voice-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 12px 32px rgba(98, 100, 167, 0.5);
+}
+
+.mic-button:active,
+.voice-button:active {
+    transform: scale(0.95);
+}
+
+.mic-button.recording,
+.voice-button.recording,
+.voice-button.stop {
+    background: linear-gradient(135deg, var(--teams-accent-red) 0%, #991F1F 100%);
+    animation: recordingPulse 1.5s infinite;
+}
+
+@keyframes recordingPulse {
+    0%, 100% {
+        box-shadow: 0 8px 24px rgba(204, 74, 49, 0.4);
+    }
+    50% {
+        box-shadow: 0 8px 40px rgba(204, 74, 49, 0.8);
+    }
+}
+
+.mic-button.disabled,
+.voice-button.disabled {
+    background: var(--teams-bg-light);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.control-info {
+    text-align: center;
+    margin-top: 12px;
+}
+
+.control-info p {
+    margin: 4px 0;
+    font-size: 13px;
+    color: var(--teams-text-secondary);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+.btn,
+.action-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: var(--teams-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--teams-primary-hover);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: var(--teams-bg-light);
+    color: var(--teams-text-primary);
+    border: 1px solid var(--teams-border);
+}
+
+.btn-secondary:hover {
+    background: var(--teams-bg-medium);
+}
+
+.btn-danger {
+    background: var(--teams-accent-red);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #991F1F;
+}
+
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+@media (max-width: 768px) {
+    .agent-voice-header {
+        padding: 12px 16px;
+    }
+
+    .agent-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+    }
+
+    .agent-details h1 {
+        font-size: 16px;
+    }
+
+    .agent-details p {
+        font-size: 12px;
+    }
+
+    .status-badge {
+        padding: 4px 10px;
+        font-size: 11px;
+    }
+
+    .agent-voice-conversation,
+    .conversation-area {
+        padding: 16px;
+    }
+
+    .conversation-card {
+        padding: 16px;
+    }
+
+    .mic-button,
+    .voice-button {
+        width: 56px;
+        height: 56px;
+        font-size: 20px;
+    }
+
+    .agent-voice-controls,
+    .controls-container {
+        padding: 16px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .agent-voice-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+}
+
+/* ============================================
+   UTILITIES
+   ============================================ */
+.hidden {
+    display: none !important;
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-muted {
+    color: var(--teams-text-secondary);
+}
+
+.mt-2 {
+    margin-top: 8px;
+}
+
+.mb-2 {
+    margin-bottom: 8px;
+}
+
+/* ============================================
+   LEGACY / CONFIG PANELS (Teams Dark Theme)
+   ============================================ */
+.config-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--teams-surface);
+    border-radius: 12px 12px 0 0;
+    max-height: 70vh;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 200;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    border: 1px solid var(--teams-border);
+    border-bottom: none;
+}
+
+.config-panel.show {
+    transform: translateY(0);
+}
+
+.config-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--teams-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--teams-primary);
+    color: white;
+}
+
+.config-header h3 {
+    margin: 0;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.close-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.config-content {
+    padding: 20px;
+    max-height: calc(70vh - 80px);
+    overflow-y: auto;
+    background: var(--teams-bg-medium);
+}
+
+.config-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.config-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.config-content::-webkit-scrollbar-thumb {
+    background: var(--teams-primary);
+    border-radius: 10px;
+}
+
+.config-section {
+    margin-bottom: 24px;
+    background: var(--teams-surface);
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid var(--teams-border);
+}
+
+.config-section h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--teams-primary);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.info-label {
+    font-size: 12px;
+    color: var(--teams-text-secondary);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.info-value {
+    font-size: 14px;
+    color: var(--teams-text-primary);
+    font-weight: 600;
+}
+
+.tools-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tool-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--teams-primary);
+    color: white;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(98, 100, 167, 0.3);
+}
+
+.editor-container {
+    position: relative;
+}
+
+.display-content {
+    padding: 12px;
+    background: var(--teams-bg-light);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--teams-text-secondary);
+    line-height: 1.6;
+    margin-bottom: 8px;
+}
+
+.editor-content {
+    margin-bottom: 8px;
+}
+
+.config-textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 12px;
+    background: var(--teams-bg-medium);
+    color: var(--teams-text-primary);
+    border: 1px solid var(--teams-border);
+    border-radius: 8px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 13px;
+    resize: vertical;
+}
+
+.config-textarea:focus {
+    outline: none;
+    border-color: var(--teams-primary);
+    box-shadow: 0 0 0 3px rgba(98, 100, 167, 0.1);
+}
+
+/* Welcome state */
+.welcome-message {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--teams-text-secondary);
+}
+
+.welcome-message i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+    color: var(--teams-primary);
+}
+
+.welcome-message p {
+    margin: 0;
+    font-size: 16px;
+}
+
+/* Editor/Config inputs with Teams theme */
+.config-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--teams-border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--teams-bg-medium);
+    color: var(--teams-text-primary);
+}
+
+.config-input:focus {
+    outline: none;
+    border-color: var(--teams-primary);
+    box-shadow: 0 0 0 3px rgba(98, 100, 167, 0.1);
+}
+
+.editor-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.btn-save, .btn-cancel, .btn-edit {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-save {
+    background: var(--teams-accent-green);
+    color: white;
+    flex: 1;
+}
+
+.btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(146, 195, 83, 0.3);
+}
+
+.btn-cancel {
+    background: var(--teams-bg-light);
+    color: var(--teams-text-secondary);
+    flex: 1;
+}
+
+.btn-cancel:hover {
+    background: var(--teams-bg-medium);
+}
+
+.btn-edit {
+    background: var(--teams-primary);
+    color: white;
+    width: 100%;
+}
+
+.btn-edit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(98, 100, 167, 0.3);
+}
+
+
+/* Mode tablet */
+@media (min-width: 768px) {
+    .agent-voice-container {
+        max-width: 100%;
+    }
+
+    .config-panel {
+        left: 50%;
+        right: auto;
+        transform: translate(-50%, 100%);
+        max-width: 440px;
+    }
+
+    .config-panel.show {
+        transform: translate(-50%, 0);
+    }
+}
+
+/* Mode PC grand écran */
+@media (min-width: 1024px) {
+    .agent-voice-container {
+        max-width: 100%;
+    }
+
+    .agent-voice-conversation {
+        padding: 30px;
+    }
+
+    .agent-voice-header {
+        padding: 30px;
+    }
+
+    #conversationDisplay,
+    .conversation-display {
+        min-height: 500px;
+        max-height: 600px;
+    }
+
+    .agent-avatar {
+        width: 64px;
+        height: 64px;
+        font-size: 32px;
+    }
+
+    .agent-details h1 {
+        font-size: 24px;
+    }
+
+    .agent-details p {
+        font-size: 16px;
+    }
+
+    .config-panel {
+        max-width: 600px;
+    }
+
+    .info-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+

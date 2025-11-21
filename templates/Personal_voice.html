@@ -1,0 +1,481 @@
+{% extends 'base.html' %}
+
+{% block title %}Voix Personnelles{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/personal_voice.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="page-title">
+                <i class="bi bi-mic-fill"></i> Création de Voix Personnelles
+            </h1>
+            <p class="page-subtitle">Créez votre propre voix synthétique avec Azure AI Speech</p>
+        </div>
+    </div>
+
+    <!-- Stepper -->
+    <div class="stepper-container">
+        <div class="stepper">
+            <div class="step active" data-step="1">
+                <div class="step-circle">1</div>
+                <div class="step-label">Projet</div>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step" data-step="2">
+                <div class="step-circle">2</div>
+                <div class="step-label">Consentement</div>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step" data-step="3">
+                <div class="step-circle">3</div>
+                <div class="step-label">Échantillons Vocaux</div>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step" data-step="4">
+                <div class="step-circle">4</div>
+                <div class="step-label">Synthèse</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ÉTAPE 1: Projet -->
+    <div class="step-content active" id="step1">
+        <!-- Message Service Indisponible -->
+        <div class="alert alert-warning" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border: 2px solid #ffc107; border-radius: 15px; padding: 25px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.2);">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <i class="bi bi-clock-history" style="font-size: 3rem; color: #ff6b6b;"></i>
+                <div>
+                    <h4 style="color: #856404; margin: 0 0 10px 0; font-weight: 700;">
+                        <i class="bi bi-exclamation-triangle-fill"></i> Service Temporairement Indisponible
+                    </h4>
+                    <p style="margin: 0 0 8px 0; color: #533f03; font-size: 1.05rem; line-height: 1.6;">
+                        La création de voix personnalisées est actuellement suspendue dans l'attente de l'accord de Microsoft.
+                    </p>
+                    <div style="background: rgba(255, 255, 255, 0.7); padding: 12px; border-radius: 8px; margin-top: 12px;">
+                        <p style="margin: 0 0 5px 0; color: #533f03; font-size: 0.95rem;">
+                            📅 <strong>Demande initiale :</strong> 14 novembre 2025
+                        </p>
+                        <p style="margin: 0 0 5px 0; color: #533f03; font-size: 0.95rem;">
+                            🔄 <strong>Relance effectuée :</strong> 20 novembre 2025
+                        </p>
+                        <p style="margin: 0; color: #533f03; font-size: 0.95rem;">
+                            ⏳ <strong>Statut :</strong> En attente de validation Microsoft
+                        </p>
+                    </div>
+                    <p style="margin: 15px 0 0 0; color: #856404; font-size: 0.9rem; font-style: italic;">
+                        Merci de votre patience. Nous vous informerons dès que le service sera rétabli.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-custom" style="opacity: 0.6; pointer-events: none;">
+            <div class="card-header-custom">
+                <i class="bi bi-folder-plus"></i>
+                <h3>Créer ou Sélectionner un Projet</h3>
+            </div>
+
+            <!-- Projets existants -->
+            <div class="mb-4">
+                <label class="form-label">Projets existants</label>
+                <select class="form-select" id="existingProjects" onchange="selectExistingProject()">
+                    <option value="">-- Sélectionner un projet --</option>
+                </select>
+            </div>
+
+            <div class="text-center mb-3">
+                <strong>OU</strong>
+            </div>
+
+            <!-- Nouveau projet -->
+            <form id="createProjectForm">
+                <div class="form-group">
+                    <label class="form-label">Nom du projet</label>
+                    <input type="text" class="form-control" id="projectName" placeholder="Mon projet vocal" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" id="projectDescription" rows="3" placeholder="Description du projet..."></textarea>
+                </div>
+                <div class="text-end">
+                    <button type="button" class="btn-primary-custom" onclick="createProject()">
+                        <i class="bi bi-plus-circle"></i> Créer le projet
+                    </button>
+                </div>
+            </form>
+
+            <div class="text-end mt-4">
+                <button class="btn-primary-custom" onclick="goToStep(2)" id="step1NextBtn" disabled>
+                    Suivant <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ÉTAPE 2: Consentement -->
+    <div class="step-content" id="step2">
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <i class="bi bi-shield-check"></i>
+                <h3>Enregistrement du Consentement</h3>
+            </div>
+
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                <strong>Important :</strong> L'enregistrement du consentement doit correspondre au texte (score minimum requis : <strong>90%</strong>)
+            </div>
+
+            <!-- Informations personnelles -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Prénom</label>
+                        <input type="text" class="form-control" id="firstName" placeholder="Votre prénom" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Nom</label>
+                        <input type="text" class="form-control" id="lastName" placeholder="Votre nom" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Nom de l'entreprise</label>
+                <input type="text" class="form-control" id="companyName" placeholder="Nom de votre entreprise" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Langue</label>
+                <select class="form-select" id="locale" onchange="updateConsentText()">
+                    <option value="fr-FR">Français (France)</option>
+                    <option value="en-US">English (US)</option>
+                    <option value="en-GB">English (UK)</option>
+                    <option value="es-ES">Español</option>
+                    <option value="de-DE">Deutsch</option>
+                    <option value="pt-BR">Português (Brasil)</option>
+                </select>
+            </div>
+
+            <!-- Texte de consentement -->
+            <div class="consent-text-box">
+                <h5><i class="bi bi-file-text"></i> Texte à lire (durée: 8-15 secondes)</h5>
+                <p id="consentTextDisplay" class="consent-text">
+                    Je <strong id="fullNameDisplay">[prénom et nom]</strong> suis conscient(e) que les enregistrements de ma voix 
+                    seront utilisés par <strong id="companyNameDisplay">[nom de l'entreprise]</strong> pour créer et 
+                    utiliser une version synthétique de ma voix.
+                </p>
+                <div class="alert alert-warning mt-2">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <small><strong>Lisez ce texte avec précision.</strong> Un score minimum de 90% est requis pour valider.</small>
+                </div>
+            </div>
+
+            <!-- Enregistreur -->
+            <div class="recorder-container" id="consentRecorder">
+                <button class="recorder-btn record" id="consentRecorderBtn" onclick="toggleConsentRecording()">
+                    <i class="bi bi-mic-fill"></i>
+                </button>
+                <div class="recording-time" id="consentRecordingTime">00:00</div>
+                <p class="recorder-hint">
+                    <strong>Cliquez pour enregistrer</strong><br>
+                    Lisez le texte de consentement ci-dessus (8-15 secondes)
+                </p>
+            </div>
+
+            <!-- Aperçu audio -->
+            <div id="consentAudioPreview" style="display: none; margin-top: 20px;">
+                <div class="card-custom" style="background: var(--waka-bg-light);">
+                    <h5><i class="bi bi-volume-up-fill"></i> Aperçu</h5>
+                    <audio controls id="consentAudio" style="width: 100%; margin-top: 10px;"></audio>
+                    
+                    <button class="btn-primary-custom" onclick="validateConsentTranscription()" style="width: 100%; margin-top: 15px;">
+                        <i class="bi bi-shield-check"></i> Valider la transcription
+                    </button>
+                </div>
+            </div>
+
+            <!-- Résultats validation -->
+            <div id="consentValidation" style="display: none; margin-top: 20px;"></div>
+
+            <!-- Navigation -->
+            <div class="d-flex justify-content-between mt-4">
+                <button class="btn-secondary-custom" onclick="goToStep(1)">
+                    <i class="bi bi-arrow-left"></i> Retour
+                </button>
+                <button class="btn-primary-custom" onclick="submitConsent()" id="submitConsentBtn" disabled>
+                    Soumettre le consentement <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ÉTAPE 3: Échantillons Vocaux (3 audios) -->
+    <div class="step-content" id="step3">
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <i class="bi bi-soundwave"></i>
+                <h3>Échantillons Vocaux (3 enregistrements)</h3>
+            </div>
+
+            <div class="alert alert-info">
+                <i class="bi bi-lightbulb"></i>
+                <strong>Instructions :</strong> Enregistrez 3 échantillons de votre voix dans différents contextes. 
+                Chaque enregistrement doit correspondre au texte fourni avec un score minimum de <strong>80%</strong>.
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Nom de la voix</label>
+                <input type="text" class="form-control" id="voiceName" placeholder="Ma voix personnelle" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" id="voiceDescription" rows="2" placeholder="Description de la voix..."></textarea>
+            </div>
+
+            <!-- AUDIO 1 : Formation -->
+            <div class="voice-sample-card" id="voiceSample1Card">
+                <div class="sample-header">
+                    <div>
+                        <span class="sample-number">1</span>
+                        <h5 class="sample-title">Contexte : Formation / Éducation</h5>
+                    </div>
+                    <span class="validation-badge not-validated" id="sample1Badge">
+                        <i class="bi bi-x-circle"></i> Non validé
+                    </span>
+                </div>
+
+                <div class="sample-text-box">
+                    <h6><i class="bi bi-book"></i> Texte à lire :</h6>
+                    <p class="sample-text" id="sample1Text">
+                        Bienvenue dans ce module de formation sur l'intelligence artificielle. Aujourd'hui, nous allons 
+                        découvrir les concepts fondamentaux du machine learning et leurs applications pratiques. 
+                        N'hésitez pas à poser des questions si certains points nécessitent des éclaircissements. 
+                        Ensemble, nous progresserons étape par étape vers la maîtrise de ces technologies.
+                    </p>
+                </div>
+
+                <div class="recorder-container" id="voiceRecorder1">
+                    <button class="recorder-btn record" id="voiceRecorderBtn1" onclick="toggleVoiceRecording(1)">
+                        <i class="bi bi-mic-fill"></i>
+                    </button>
+                    <div class="recording-time" id="voiceRecordingTime1">00:00</div>
+                    <p class="recorder-hint">Enregistrez le texte ci-dessus (15-25 secondes)</p>
+                </div>
+
+                <div id="voiceAudioPreview1" style="display: none; margin-top: 15px;">
+                    <audio controls id="voiceAudio1" style="width: 100%;"></audio>
+                    <button class="btn-primary-custom mt-2" onclick="validateVoiceSample(1)" style="width: 100%;">
+                        <i class="bi bi-shield-check"></i> Valider la transcription
+                    </button>
+                </div>
+
+                <div id="voiceValidation1" style="display: none; margin-top: 15px;"></div>
+            </div>
+
+            <!-- AUDIO 2 : Service Client -->
+            <div class="voice-sample-card" id="voiceSample2Card">
+                <div class="sample-header">
+                    <div>
+                        <span class="sample-number">2</span>
+                        <h5 class="sample-title">Contexte : Service Client</h5>
+                    </div>
+                    <span class="validation-badge not-validated" id="sample2Badge">
+                        <i class="bi bi-x-circle"></i> Non validé
+                    </span>
+                </div>
+
+                <div class="sample-text-box">
+                    <h6><i class="bi bi-headset"></i> Texte à lire :</h6>
+                    <p class="sample-text" id="sample2Text">
+                        Bonjour et merci d'avoir contacté notre service client. Je suis là pour vous aider aujourd'hui. 
+                        Pourriez-vous me donner plus de détails sur votre demande ? Je vais faire mon possible pour 
+                        résoudre votre problème rapidement et efficacement. Votre satisfaction est notre priorité 
+                        et nous sommes à votre écoute.
+                    </p>
+                </div>
+
+                <div class="recorder-container" id="voiceRecorder2">
+                    <button class="recorder-btn record" id="voiceRecorderBtn2" onclick="toggleVoiceRecording(2)">
+                        <i class="bi bi-mic-fill"></i>
+                    </button>
+                    <div class="recording-time" id="voiceRecordingTime2">00:00</div>
+                    <p class="recorder-hint">Enregistrez le texte ci-dessus (15-25 secondes)</p>
+                </div>
+
+                <div id="voiceAudioPreview2" style="display: none; margin-top: 15px;">
+                    <audio controls id="voiceAudio2" style="width: 100%;"></audio>
+                    <button class="btn-primary-custom mt-2" onclick="validateVoiceSample(2)" style="width: 100%;">
+                        <i class="bi bi-shield-check"></i> Valider la transcription
+                    </button>
+                </div>
+
+                <div id="voiceValidation2" style="display: none; margin-top: 15px;"></div>
+            </div>
+
+            <!-- AUDIO 3 : Podcast/Vidéo -->
+            <div class="voice-sample-card" id="voiceSample3Card">
+                <div class="sample-header">
+                    <div>
+                        <span class="sample-number">3</span>
+                        <h5 class="sample-title">Contexte : Podcast / Vidéo</h5>
+                    </div>
+                    <span class="validation-badge not-validated" id="sample3Badge">
+                        <i class="bi bi-x-circle"></i> Non validé
+                    </span>
+                </div>
+
+                <div class="sample-text-box">
+                    <h6><i class="bi bi-broadcast"></i> Texte à lire :</h6>
+                    <p class="sample-text" id="sample3Text">
+                        Bienvenue dans cet épisode où nous explorons les dernières innovations technologiques. 
+                        Aujourd'hui, nous allons discuter de l'impact de l'intelligence artificielle sur notre quotidien. 
+                        Ces avancées transforment profondément notre façon de travailler et de communiquer. 
+                        Restez avec nous pour découvrir comment ces technologies façonnent notre avenir.
+                    </p>
+                </div>
+
+                <div class="recorder-container" id="voiceRecorder3">
+                    <button class="recorder-btn record" id="voiceRecorderBtn3" onclick="toggleVoiceRecording(3)">
+                        <i class="bi bi-mic-fill"></i>
+                    </button>
+                    <div class="recording-time" id="voiceRecordingTime3">00:00</div>
+                    <p class="recorder-hint">Enregistrez le texte ci-dessus (15-25 secondes)</p>
+                </div>
+
+                <div id="voiceAudioPreview3" style="display: none; margin-top: 15px;">
+                    <audio controls id="voiceAudio3" style="width: 100%;"></audio>
+                    <button class="btn-primary-custom mt-2" onclick="validateVoiceSample(3)" style="width: 100%;">
+                        <i class="bi bi-shield-check"></i> Valider la transcription
+                    </button>
+                </div>
+
+                <div id="voiceValidation3" style="display: none; margin-top: 15px;"></div>
+            </div>
+
+            <!-- Récapitulatif validation -->
+            <div class="validation-summary">
+                <h6><i class="bi bi-clipboard-check"></i> Récapitulatif des validations</h6>
+                <div class="validation-progress">
+                    <div class="validation-item" id="validationItem1">
+                        <i class="bi bi-circle"></i> <span>Échantillon 1 (Formation)</span>
+                    </div>
+                    <div class="validation-item" id="validationItem2">
+                        <i class="bi bi-circle"></i> <span>Échantillon 2 (Service Client)</span>
+                    </div>
+                    <div class="validation-item" id="validationItem3">
+                        <i class="bi bi-circle"></i> <span>Échantillon 3 (Podcast/Vidéo)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statut création -->
+            <div id="voiceCreationStatus" style="display: none; margin-top: 20px;">
+                <div class="alert alert-info">
+                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                    <strong>Création en cours...</strong> Cela peut prendre quelques minutes.
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="d-flex justify-content-between mt-4">
+                <button class="btn-secondary-custom" onclick="goToStep(2)">
+                    <i class="bi bi-arrow-left"></i> Retour
+                </button>
+                <button class="btn-primary-custom" onclick="createPersonalVoice()" id="createVoiceBtn" disabled>
+                    <i class="bi bi-check-circle"></i> Créer la voix (0/3 validés)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ÉTAPE 4: Synthèse -->
+    <div class="step-content" id="step4">
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <i class="bi bi-play-circle"></i>
+                <h3>Test de Synthèse Vocale</h3>
+            </div>
+
+            <div class="alert alert-success">
+                <i class="bi bi-check-circle-fill"></i>
+                <strong>Félicitations !</strong> Votre voix personnelle a été créée avec succès.
+            </div>
+
+            <!-- Speaker Profile ID -->
+            <div class="form-group">
+                <label class="form-label">Speaker Profile ID</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="speakerProfileId" readonly>
+                    <button class="btn btn-secondary" onclick="copySpeakerProfileId()">
+                        <i class="bi bi-clipboard"></i> Copier
+                    </button>
+                </div>
+            </div>
+
+            <!-- Synthèse -->
+            <div class="form-group">
+                <label class="form-label">Texte à synthétiser</label>
+                <textarea class="form-control" id="synthesisText" rows="4" placeholder="Entrez le texte que vous souhaitez synthétiser avec votre voix..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Voix de base</label>
+                <select class="form-select" id="baseVoice">
+                    <option value="en-US-AvaMultilingualNeural">en-US-AvaMultilingualNeural</option>
+                    <option value="fr-FR-DeniseNeural">fr-FR-DeniseNeural</option>
+                    <option value="fr-FR-HenriNeural">fr-FR-HenriNeural</option>
+                </select>
+            </div>
+
+            <button class="btn-accent" onclick="synthesizeSpeech()" style="width: 100%;">
+                <i class="bi bi-play-fill"></i> Synthétiser
+            </button>
+
+            <!-- Résultat synthèse -->
+            <div id="synthesisResult" style="display: none; margin-top: 20px;">
+                <div class="card-custom" style="background: var(--waka-bg-light);">
+                    <h5><i class="bi bi-volume-up-fill"></i> Résultat</h5>
+                    <audio controls id="synthesizedAudio" style="width: 100%; margin-top: 10px;"></audio>
+                    <button class="btn-secondary-custom mt-3" onclick="downloadSynthesizedAudio()" style="width: 100%;">
+                        <i class="bi bi-download"></i> Télécharger
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="d-flex justify-content-between mt-4">
+                <button class="btn-secondary-custom" onclick="goToStep(3)">
+                    <i class="bi bi-arrow-left"></i> Retour
+                </button>
+                <button class="btn-accent" onclick="resetWizard()">
+                    <i class="bi bi-arrow-clockwise"></i> Nouvelle voix
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="notificationToast" class="toast" role="alert">
+        <div class="toast-header">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            <strong class="me-auto">Notification</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/audio_recorder.js') }}"></script>
+<script src="{{ url_for('static', filename='js/personal_voice.js') }}"></script>
+{% endblock %}

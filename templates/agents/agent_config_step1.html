@@ -1,0 +1,568 @@
+{% extends "base.html" %}
+
+{% block title %}Étape 1 : Configuration de l'agent{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ========================================
+   SECTION : Cards de famille d'agents
+   ======================================== */
+
+.agent-family-card {
+    background: var(--waka-white, #FFFFFF);
+    border-radius: 16px;
+    padding: 32px;
+    border: 2px solid var(--waka-border, #E1BEE7);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-shadow: 0 4px 16px rgba(74, 20, 140, 0.1);
+    cursor: pointer;
+}
+
+.agent-family-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(135deg, #4A148C 0%, #7B1FA2 100%);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.agent-family-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 50%, #F3E5F5 100%);
+    opacity: 0;
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: -1;
+}
+
+.agent-family-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(74, 20, 140, 0.2);
+    border-color: #7B1FA2;
+}
+
+.agent-family-card:hover::before {
+    transform: scaleX(1);
+}
+
+.agent-family-card:hover::after {
+    opacity: 0.5;
+}
+
+/* Card Icon */
+.agent-card-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #4A148C, #7B1FA2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px auto;
+    font-size: 32px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 6px 16px rgba(74, 20, 140, 0.3);
+}
+
+.agent-card-icon i {
+    color: white !important;
+}
+
+.agent-family-card:hover .agent-card-icon {
+    transform: scale(1.1) rotate(-3deg);
+    box-shadow: 0 10px 24px rgba(74, 20, 140, 0.4);
+}
+
+/* Variantes de couleur pour les icônes */
+.agent-family-card:nth-child(1) .agent-card-icon {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.agent-family-card:nth-child(2) .agent-card-icon {
+    background: linear-gradient(135deg, #FF6F00, #FFC107);
+}
+
+.agent-family-card:nth-child(3) .agent-card-icon {
+    background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+/* Card Content */
+.agent-card-content {
+    text-align: center;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.agent-card-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--waka-primary);
+    margin-bottom: 16px;
+    letter-spacing: -0.3px;
+}
+
+.agent-card-description {
+    font-size: 1rem;
+    color: #6B7280;
+    margin-bottom: 24px;
+    flex-grow: 1;
+    line-height: 1.7;
+}
+
+.agent-card-badges {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+.agent-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+/* Card Button */
+.agent-card-action {
+    margin-top: auto;
+}
+
+.agent-card-action .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    background: transparent;
+    color: currentColor;
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    justify-content: center;
+}
+
+.agent-card-action .btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: currentColor;
+    opacity: 0;
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.agent-card-action .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.agent-card-action .btn:hover::before {
+    opacity: 0.1;
+}
+
+.agent-card-action .btn i {
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 1;
+}
+
+.agent-card-action .btn:hover i {
+    transform: translateX(5px);
+}
+
+.agent-card-action .btn span,
+.agent-card-action .btn {
+    position: relative;
+    z-index: 1;
+}
+
+/* Animation on load */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.agent-family-card {
+    opacity: 0;
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.agent-family-card:nth-child(1) { animation-delay: 0.1s; }
+.agent-family-card:nth-child(2) { animation-delay: 0.2s; }
+.agent-family-card:nth-child(3) { animation-delay: 0.3s; }
+
+/* ========================================
+   SECTION : En-tête et progression
+   ======================================== */
+
+.page-header {
+    background: var(--waka-white);
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 16px rgba(74, 20, 140, 0.1);
+    border: 2px solid var(--waka-border);
+    margin-bottom: 40px;
+}
+
+.page-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--waka-primary);
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.page-title i {
+    font-size: 2rem;
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 16px;
+}
+
+.progress-step {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #6B7280;
+    transition: all 0.3s ease;
+}
+
+.progress-step.active {
+    font-weight: 700;
+    color: var(--waka-primary);
+}
+
+/* ========================================
+   SECTION : Titre de l'étape
+   ======================================== */
+
+.step-title-section {
+    text-align: center;
+    margin-bottom: 48px;
+}
+
+.step-main-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--waka-primary);
+    margin-bottom: 12px;
+}
+
+.step-subtitle {
+    font-size: 1.1rem;
+    color: #6B7280;
+    font-weight: 400;
+}
+
+/* ========================================
+   SECTION : Liste de modèles
+   ======================================== */
+
+.agent-model-item {
+    background: var(--waka-white);
+    border: 2px solid var(--waka-border);
+    border-left: 5px solid var(--waka-primary-pale);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.agent-model-item:hover {
+    border-left-color: var(--waka-primary);
+    transform: translateX(10px);
+    box-shadow: 0 8px 24px rgba(74, 20, 140, 0.15);
+    background: var(--waka-off-white);
+}
+
+.agent-model-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 12px;
+}
+
+.agent-model-name {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--waka-primary);
+}
+
+.agent-model-description {
+    color: #6B7280;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+/* ========================================
+   SECTION : Section modèles (cachée)
+   ======================================== */
+
+.models-section-card {
+    background: var(--waka-white);
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(74, 20, 140, 0.1);
+    border: 2px solid var(--waka-border);
+    overflow: hidden;
+}
+
+.models-section-header {
+    background: var(--gradient-bg);
+    padding: 24px 32px;
+    border-bottom: 2px solid var(--waka-border);
+}
+
+.models-section-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--waka-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.models-section-body {
+    padding: 32px;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+    .agent-family-card {
+        padding: 24px;
+    }
+    
+    .agent-card-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 28px;
+    }
+    
+    .agent-card-title {
+        font-size: 1.2rem;
+    }
+    
+    .agent-card-description {
+        font-size: 0.95rem;
+    }
+    
+    .page-header {
+        padding: 24px;
+    }
+    
+    .page-title {
+        font-size: 1.5rem;
+    }
+    
+    .step-main-title {
+        font-size: 1.5rem;
+    }
+    
+    .step-subtitle {
+        font-size: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- En-tête avec progression -->
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="page-title mb-0">
+                <i class="bi bi-robot"></i> 
+                <span>Créer un agent</span>
+            </h2>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> Annuler
+            </a>
+        </div>
+        
+        <!-- Barre de progression -->
+        <div class="progress mb-3" style="height: 10px;">
+            <div class="progress-bar" role="progressbar" style="width: 33%;" aria-valuenow="33" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        
+        <div class="progress-steps">
+            <span class="progress-step active">
+                <i class="bi bi-check-circle-fill"></i> Étape 1 : Configuration
+            </span>
+            <span class="progress-step">
+                Étape 2 : Paramètres
+            </span>
+            <span class="progress-step">
+                Étape 3 : Finalisation
+            </span>
+        </div>
+    </div>
+
+    <!-- Titre de l'étape -->
+    <div class="step-title-section">
+        <h3 class="step-main-title">Choisissez le type de configuration</h3>
+        <p class="step-subtitle">Sélectionnez le modèle et la technologie adaptés à vos besoins</p>
+    </div>
+
+    <!-- Cartes de choix principal -->
+    <div class="row g-4 mb-5">
+        <!-- Famille Realtime -->
+        <div class="col-md-4">
+            <div class="agent-family-card" data-config-type="realtime" onclick="showModels('realtime')">
+                <div class="agent-card-content">
+                    <div>
+                        <div class="agent-card-icon">
+                            <i class="bi bi-lightning-charge-fill"></i>
+                        </div>
+                        <h4 class="agent-card-title">Realtime Family</h4>
+                        <p class="agent-card-description">
+                            GPT Realtime & Realtime Mini<br>
+                            <strong>Temps réel + Audio natif</strong>
+                        </p>
+                        <div class="agent-card-badges">
+                            <span class="agent-badge bg-danger text-white">Temps Réel</span>
+                            <span class="agent-badge bg-info text-white">Audio Natif</span>
+                        </div>
+                    </div>
+                    <div class="agent-card-action">
+                        <button class="btn btn-outline-danger w-100">
+                            <span>Choisir cette famille</span>
+                            <i class="bi bi-arrow-right-circle"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Famille GPT-4o -->
+        <div class="col-md-4">
+            <div class="agent-family-card" data-config-type="gpt4o-family" onclick="showModels('gpt4o-family')">
+                <div class="agent-card-content">
+                    <div>
+                        <div class="agent-card-icon">
+                            <i class="bi bi-cpu-fill"></i>
+                        </div>
+                        <h4 class="agent-card-title">GPT-4o Family</h4>
+                        <p class="agent-card-description">
+                            GPT-4o, 4o-mini, 4.1, 4.1-mini<br>
+                            <strong>Azure STT + TTS</strong>
+                        </p>
+                        <div class="agent-card-badges">
+                            <span class="agent-badge bg-warning text-dark">GPT-4o</span>
+                            <span class="agent-badge bg-warning text-dark">Azure Speech</span>
+                        </div>
+                    </div>
+                    <div class="agent-card-action">
+                        <button class="btn btn-outline-warning w-100">
+                            <span>Choisir cette famille</span>
+                            <i class="bi bi-arrow-right-circle"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Famille GPT-5 -->
+        <div class="col-md-4">
+            <div class="agent-family-card" data-config-type="gpt5-family" onclick="showModels('gpt5-family')">
+                <div class="agent-card-content">
+                    <div>
+                        <div class="agent-card-icon">
+                            <i class="bi bi-stars"></i>
+                        </div>
+                        <h4 class="agent-card-title">GPT-5 Family</h4>
+                        <p class="agent-card-description">
+                            GPT-5, 5-mini, 5-nano, 5-chat + Phi4<br>
+                            <strong>Dernière génération</strong>
+                        </p>
+                        <div class="agent-card-badges">
+                            <span class="agent-badge bg-success text-white">GPT-5</span>
+                            <span class="agent-badge bg-success text-white">Premium</span>
+                        </div>
+                    </div>
+                    <div class="agent-card-action">
+                        <button class="btn btn-outline-success w-100">
+                            <span>Choisir cette famille</span>
+                            <i class="bi bi-arrow-right-circle"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section de sélection des modèles (cachée initialement) -->
+    <div id="modelsSection" class="row" style="display: none;">
+        <div class="col-12">
+            <div class="models-section-card">
+                <div class="models-section-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="models-section-title mb-0">
+                            <i class="bi bi-list-check"></i> 
+                            <span>Sélectionnez un modèle</span>
+                        </h5>
+                        <button class="btn btn-outline-secondary" onclick="hideModels()">
+                            <i class="bi bi-arrow-left"></i> Retour
+                        </button>
+                    </div>
+                </div>
+                <div class="models-section-body">
+                    <div id="modelsList" class="list-group">
+                        <!-- Les modèles seront injectés ici par JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire caché pour soumettre le choix -->
+    <form id="configForm" method="POST" action="{{ url_for('agents_manager.agent_config_step2_create') }}" style="display: none;">
+        <input type="hidden" name="config_type" id="configType">
+        <input type="hidden" name="model_id" id="modelId">
+        <input type="hidden" name="model_name" id="modelName">
+        <input type="hidden" name="model_description" id="modelDescription">
+        <input type="hidden" name="model_family" id="modelFamily">
+    </form>
+</div>
+
+<script src="{{ url_for('static', filename='js/agent_config_step1.js') }}"></script>
+{% endblock %}

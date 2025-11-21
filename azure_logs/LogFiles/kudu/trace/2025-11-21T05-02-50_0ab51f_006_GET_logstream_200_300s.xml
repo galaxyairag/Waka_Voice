@@ -1,0 +1,8 @@
+<step title="Incoming Request" date="2025-11-21T05:02:50.854" instance="0ab51f" url="/logstream" method="GET" type="request" pid="851,1,14" Host="waka.scm.azurewebsites.net" User-Agent="AZURECLI/2.77.0 (MSI)" Accept-Encoding="identity" Authorization="Bas..." x-ms-client-request-id="47e99118-c697-11f0-a46c-94bb43509061" X-ARR-LOG-ID="47e99118-c697-11f0-a46c-94bb43509061" CLIENT-IP="129.222.109.197:11287" X-SITE-DEPLOYMENT-ID="waka" WAS-DEFAULT-HOSTNAME="waka.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/logstream" X-Client-IP="129.222.109.197" X-Client-Port="11287" >
+  <step title="Cleanup Xml Logs" date="2025-11-21T05:02:50.856" >
+    <step title="Cleanup Infos" date="2025-11-21T05:02:50.863" totalFiles="212" totalCleanup="52" /><!-- duration: 4ms -->
+  </step><!-- duration: 14ms -->
+  <step title="LogStreamHandlerMiddleware.Invoke" date="2025-11-21T05:02:50.883" /><!-- duration: 39ms -->
+  <step title="Error occurred" date="2025-11-21T05:07:50.922" type="error" text="LogStreamManager: ProcessRequest end" /><!-- duration: 6ms -->
+  <step title="Outgoing response" date="2025-11-21T05:07:50.940" type="response" statusCode="200" statusText="OK" /><!-- duration: 4ms -->
+</step><!-- duration: 300093ms -->

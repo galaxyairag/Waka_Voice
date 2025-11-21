@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>f018ad999fc5b36976a9c6c1164d3912a105ffa0</id>
+  <author>nabil</author>
+  <deployer>$waka</deployer>
+  <authorEmail>nabil@galaxyai.digital</authorEmail>
+  <message>Force: Update agents_config_routes avec version</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-11-21T04:34:26.5333417Z</lastSuccessEndTime>
+  <receivedTime>2025-11-21T04:33:49.2521671Z</receivedTime>
+  <startTime>2025-11-21T04:33:52.0018234Z</startTime>
+  <endTime>2025-11-21T04:34:26.5333417Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>False</is_readonly>
+  <buildSummary />
+</deployment>

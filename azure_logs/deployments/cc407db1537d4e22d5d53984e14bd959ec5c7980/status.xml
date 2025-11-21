@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>cc407db1537d4e22d5d53984e14bd959ec5c7980</id>
+  <author>nabil</author>
+  <deployer>$waka</deployer>
+  <authorEmail>nabil@galaxyai.digital</authorEmail>
+  <message>Debug: Ajouter route /debug/routes</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-11-21T04:29:24.3312843Z</lastSuccessEndTime>
+  <receivedTime>2025-11-21T04:28:53.6137477Z</receivedTime>
+  <startTime>2025-11-21T04:28:55.4320956Z</startTime>
+  <endTime>2025-11-21T04:29:24.3312843Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>False</is_readonly>
+  <buildSummary />
+</deployment>

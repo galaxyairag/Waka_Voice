@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>60fb252000a62ab58ba2d75875dbe245db550d0f</id>
+  <author>nabil</author>
+  <deployer>$waka</deployer>
+  <authorEmail>nabil@galaxyai.digital</authorEmail>
+  <message>Debug: Ajouter log au chargement du module agents_config_routes</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-11-21T04:20:43.2064874Z</lastSuccessEndTime>
+  <receivedTime>2025-11-21T04:20:01.7696828Z</receivedTime>
+  <startTime>2025-11-21T04:20:04.4972089Z</startTime>
+  <endTime>2025-11-21T04:20:43.2064874Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>False</is_readonly>
+  <buildSummary />
+</deployment>

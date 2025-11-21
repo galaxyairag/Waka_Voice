@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>b81e158ed806a20fe92735a41d0a64c701c3d24b</id>
+  <author>nabil</author>
+  <deployer>$waka</deployer>
+  <authorEmail>nabil@galaxyai.digital</authorEmail>
+  <message>Force rebuild: Clear Python cache on Azure</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-11-21T04:41:59.1487247Z</lastSuccessEndTime>
+  <receivedTime>2025-11-21T04:41:20.9439366Z</receivedTime>
+  <startTime>2025-11-21T04:41:26.2952404Z</startTime>
+  <endTime>2025-11-21T04:41:59.1487247Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>False</is_readonly>
+  <buildSummary />
+</deployment>

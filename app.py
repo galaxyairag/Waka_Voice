@@ -75,7 +75,10 @@ try:
     from Blueprints.background_upload_routes import background_bp
     
     # Enregistrer les blueprints
+    logger.info(f"🔧 Enregistrement de agents_config_bp: {agents_config_bp}, name={agents_config_bp.name}, url_prefix={agents_config_bp.url_prefix}")
     app.register_blueprint(agents_config_bp)
+    logger.info("✅ agents_config_bp enregistré")
+    
     init_azure_voices(app)
     app.register_blueprint(conversation_history_bp)
     app.register_blueprint(quality_bp)
